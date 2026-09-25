@@ -6520,6 +6520,11 @@
 
     .explorer-axes .viz-select select { width: min(320px, 100%); }
     .explorer-axes .viz-control { max-width: 100%; }
+    /* A student's name can run long (in a malformed file, a whole line of
+       it), and a select is as wide as its longest option: the pin picker
+       holds to its column instead of pushing the page sideways. */
+    #sec-explorer [data-viz-control="pin"] { max-width: 100%; }
+    #sec-explorer [data-viz-control="pin"] select { width: min(320px, 100%); }
 
     .explorer-swap {
       min-height: 38px;
@@ -10839,13 +10844,14 @@ Spring 2026,Fall 2025,North Valley,Maple School,Rivera,Period 2,Science,Science,
     ];
 
     // The teacher's first screen. A class teacher opening this once a term
-    // acts on eight sections: what the file says, what happened, the targets
-    // ahead, who needs what, the wall, and the quiz that readies them for the
-    // conversation about it. The other twelve are for a closer look, and a
-    // page that shows all twenty at equal weight hides the eight. So the page
-    // opens on the essentials, the rest are one click away, and the click is
-    // remembered - a preference about the page, not about any student.
-    const ESSENTIAL_SECTIONS = new Set(["sec-briefing", "sec-snapshot", "sec-growth", "sec-goals", "sec-actions", "sec-priority", "sec-posters", "sec-quiz"]);
+    // acts on nine sections: what the file says, what stands out in it, what
+    // happened, the targets ahead, who needs what, the wall, and the quiz that
+    // readies them for the conversation about it. The rest are for a closer
+    // look, and a page that shows every section at equal weight hides the
+    // nine. So the page opens on the essentials, the rest are one click away,
+    // and the click is remembered - a preference about the page, not about
+    // any student.
+    const ESSENTIAL_SECTIONS = new Set(["sec-briefing", "sec-insights", "sec-snapshot", "sec-growth", "sec-goals", "sec-actions", "sec-priority", "sec-posters", "sec-quiz"]);
 
     function viewIsFull() {
       return Boolean(state.prefs) && state.prefs.view === "full";
@@ -18677,9 +18683,8 @@ Spring 2026,Fall 2025,North Valley,Maple School,Rivera,Period 2,Science,Science,
     // interval, Wilson's interval and Cohen's h) sit here, beside their only
     // users.
 
-    // Insights is one of the essentials the page opens on. It is added here
-    // rather than in the list itself so the whole section stays in one block.
-    ESSENTIAL_SECTIONS.add("sec-insights");
+    // Insights is one of the essentials the page opens on; it is listed in
+    // ESSENTIAL_SECTIONS itself, beside the Briefing it follows.
 
     // The smallest gap between two groups, in pooled standard deviations,
     // that is worth a card. Below it a difference is real arithmetic but not
