@@ -5631,6 +5631,160 @@
         print-color-adjust: exact;
       }
     }
+
+    /* ---- AISA: Heatmap ---- */
+    /* The Heatmap section: a group-by-subject matrix and, from a Class
+       Profile export, a student-by-area grid. Colours and chrome come from
+       the viz kit; this block only lays out the grid, its stepped key and
+       the cell text. A grid wider than its card scrolls inside the card,
+       never the page. */
+    .hm-block + .hm-block:not([hidden]) { margin-top: 26px; }
+    .hm-block > .subsection-title { margin-top: 0; }
+
+    .hm-legend-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 10px 28px;
+      margin: 2px 0 14px;
+    }
+
+    .hm-key { display: grid; gap: 5px; width: min(100%, 360px); }
+
+    .hm-key-bar {
+      display: flex;
+      gap: 2px;
+      height: 12px;
+    }
+
+    .hm-key-bar > span { flex: 1; border-radius: 2px; }
+    .hm-key-bar > span:first-child { border-radius: 3px 2px 2px 3px; }
+    .hm-key-bar > span:last-child { border-radius: 2px 3px 3px 2px; }
+
+    .hm-key-ticks {
+      position: relative;
+      height: 14px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-variant-numeric: tabular-nums;
+      line-height: 14px;
+    }
+
+    .hm-key-ticks > span {
+      position: absolute;
+      top: 0;
+      transform: translateX(-50%);
+      white-space: nowrap;
+    }
+
+    .hm-key-ticks > .is-start { left: 0; transform: none; }
+    .hm-key-ticks > .is-end { right: 0; transform: none; }
+
+    .hm-scroll-x {
+      overflow-x: auto;
+      max-width: 100%;
+      padding-bottom: 2px;
+    }
+
+    .hm-scroll-x .viz-svg.is-fixed { max-width: none; }
+
+    .hm-scroll-hint {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 0.76rem;
+    }
+
+    .hm-corner {
+      fill: var(--muted);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+
+    .hm-row-label { fill: var(--text); font-size: 12px; font-weight: 700; }
+    .hm-row-sub { fill: var(--muted); font-size: 10.5px; font-weight: 600; }
+    .hm-student { fill: var(--text); font-size: 11.5px; font-weight: 600; }
+    .hm-rit { fill: var(--muted); font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+    /* The margins are totals, so they take the heading purple: structure,
+       not emphasis. */
+    .hm-row-label.is-margin,
+    .hm-rit.is-margin,
+    .viz-tick.hm-margin-head { fill: var(--heading); font-weight: 800; }
+
+    .hm-cell-value,
+    .hm-cell-n {
+      font-variant-numeric: tabular-nums;
+      pointer-events: none;
+    }
+
+    .hm-cell-value { font-size: 13.5px; font-weight: 800; }
+    .hm-cell-value.is-small { font-size: 11px; }
+    .hm-cell-n { font-size: 10px; font-weight: 600; }
+
+    /* On a hatched cell the figures carry a halo of the cell's own fill, so
+       the hatch never runs through them. */
+    .hm-cell-value.is-haloed,
+    .hm-cell-n.is-haloed {
+      paint-order: stroke;
+      stroke-width: 3px;
+      stroke-linejoin: round;
+    }
+
+    /* An empty cell is an outline, not a fill: the diverging ramp's grey
+       centre and the kit's empty fill are one step apart, and "close to 50"
+       must never read as "no records". The key's swatch matches. */
+    .hm-svg .viz-cell.is-empty > .viz-mark {
+      fill: transparent;
+      stroke: var(--line-strong);
+      stroke-width: 1px;
+    }
+
+    .hm-svg .viz-cell.is-empty:hover > .viz-mark { stroke: var(--viz-hover); }
+
+    .hm-legend-row .viz-legend-item:last-child .viz-swatch {
+      background: transparent;
+      box-shadow: inset 0 0 0 1px var(--line-strong);
+    }
+
+    .hm-area-grid { max-width: none; }
+
+    .hm-area-body.is-tall {
+      max-height: min(620px, 70vh);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .hm-area-body.is-tall:focus-visible {
+      outline: 2px solid var(--brand);
+      outline-offset: 2px;
+      box-shadow: var(--focus);
+    }
+
+    .hm-area-key {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 18px;
+      margin: 10px 0 0;
+      padding: 0;
+      list-style: none;
+      color: var(--text-soft);
+      font-size: 0.8rem;
+    }
+
+    .hm-area-key b { color: var(--heading); margin-right: 4px; }
+
+    /* On paper the whole grid prints: no inner scroll, and a grid wider
+       than the page scales down to fit it rather than being cut. */
+    @media print {
+      .hm-scroll-x { overflow: visible; }
+      .hm-scroll-x .viz-svg.is-fixed { max-width: 100%; height: auto; }
+      .hm-scroll-hint { display: none; }
+      .hm-area-grid { width: auto !important; max-width: 100%; }
+      .hm-area-body.is-tall { max-height: none; overflow: visible; border-bottom: 0; }
+    }
+    /* ---- end AISA: Heatmap ---- */
   </style>
 </head>
 <body>
@@ -6139,6 +6293,20 @@
           </div>
           <div class="table-scroll" id="crossSubjectTable"></div>
         </div>
+      </section>
+
+      <section class="section" id="sec-heatmap" aria-labelledby="heatmapTitle">
+        <div class="section-header">
+          <div>
+            <h2 id="heatmapTitle">Heatmap</h2>
+            <p id="heatmapNote">Every class, teacher or grade against every subject on one grid, so the cell that needs a conversation stands out before anyone reads a number.</p>
+          </div>
+          <div class="btn-row">
+            <button class="btn small" id="exportHeatmapBtn" type="button">Export Heatmap CSV</button>
+          </div>
+        </div>
+        <div class="hm-block" id="heatmapMatrix"></div>
+        <div class="hm-block" id="heatmapAreas" hidden></div>
       </section>
 
       <section class="section" id="sec-strands" aria-labelledby="strandTitle">
@@ -9577,6 +9745,7 @@ Spring 2026,Fall 2025,North Valley,Maple School,Rivera,Period 2,Science,Science,
       renderGrowthEquity();
       renderTargets();
       renderCrossSubject();
+      renderHeatmap();
       renderStrands();
       renderSummaryReport();
       // A filter change rewrites the briefing, so anything mid-sentence is now
@@ -9608,6 +9777,7 @@ Spring 2026,Fall 2025,North Valley,Maple School,Rivera,Period 2,Science,Science,
       { id: "sec-actions", label: "Actions", modes: ["growth", "mixed", "baseline"] },
       { id: "sec-target", label: "Targets", modes: ["growth", "mixed", "baseline"] },
       { id: "sec-crosssubject", label: "Cross-Subject", modes: ["growth", "mixed", "baseline"] },
+      { id: "sec-heatmap", label: "Heatmap", modes: ["growth", "mixed", "baseline"] },
       // Only a Class Profile export carries instructional areas, so the section
       // exists only when the loaded files actually have them.
       { id: "sec-strands", label: "Areas", modes: ["growth", "mixed", "baseline"], available: hasStrandData },
@@ -14198,6 +14368,1048 @@ Spring 2026,Fall 2025,North Valley,Maple School,Rivera,Period 2,Science,Science,
         .sort((a, b) => (b.subjectSpread || 0) - (a.subjectSpread || 0) || naturalCompare(a.studentName, b.studentName));
     }
 
+    // ---- AISA: Heatmap ----
+    // =====================================================================
+    // Two grids that put a whole view on one screen, drawn with the viz kit.
+    //
+    //   The group matrix: a row for each class, teacher or grade in view and a
+    //   column for each subject, with an "All" row and column as margins. One
+    //   metric at a time. The level metrics (median percentile, the share at
+    //   or above the 61st) sit on the purple ramp; the growth metrics sit
+    //   either side of their centre (CGP around 50, RIT change around 0) on
+    //   the gold - grey - purple diverging ramp. Every cell prints its value
+    //   and the records behind it; under MIN_SHARE_N records the cell is
+    //   hatched and a share prints as a count, the page-wide rule.
+    //
+    //   The area grid (Class Profile exports only): a row for each student and
+    //   a column for each instructional area, each cell the area RIT minus
+    //   that student's own overall RIT, with the class median on top. The
+    //   Areas section already tests the class pattern with a confidence
+    //   interval and names the teaching groups, so this grid does not repeat
+    //   either. What it adds is where in the class a gap sits: students run
+    //   from the highest overall RIT to the lowest, so a strand that is only
+    //   weak at the top of the class reads differently from one that is weak
+    //   all the way down.
+    //
+    // Colours come in flat classes rather than a smooth ramp, so a cell can be
+    // matched to the key by eye, and the class edges are fixed per metric
+    // rather than stretched to the data: the same colour means the same thing
+    // after a filter change, and a class that is uniformly middling does not
+    // get painted as if it held extremes. Nothing here is stored except which
+    // rows, metric and subject the teacher last picked (vizPref tokens).
+    const HEATMAP_ALL = "\u0000all";
+    // Above this many data cells the marks stop being tab stops and the table
+    // view carries the values (the kit's rule for dense charts).
+    const HEATMAP_MAX_FOCUSABLE = 60;
+    // Past this many students the area grid scrolls inside its card, with the
+    // area names and the class median held above the scroll.
+    const HEATMAP_TALL_ROWS = 30;
+
+    // Full, short and shortest column headings, taken in that order until one
+    // fits the column.
+    const HEATMAP_SUBJECT_LABELS = {
+      Mathematics: ["Mathematics", "Math", "Math"],
+      Reading: ["Reading", "Reading", "Read."],
+      Language: ["Language", "Lang.", "Lang."],
+      Science: ["Science", "Science", "Sci."]
+    };
+
+    // The level metrics use NWEA's own quintile edges (the colour bands'
+    // 20/40/60/80) for their five classes. The growth metrics step out from
+    // the centre: CGP 45-55 is grey, then 10-point steps; RIT change within 1
+    // RIT of none is grey, then 5 and 10.
+    const HEATMAP_METRICS = [
+      {
+        key: "pct",
+        control: "Median %ile",
+        name: "Median achievement percentile",
+        keyTitle: "Median percentile",
+        tipLabel: "Median percentile",
+        nLabel: "Records with a percentile",
+        growth: false,
+        scale: "sequential",
+        edges: [20, 40, 60, 80],
+        ends: ["1", "99"],
+        unit: "percentile points",
+        has: (row) => isFiniteNumber(row.currentPercentile),
+        value: (row) => row.currentPercentile
+      },
+      {
+        key: "secure",
+        control: "61st+ share",
+        name: "Share at or above the 61st percentile",
+        keyTitle: "Share at or above the 61st",
+        tipLabel: "At or above the 61st",
+        nLabel: "Records with a percentile",
+        growth: false,
+        scale: "sequential",
+        edges: [20, 40, 60, 80],
+        ends: ["0%", "100%"],
+        edgeFormat: (value) => value + "%",
+        unit: "percentage points",
+        share: true,
+        has: (row) => isFiniteNumber(row.currentPercentile),
+        hit: (row) => row.currentPercentile >= SECURE_BENCHMARK
+      },
+      {
+        key: "met",
+        control: "Met projection",
+        name: "Share that met their growth projection",
+        keyTitle: "Share that met projection",
+        tipLabel: "Met projection",
+        nLabel: "Records with a growth result",
+        growth: true,
+        scale: "sequential",
+        edges: [20, 40, 60, 80],
+        ends: ["0%", "100%"],
+        edgeFormat: (value) => value + "%",
+        unit: "percentage points",
+        share: true,
+        has: (row) => row.metGrowth === true || row.metGrowth === false,
+        hit: (row) => row.metGrowth === true
+      },
+      {
+        key: "cgp",
+        control: "Median CGP",
+        name: "Median conditional growth percentile",
+        keyTitle: "Median CGP \u00b7 50 is typical growth",
+        tipLabel: "Median CGP",
+        nLabel: "Records with a CGP",
+        growth: true,
+        scale: "diverging",
+        centre: 50,
+        steps: [5, 15, 25],
+        unit: "CGP points",
+        has: (row) => isFiniteNumber(row.conditionalGrowthPercentile),
+        value: (row) => row.conditionalGrowthPercentile
+      },
+      {
+        key: "change",
+        control: "RIT change",
+        name: "Mean RIT change",
+        keyTitle: "Mean RIT change \u00b7 0 is no change",
+        tipLabel: "Mean RIT change",
+        nLabel: "Records with both windows",
+        growth: true,
+        scale: "diverging",
+        centre: 0,
+        steps: [1, 5, 10],
+        signed: true,
+        unit: "RIT",
+        has: (row) => isFiniteNumber(row.ritChange),
+        value: (row) => row.ritChange
+      }
+    ];
+
+    const HEATMAP_DIMENSIONS = [
+      { key: "class", label: "Class", plural: "classes", get: (row) => row.className, format: (value) => value },
+      { key: "teacher", label: "Teacher", plural: "teachers", get: (row) => row.teacher, format: (value) => value },
+      {
+        key: "grade",
+        label: "Grade",
+        plural: "grades",
+        get: (row) => row.studentGrade,
+        format: (value) => (value === "Missing" ? "No grade" : "Grade " + value),
+        rank: heatmapGradeRank
+      }
+    ];
+
+    // The teacher's picks for this page. Seeded once from vizPref; a pick the
+    // current view cannot show (Class, filtered to one class) is kept, so it
+    // comes back when the filter is cleared.
+    const heatmapView = { loaded: false, rows: null, metric: null, area: null };
+
+    function heatmapLoadView() {
+      if (heatmapView.loaded) return;
+      heatmapView.loaded = true;
+      heatmapView.rows = vizPref.get("heatmap.rows", null);
+      heatmapView.metric = vizPref.get("heatmap.metric", null);
+      heatmapView.area = vizPref.get("heatmap.area", null);
+    }
+
+    function heatmapGradeRank(value) {
+      const text = String(value).trim().toLowerCase();
+      if (text === "missing") return 1000;
+      if (/^(pk|pre)/.test(text)) return -1;
+      if (/^k/.test(text)) return 0;
+      const number = parseFloat(text);
+      return isFiniteNumber(number) ? number : 500;
+    }
+
+    function heatmapSigned(value, digits) {
+      if (!isFiniteNumber(value)) return "N/A";
+      const text = formatNumber(Math.abs(value), digits === undefined ? 1 : digits);
+      if (text === "0") return "0";
+      return (value > 0 ? "+" : "\u2212") + text;
+    }
+
+    // Shortens a label to fit maxPx at charPx a character, with an ellipsis.
+    function heatmapFit(text, maxPx, charPx) {
+      const value = String(text);
+      if (value.length * charPx <= maxPx) return value;
+      const keep = Math.max(1, Math.floor(maxPx / charPx) - 1);
+      return value.slice(0, keep).trimEnd() + "\u2026";
+    }
+
+    // Word-wraps a heading into at most maxLines lines of maxPx, or returns
+    // null when it cannot be done without cutting a word.
+    function heatmapWrap(text, maxPx, maxLines, charPx) {
+      const words = String(text).split(/\s+/).filter(Boolean);
+      const lines = [];
+      let line = "";
+      for (let i = 0; i < words.length; i += 1) {
+        if (words[i].length * charPx > maxPx) return null;
+        const next = line ? line + " " + words[i] : words[i];
+        if (next.length * charPx <= maxPx) {
+          line = next;
+        } else {
+          lines.push(line);
+          line = words[i];
+        }
+      }
+      if (line) lines.push(line);
+      return lines.length <= maxLines ? lines : null;
+    }
+
+    function heatmapDimensionsFor(rows) {
+      return HEATMAP_DIMENSIONS.filter((dim) => new Set(rows.map(dim.get)).size > 1);
+    }
+
+    // Growth metrics exist only with a second window, and a metric the file
+    // never carries (a CGP column missing from the export) is not offered at
+    // all. Availability reads the whole file, not the filtered view, so the
+    // picker does not change shape under a filter.
+    function heatmapMetricsFor() {
+      return HEATMAP_METRICS.filter((metric) => (!metric.growth || hasGrowthContext()) && state.allRows.some(metric.has));
+    }
+
+    function heatmapPick(list, key) {
+      return list.find((item) => item.key === key) || list[0] || null;
+    }
+
+    // One cell: the metric's value over these records, the number it rests
+    // on, the words for the cell and the rows for its tooltip.
+    function heatmapSummary(metric, rows) {
+      const base = rows.filter(metric.has);
+      const n = base.length;
+      const students = new Set(base.map((row) => studentKey(row))).size;
+      const tip = [];
+      const summary = { n, students, value: null, text: "", tip, missing: rows.length - n };
+      if (metric.share) {
+        const entry = share(base, metric.hit);
+        summary.share = entry;
+        summary.value = sharePct(entry);
+        summary.text = formatShare(entry);
+        tip.push([metric.tipLabel, n ? formatInteger(entry.n) + " of " + formatInteger(n) +
+          (n >= MIN_SHARE_N ? " (" + formatPercentWhole(summary.value) + ")" : "") : "no records"]);
+        if (metric.key === "met") {
+          const close = base.filter((row) => row.metCertainty === "too-close").length;
+          if (close) tip.push(["Too close to call", formatInteger(close)]);
+        }
+      } else if (metric.key === "change") {
+        const interval = vizStats.ci95Mean(base.map(metric.value));
+        summary.value = interval ? interval.mean : null;
+        summary.text = heatmapSigned(summary.value, 1);
+        if (interval) {
+          tip.push([metric.tipLabel, heatmapSigned(interval.mean, 1) + " RIT"]);
+          if (isFiniteNumber(interval.lo)) tip.push(["95% interval", heatmapSigned(interval.lo, 1) + " to " + heatmapSigned(interval.hi, 1)]);
+        }
+      } else {
+        const five = vizStats.fiveNumber(base.map(metric.value));
+        summary.value = five ? five.median : null;
+        summary.text = formatNumber(summary.value, 1);
+        if (five) {
+          tip.push([metric.tipLabel, formatNumber(five.median, 1)]);
+          if (five.n >= 4) tip.push(["Middle half", formatNumber(five.q1, 1) + " to " + formatNumber(five.q3, 1)]);
+        }
+      }
+      tip.push([metric.nLabel, formatInteger(n)]);
+      if (students !== n) tip.push(["Students", formatInteger(students)]);
+      if (summary.missing > 0) tip.push(["Records without one", formatInteger(summary.missing)]);
+      return summary;
+    }
+
+    // The flat colour class for a value: 0-4 on the purple ramp, or -3..3
+    // either side of the centre on the diverging one.
+    function heatmapClass(metric, value) {
+      if (!isFiniteNumber(value)) return null;
+      if (metric.scale === "sequential") return metric.edges.filter((edge) => value > edge).length;
+      const distance = value - metric.centre;
+      const step = metric.steps.filter((threshold) => Math.abs(distance) >= threshold).length;
+      return distance < 0 ? -step : step;
+    }
+
+    // The lightest class starts a little way up the ramp so a low cell still
+    // reads as a cell against the white panel (and the dark one).
+    function heatmapClassColor(metric, level) {
+      if (level === null) return VIZ_EMPTY;
+      if (metric.scale === "sequential") return vizColor.sequential(0.12 + 0.88 * level / metric.edges.length);
+      return vizColor.diverging(level / metric.steps.length);
+    }
+
+    function heatmapKeyClasses(metric) {
+      if (metric.scale === "sequential") {
+        const colors = [];
+        for (let level = 0; level <= metric.edges.length; level += 1) colors.push(heatmapClassColor(metric, level));
+        const format = metric.edgeFormat || String;
+        return { colors, edges: metric.edges.map(format), ends: metric.ends };
+      }
+      const colors = [];
+      for (let level = -metric.steps.length; level <= metric.steps.length; level += 1) colors.push(heatmapClassColor(metric, level));
+      const format = metric.signed ? (value) => heatmapSigned(value, 0) : (value) => formatNumber(value, 0);
+      const lows = metric.steps.slice().reverse().map((step) => metric.centre - step);
+      const highs = metric.steps.map((step) => metric.centre + step);
+      return { colors, edges: lows.concat(highs).map(format), ends: null };
+    }
+
+    // A stepped colour key: the classes as blocks, their edges as ticks
+    // between them. Drawn inside the chart's slot, so its resolved colours
+    // follow a theme flip with the chart.
+    function heatmapKeyHTML(title, classes, spoken) {
+      const count = classes.colors.length;
+      const blocks = classes.colors.map((color) => '<span style="background:' + escapeAttr(color) + '"></span>').join("");
+      let ticks = classes.edges.map((edge, i) =>
+        '<span style="left:' + ((i + 1) / count * 100).toFixed(2) + '%">' + escapeHTML(edge) + "</span>").join("");
+      if (classes.ends) {
+        ticks = '<span class="is-start">' + escapeHTML(classes.ends[0]) + "</span>" + ticks +
+          '<span class="is-end">' + escapeHTML(classes.ends[1]) + "</span>";
+      }
+      return '<div class="hm-key" role="img" aria-label="' + escapeAttr(spoken) + '">' +
+        '<span class="viz-eyebrow">' + escapeHTML(title) + "</span>" +
+        '<span class="hm-key-bar" aria-hidden="true">' + blocks + "</span>" +
+        '<span class="hm-key-ticks" aria-hidden="true">' + ticks + "</span></div>";
+    }
+
+    function heatmapKeySpoken(title, classes) {
+      const edges = classes.edges;
+      const parts = [];
+      for (let i = 0; i <= edges.length; i += 1) {
+        if (i === 0) parts.push("up to " + edges[0]);
+        else if (i === edges.length) parts.push("above " + edges[edges.length - 1]);
+        else parts.push(edges[i - 1] + " to " + edges[i]);
+      }
+      return "Colour key, " + title + ": " + classes.colors.length + " steps, " + parts.join("; ") + ".";
+    }
+
+    // The two marks every heatmap here shares: the thin-data hatch and the
+    // empty cell. Colours are the theme tokens, so no redraw is needed.
+    function heatmapMarksLegend() {
+      return vizLegend([
+        { label: "Fewer than " + MIN_SHARE_N + " records", color: "var(--viz-seq-2)", thin: true },
+        { label: "No records", color: VIZ_EMPTY }
+      ], { ariaLabel: "Cell marks" });
+    }
+
+    // ---------------------------------------------------------------------
+    // The group matrix
+    // ---------------------------------------------------------------------
+    function heatmapMatrixModel(rows, dim, metric) {
+      const subjects = getOverviewBuckets(rows, "subject");
+      const byGroup = new Map();
+      rows.forEach((row) => {
+        const key = dim.get(row);
+        if (!byGroup.has(key)) byGroup.set(key, []);
+        byGroup.get(key).push(row);
+      });
+      const bySubject = (list) => {
+        const out = new Map(subjects.map((subject) => [subject, []]));
+        list.forEach((row) => { if (out.has(row.subject)) out.get(row.subject).push(row); });
+        return out;
+      };
+      const buildRow = (key, label, list) => {
+        const split = bySubject(list);
+        return {
+          key,
+          label,
+          students: new Set(list.map((row) => studentKey(row))).size,
+          cells: new Map(subjects.map((subject) => [subject, heatmapSummary(metric, split.get(subject))])),
+          all: heatmapSummary(metric, list)
+        };
+      };
+      const groups = [...byGroup.entries()]
+        .sort((a, b) => {
+          if ((a[0] === "Missing") !== (b[0] === "Missing")) return a[0] === "Missing" ? 1 : -1;
+          if (dim.rank) return dim.rank(a[0]) - dim.rank(b[0]) || naturalCompare(a[0], b[0]);
+          return naturalCompare(a[0], b[0]);
+        })
+        .map(([key, list]) => buildRow(key, dim.format(key), list));
+      const all = buildRow(HEATMAP_ALL, "All " + dim.plural, rows);
+      return { dim, metric, subjects, groups, all, showAllRow: groups.length > 1, showAllCol: subjects.length > 1 };
+    }
+
+    // The cells that can be read as a pattern: inside the grid (not the
+    // margins), with a value, and resting on at least MIN_SHARE_N records.
+    function heatmapReadableCells(model) {
+      const cells = [];
+      model.groups.forEach((group) => {
+        model.subjects.forEach((subject) => {
+          const cell = group.cells.get(subject);
+          if (isFiniteNumber(cell.value) && cell.n >= MIN_SHARE_N) cells.push({ group, subject, cell });
+        });
+      });
+      return cells;
+    }
+
+    // The takeaway in words: the lowest and highest readable cells, and the
+    // subject where the groups sit furthest apart. Descriptive only - the
+    // cells hold different students, so no difference here is a tested one.
+    function heatmapMatrixTakeaway(model) {
+      const { metric, dim } = model;
+      const readable = heatmapReadableCells(model);
+      if (!model.all.all.n) {
+        return "No record in this view has a value for " + metric.name.toLowerCase() + ", so every cell is empty. Pick another measure or clear a filter.";
+      }
+      if (!readable.length) {
+        return "Every cell in this grid rests on fewer than " + MIN_SHARE_N + " records, so it describes these students rather than a pattern. Clear a filter or load more classes to read it.";
+      }
+      const name = (item) => (model.groups.length > 1 ? item.group.label + " in " : "") + item.subject;
+      let low = readable[0];
+      let high = readable[0];
+      readable.forEach((item) => {
+        if (item.cell.value < low.cell.value) low = item;
+        if (item.cell.value > high.cell.value) high = item;
+      });
+      let text = low === high
+        ? "One cell can be read: " + name(low) + " (" + low.cell.text + ")."
+        : "Lowest: " + name(low) + " (" + low.cell.text + "). Highest: " + name(high) + " (" + high.cell.text + ").";
+      let widest = null;
+      model.subjects.forEach((subject) => {
+        const inSubject = readable.filter((item) => item.subject === subject);
+        if (inSubject.length < 2) return;
+        const values = inSubject.map((item) => item.cell.value);
+        const spread = Math.max(...values) - Math.min(...values);
+        if (!widest || spread > widest.spread) widest = { subject, spread };
+      });
+      if (widest && widest.spread > 0) {
+        text += " The " + dim.plural + " sit furthest apart in " + widest.subject + ": " + formatNumber(widest.spread, metric.share ? 0 : 1) + " " + metric.unit + " between the lowest and highest.";
+      }
+      return text;
+    }
+
+    function heatmapMatrixRead(model) {
+      const takeaway = heatmapMatrixTakeaway(model);
+      return heatmapReadableCells(model).length
+        ? takeaway + " Each cell describes the students in it; a gap between two cells is a question to ask, not a tested finding."
+        : takeaway;
+    }
+
+    function heatmapColumnLabel(subject, width) {
+      if (subject === HEATMAP_ALL) return width - 8 >= 12 * VIZ_CHAR_PX ? "All subjects" : "All";
+      const options = HEATMAP_SUBJECT_LABELS[subject] || [subject];
+      const fit = options.find((label) => label.length * VIZ_CHAR_PX <= width - 8);
+      return fit || heatmapFit(options[options.length - 1], width - 8, VIZ_CHAR_PX);
+    }
+
+    function heatmapCellTip(model, line, subject, cell) {
+      const marginRow = line.key === HEATMAP_ALL;
+      const marginCol = subject === HEATMAP_ALL;
+      const title = line.label + " \u00b7 " + (marginCol ? "All subjects" : subject);
+      if (!cell.n) return vizTip(title, [], "No records with this measure.");
+      let note = "";
+      if (vizIsThin(cell.n)) note = vizThinNote(cell.n);
+      else if (marginRow && marginCol) note = "Every record in view.";
+      else if (marginRow) note = "Every " + model.dim.label.toLowerCase() + " in view, in " + subject + ".";
+      else if (marginCol) note = "Every subject for this " + model.dim.label.toLowerCase() + ".";
+      return vizTip(title, cell.tip, note);
+    }
+
+    // The kit gives a chart with no focusable marks a root <title>, which a
+    // browser pops up as a native tooltip over every mark that carries a kit
+    // tip. A dense grid - tips, but too many cells to be tab stops - takes
+    // its name as an aria-label instead, so only the kit's tooltip shows.
+    function heatmapFrame(inner, options) {
+      const svg = vizFrame(inner, options);
+      if (!/\sdata-tip="/.test(inner) || /\stabindex="0"/.test(inner)) return svg;
+      return svg.replace(/ aria-labelledby="([^"]*)"><title id="[^"]*">[\s\S]*?<\/title>/, (match, ids) => {
+        const rest = ids.split(" ").slice(1).join(" ");
+        return ' aria-label="' + escapeAttr(options.ariaLabel || "Chart") + '"' + (rest ? ' aria-describedby="' + rest + '"' : "") + ">";
+      });
+    }
+
+    function heatmapMatrixSVG(model, width) {
+      const { metric, groups, subjects, dim } = model;
+      const columns = subjects.concat(model.showAllCol ? [HEATMAP_ALL] : []);
+      const lines = groups.concat(model.showAllRow ? [model.all] : []);
+      const rowCount = lines.length;
+      const cellH = rowCount <= 12 ? 50 : rowCount <= 24 ? 40 : 30;
+      const twoLine = cellH >= 40;
+      const marginGap = 8;
+      // Row labels: the name at 12px, the head count under it at 10.5px.
+      const nameChars = Math.max(...lines.map((line) => line.label.length));
+      const labelNeed = Math.max(nameChars * 7.3, 11 * 6.2) + 26;
+      const labelW = Math.round(Math.max(88, Math.min(labelNeed, Math.max(88, width * 0.3))));
+      const available = width - labelW - (model.showAllCol ? marginGap : 0);
+      const cellW = Math.max(58, Math.min(168, Math.floor(available / columns.length)));
+      const gridW = labelW + columns.length * cellW + (model.showAllCol ? marginGap : 0);
+      const top = 34;
+      const gridH = rowCount * cellH + (model.showAllRow ? marginGap : 0);
+      const height = top + gridH + 2;
+      const colX = (i) => labelW + i * cellW + (model.showAllCol && i === columns.length - 1 ? marginGap : 0);
+      const rowY = (j) => top + j * cellH + (model.showAllRow && j === rowCount - 1 ? marginGap : 0);
+      const dataCells = rowCount * columns.length;
+      const focusable = dataCells <= HEATMAP_MAX_FOCUSABLE;
+
+      let inner = vizText(labelW - 12, top - 12, dim.label.toUpperCase(), { className: "hm-corner", anchor: "end" });
+      columns.forEach((subject, i) => {
+        const x = colX(i) + cellW / 2;
+        inner += vizText(x, top - 12, heatmapColumnLabel(subject, cellW), { className: "viz-tick is-band" + (subject === HEATMAP_ALL ? " hm-margin-head" : ""), anchor: "middle" });
+      });
+
+      lines.forEach((line, j) => {
+        const y = rowY(j);
+        const cy = y + cellH / 2;
+        const isMarginRow = line.key === HEATMAP_ALL;
+        const labelClass = "hm-row-label" + (isMarginRow ? " is-margin" : "");
+        const label = heatmapFit(line.label, labelW - 20, 7.3);
+        const sub = formatInteger(line.students) + (line.students === 1 ? " student" : " students");
+        // A name too long for one line takes two in a tall row (the head
+        // count then gives way to it) rather than being cut.
+        const wrapped = twoLine && label !== line.label ? heatmapWrap(line.label, labelW - 20, 2, 7.3) : null;
+        if (wrapped && wrapped.length === 2) {
+          inner += vizText(labelW - 12, cy - 7, wrapped[0], { className: labelClass, anchor: "end", baseline: "central" });
+          inner += vizText(labelW - 12, cy + 8, wrapped[1], { className: labelClass, anchor: "end", baseline: "central" });
+        } else if (twoLine) {
+          inner += vizText(labelW - 12, cy - 7, label, { className: labelClass, anchor: "end", baseline: "central" });
+          inner += vizText(labelW - 12, cy + 9, sub, { className: "hm-row-sub", anchor: "end", baseline: "central" });
+        } else {
+          inner += vizText(labelW - 12, cy, label, { className: labelClass, anchor: "end", baseline: "central" });
+        }
+        columns.forEach((subject, i) => {
+          const cell = subject === HEATMAP_ALL ? line.all : line.cells.get(subject);
+          const x = colX(i);
+          const empty = !cell.n || !isFiniteNumber(cell.value);
+          const level = heatmapClass(metric, cell.value);
+          const fill = heatmapClassColor(metric, level);
+          const thin = !empty && vizIsThin(cell.n);
+          inner += vizHeatCell(x, y, cellW, cellH, {
+            fill,
+            empty,
+            thin,
+            tip: heatmapCellTip(model, line, subject, cell),
+            focusable: focusable && !empty,
+            radius: 4
+          });
+          if (empty) return;
+          // The value, then the records it rests on. Text wears the ink that
+          // clears 4.5:1 on the fill; on a hatched cell it also takes a halo
+          // of the fill so the hatch never runs through the figures.
+          const ink = vizColor.textOn(fill);
+          const halo = thin ? ' stroke="' + escapeAttr(fill) + '"' : "";
+          const cx = x + cellW / 2;
+          const room = cellW - 10;
+          const big = cell.text.length * 8.2 <= room;
+          const small = cell.text.length * 6.6 <= room;
+          if (big || small) {
+            inner += '<text class="hm-cell-value' + (big ? "" : " is-small") + (thin ? " is-haloed" : "") + '" x="' + vizNum(cx) + '" y="' + vizNum(twoLine ? cy - 7 : cy) +
+              '" text-anchor="middle" dominant-baseline="central" fill="' + escapeAttr(ink) + '"' + halo + ">" + escapeHTML(cell.text) + "</text>";
+          }
+          if (twoLine) {
+            inner += '<text class="hm-cell-n' + (thin ? " is-haloed" : "") + '" x="' + vizNum(cx) + '" y="' + vizNum(cy + 10) +
+              '" text-anchor="middle" dominant-baseline="central" fill="' + escapeAttr(ink) + '"' + halo + ">n = " + escapeHTML(formatInteger(cell.n)) + "</text>";
+          }
+        });
+      });
+
+      const frame = heatmapFrame(inner, {
+        width: gridW,
+        height,
+        fixed: true,
+        className: "hm-svg",
+        ariaLabel: metric.name + " by " + dim.label.toLowerCase() + " and subject. " + heatmapMatrixTakeaway(model),
+        desc: "Rows are " + dim.plural + (model.showAllRow ? ", with an All row at the foot" : "") + "; columns are subjects" +
+          (model.showAllCol ? ", with an All column at the end" : "") + ". Each cell shows the value and the number of records behind it." +
+          (focusable ? " Tab through the cells to hear each one." : " The table under the chart lists every value.")
+      });
+      return '<div class="hm-scroll-x">' + frame + "</div>" +
+        (gridW > width ? '<p class="hm-scroll-hint">Scroll the grid sideways for every column.</p>' : "");
+    }
+
+    function heatmapMatrixTable(model) {
+      const { metric, dim, subjects } = model;
+      const columns = [{ key: "label", label: dim.label }];
+      subjects.concat(model.showAllCol ? [HEATMAP_ALL] : []).forEach((subject) => {
+        columns.push({
+          key: subject,
+          label: subject === HEATMAP_ALL ? "All subjects" : subject,
+          numeric: true,
+          // A thin share is already a count ("7 of 9"), so it carries its n.
+          format: (cell) => {
+            if (!cell || !cell.n || !isFiniteNumber(cell.value)) return "\u2013";
+            return cell.share && vizIsThin(cell.n) ? cell.text : cell.text + " (" + formatInteger(cell.n) + ")";
+          },
+          thin: (row) => Boolean(row[subject]) && row[subject].n > 0 && vizIsThin(row[subject].n)
+        });
+      });
+      const toRow = (line) => {
+        const out = { label: line.label };
+        subjects.forEach((subject) => { out[subject] = line.cells.get(subject); });
+        out[HEATMAP_ALL] = line.all;
+        return out;
+      };
+      const rows = model.groups.map(toRow).concat(model.showAllRow ? [toRow(model.all)] : []);
+      return vizTable({
+        caption: metric.name + " by " + dim.label.toLowerCase() + " and subject. Each cell: value (records).",
+        columns,
+        rows
+      });
+    }
+
+    function heatmapWindowText(metric) {
+      if (!metric.growth) return "Scores from " + currentWindowName() + ".";
+      const info = state.dataWindow;
+      return "Growth from " + (info.priorWindowLabel || "the prior window") + " to " + (info.currentWindowLabel || "the current window") +
+        (info.mode === "mixed" ? ", records with both windows only." : ".");
+    }
+
+    function renderHeatmapMatrix() {
+      const wrap = document.getElementById("heatmapMatrix");
+      if (!wrap) return;
+      heatmapLoadView();
+      const rows = state.filteredRows;
+      if (!rows.length) {
+        wrap.innerHTML = vizEmpty("No records in this view. Clear a filter to fill the grid.");
+        return;
+      }
+      const metrics = heatmapMetricsFor();
+      const metric = heatmapPick(metrics, heatmapView.metric);
+      if (!metric) {
+        wrap.innerHTML = vizEmpty("This file has no percentiles or growth measures to map.");
+        return;
+      }
+      const dims = heatmapDimensionsFor(rows);
+      // With one class, one teacher and one grade in view there is nothing to
+      // put in rows but the view itself - still worth a row, for the subjects.
+      const onlyClass = unique(rows.map((row) => row.className));
+      const namedClass = onlyClass.length === 1 && onlyClass[0] !== "Missing" ? onlyClass[0] : "";
+      const dim = heatmapPick(dims, heatmapView.rows) || {
+        key: "view",
+        label: namedClass ? "Class" : "Group",
+        plural: "groups",
+        get: () => "This view",
+        format: () => namedClass || "This view"
+      };
+      const model = heatmapMatrixModel(rows, dim, metric);
+      // Room held for the chart before it draws: the key, the header and one
+      // row height per line, so a one-row grid does not leave a gap under it.
+      const lineCount = model.groups.length + (model.showAllRow ? 1 : 0);
+      const estimate = 60 + 34 + lineCount * (lineCount <= 12 ? 50 : lineCount <= 24 ? 40 : 30);
+
+      const controls = [];
+      if (dims.length > 1) {
+        controls.push(vizSegmented({ name: "heatmap-rows", label: "Rows", value: dim.key, options: dims.map((item) => ({ value: item.key, label: item.label })) }));
+      }
+      if (metrics.length > 1) {
+        controls.push(vizSegmented({ name: "heatmap-metric", label: "Colour by", value: metric.key, options: metrics.map((item) => ({ value: item.key, label: item.control })) }));
+      }
+      const single = !dims.length
+        ? " Everything in view is one class, one teacher and one grade, so the grid has a single row; load or filter to more than one to compare groups."
+        : "";
+      const card = vizCard({
+        eyebrow: (dims.length ? dim.plural : "subjects") + (dims.length ? " \u00d7 subjects" : ""),
+        title: metric.name + " by " + (dims.length ? dim.label.toLowerCase() + " and " : "") + "subject",
+        sub: heatmapWindowText(metric) + " Each cell shows the value, then n, the records it rests on." + single,
+        // The key's colours are resolved, so they are read inside the draw,
+        // which the kit repeats on a theme flip and for a print.
+        body: vizChartSlot((width) => {
+          const classes = heatmapKeyClasses(metric);
+          return '<div class="hm-legend-row">' + heatmapKeyHTML(metric.keyTitle, classes, heatmapKeySpoken(metric.keyTitle, classes)) + heatmapMarksLegend() + "</div>" +
+            heatmapMatrixSVG(model, width);
+        }, { minHeight: Math.min(640, estimate) }),
+        note: heatmapMatrixRead(model),
+        table: vizTableToggle(heatmapMatrixTable(model)),
+        wide: true,
+        className: "hm-card"
+      });
+      vizMount(wrap, (controls.length ? vizControls(controls) : "") + '<div class="viz-grid">' + card + "</div>");
+    }
+
+    // ---------------------------------------------------------------------
+    // The area grid
+    // ---------------------------------------------------------------------
+    function heatmapAreaSubjects(rows) {
+      return getOverviewBuckets(rows.filter((row) => row.hasInstructionalAreas && isFiniteNumber(row.currentRIT)), "subject");
+    }
+
+    // One row per student: their latest sitting of this subject in view (the
+    // one a teacher acts on), with how many sittings there were.
+    function heatmapAreaModel(rows, subject) {
+      const usable = rows.filter((row) => row.subject === subject && row.hasInstructionalAreas && isFiniteNumber(row.currentRIT));
+      if (!usable.length) return null;
+      const floor = areaNoiseFloor(usable).floor;
+      const byStudent = new Map();
+      usable.forEach((row) => {
+        const key = studentKey(row);
+        if (!byStudent.has(key)) byStudent.set(key, []);
+        byStudent.get(key).push(row);
+      });
+      const students = [...byStudent.values()].map((list) => {
+        const row = list.reduce((best, item) => (sittingOrder(item) > sittingOrder(best) ? item : best), list[0]);
+        const areas = new Map();
+        row.instructionalAreas.forEach((area) => { if (isFiniteNumber(area.delta)) areas.set(area.name, area); });
+        return { row, sittings: list.length, areas };
+      });
+      // Areas keep NWEA's own order: the order they first appear in the
+      // export, which is the goal order on the test.
+      const areaNames = [];
+      students.forEach((student) => student.areas.forEach((area, name) => { if (!areaNames.includes(name)) areaNames.push(name); }));
+      students.sort((a, b) => b.row.currentRIT - a.row.currentRIT || naturalCompare(a.row.studentName, b.row.studentName));
+      const medians = areaNames.map((name) => {
+        const deltas = students.map((student) => student.areas.get(name)).filter(Boolean).map((area) => area.delta);
+        const five = vizStats.fiveNumber(deltas);
+        return { name, n: deltas.length, median: five ? five.median : null, q1: five ? five.q1 : null, q3: five ? five.q3 : null };
+      });
+      return {
+        subject,
+        floor,
+        students,
+        areaNames,
+        medians,
+        medianRIT: vizStats.quantile(students.map((student) => student.row.currentRIT), 0.5)
+      };
+    }
+
+    // Grey inside half the noise floor, a light tint up to the floor (still
+    // noise), then the floor and twice the floor. So everything a teacher
+    // should act on is in the two stronger steps, and the Areas section's
+    // flags are exactly the cells with a printed number.
+    function heatmapAreaClass(delta, floor) {
+      if (!isFiniteNumber(delta)) return null;
+      const size = Math.abs(delta);
+      const step = size >= 2 * floor ? 3 : size >= floor ? 2 : size >= floor / 2 ? 1 : 0;
+      return delta < 0 ? -step : step;
+    }
+
+    function heatmapAreaKey(floor) {
+      const colors = [];
+      for (let level = -3; level <= 3; level += 1) colors.push(vizColor.diverging(level / 3));
+      const cut = [2 * floor, floor, floor / 2];
+      const edges = cut.map((value) => heatmapSigned(-value, 1)).concat(cut.slice().reverse().map((value) => heatmapSigned(value, 1)));
+      return { colors, edges, ends: null };
+    }
+
+    // Where the gap sits. For the area with the most students at or beyond
+    // the floor below their own level, how those students split between the
+    // top and bottom half of the class by overall RIT.
+    function heatmapAreaRead(model) {
+      const floorText = formatNumber(model.floor, 1) + " RIT";
+      const half = Math.ceil(model.students.length / 2);
+      const counts = model.areaNames.map((name) => {
+        let top = 0;
+        let bottom = 0;
+        let topOf = 0;
+        let bottomOf = 0;
+        model.students.forEach((student, index) => {
+          const area = student.areas.get(name);
+          if (!area) return;
+          if (index < half) topOf += 1; else bottomOf += 1;
+          if (area.delta <= -model.floor) { if (index < half) top += 1; else bottom += 1; }
+        });
+        return { name, top, bottom, topOf, bottomOf, total: top + bottom };
+      }).sort((a, b) => b.total - a.total);
+      const lead = counts[0];
+      if (!lead || lead.total < AREA_GROUP_MIN_STUDENTS) {
+        return "No area has " + AREA_GROUP_MIN_STUDENTS + " or more students at least " + floorText +
+          " below their own overall score, so most of this grid sits inside the noise floor. The class median row is the part to read.";
+      }
+      let where = "spread through the class";
+      if (lead.top >= 2 * Math.max(1, lead.bottom)) where = "mostly in the top half of the class";
+      else if (lead.bottom >= 2 * Math.max(1, lead.top)) where = "mostly in the bottom half of the class";
+      return lead.name + " has the most students at least " + floorText + " below their own level: " +
+        formatInteger(lead.top) + " of " + formatInteger(lead.topOf) + " in the top half by overall RIT and " +
+        formatInteger(lead.bottom) + " of " + formatInteger(lead.bottomOf) + " in the bottom half, so the gap sits " + where +
+        ". With groups this size read it as a lead to check, not a finding.";
+    }
+
+    function heatmapAreaSVGs(model, width) {
+      const { students, areaNames, medians, floor } = model;
+      const tall = students.length > HEATMAP_TALL_ROWS;
+      const nameChars = Math.max(12, ...students.map((student) => String(student.row.studentName).length));
+      const nameW = Math.round(Math.max(96, Math.min(nameChars * 6.9 + 30, Math.max(96, width * 0.3))));
+      const ritW = 48;
+      const left = nameW + ritW;
+      const cellW = Math.max(50, Math.min(172, Math.floor((width - left - (tall ? 14 : 0)) / Math.max(1, areaNames.length))));
+      const gridW = left + areaNames.length * cellW;
+      // Area names wrap onto up to three lines; where even that will not fit
+      // they become A1, A2... with the full names listed under the grid.
+      const wrapped = areaNames.map((name) => heatmapWrap(name, cellW - 10, 3, VIZ_CHAR_PX));
+      const coded = wrapped.some((lines) => !lines);
+      const headLines = coded ? 1 : Math.max(1, ...wrapped.map((lines) => lines.length));
+      const headH = headLines * 13 + 14;
+      const medianH = 32;
+      const rowH = students.length > 40 ? 22 : 24;
+      const colX = (i) => left + i * cellW;
+      const studentCells = students.length * areaNames.length;
+      const focusStudents = studentCells <= HEATMAP_MAX_FOCUSABLE;
+      const subjectWord = model.subject.toLowerCase();
+
+      // Head: area names, then the class median row.
+      let head = vizText(nameW - 10, headH - 10, "STUDENT", { className: "hm-corner", anchor: "end" }) +
+        vizText(left - 8, headH - 10, "RIT", { className: "hm-corner", anchor: "end" });
+      areaNames.forEach((name, i) => {
+        const cx = colX(i) + cellW / 2;
+        if (coded) {
+          head += vizText(cx, headH - 10, "A" + (i + 1), { className: "viz-tick is-band", anchor: "middle" });
+        } else {
+          const lines = wrapped[i];
+          lines.forEach((line, k) => {
+            head += vizText(cx, headH - 10 - (lines.length - 1 - k) * 13, line, { className: "viz-tick is-band", anchor: "middle" });
+          });
+        }
+      });
+      const my = headH;
+      head += vizText(nameW - 10, my + medianH / 2, "Class median", { className: "hm-row-label is-margin", anchor: "end", baseline: "central" });
+      head += vizText(left - 8, my + medianH / 2, formatNumber(model.medianRIT, 1), { className: "hm-rit is-margin", anchor: "end", baseline: "central" });
+      medians.forEach((entry, i) => {
+        const level = heatmapAreaClass(entry.median, floor);
+        const fill = level === null ? VIZ_EMPTY : vizColor.diverging(level / 3);
+        const thin = entry.n > 0 && vizIsThin(entry.n);
+        const rows = [
+          ["Median difference", heatmapSigned(entry.median, 1) + " RIT"],
+          ["Students", formatInteger(entry.n)]
+        ];
+        if (entry.n >= 4) rows.splice(1, 0, ["Middle half", heatmapSigned(entry.q1, 1) + " to " + heatmapSigned(entry.q3, 1)]);
+        head += vizHeatCell(colX(i), my, cellW, medianH, {
+          fill,
+          empty: !entry.n,
+          thin,
+          label: entry.n ? heatmapSigned(entry.median, 1) : "",
+          tip: vizTip("Class median \u00b7 " + entry.name, rows, thin ? vizThinNote(entry.n) : "Area RIT minus each student's own overall " + subjectWord + " RIT; the Areas section tests this with a confidence interval."),
+          focusable: entry.n > 0,
+          radius: 4
+        });
+      });
+      const headHeight = my + medianH + 8;
+      const headSVG = heatmapFrame(head, {
+        width: gridW,
+        height: headHeight,
+        fixed: true,
+        className: "hm-svg",
+        ariaLabel: "Class median for each " + model.subject + " area against the students' own overall RIT",
+        desc: medians.map((entry) => entry.name + " " + heatmapSigned(entry.median, 1)).join("; ") + "."
+      });
+
+      // Body: one row per student, highest overall RIT first.
+      let body = "";
+      let beyond = 0;
+      let below = 0;
+      students.forEach((student, j) => {
+        const y = j * rowH;
+        const cy = y + rowH / 2;
+        const row = student.row;
+        body += vizText(nameW - 10, cy, heatmapFit(row.studentName, nameW - 18, 6.9), { className: "hm-student", anchor: "end", baseline: "central" });
+        body += vizText(left - 8, cy, formatNumber(row.currentRIT, 0), { className: "hm-rit", anchor: "end", baseline: "central" });
+        areaNames.forEach((name, i) => {
+          const area = student.areas.get(name);
+          if (!area) {
+            body += vizHeatCell(colX(i), y, cellW, rowH, { empty: true, radius: 3, tip: vizTip(row.studentName + " \u00b7 " + name, [], "No score for this area."), focusable: false });
+            return;
+          }
+          const level = heatmapAreaClass(area.delta, floor);
+          const fill = vizColor.diverging(level / 3);
+          const flagged = Math.abs(area.delta) >= floor;
+          if (flagged) { beyond += 1; if (area.delta < 0) below += 1; }
+          const rows = [
+            ["Area RIT", formatNumber(area.rit, 0) + (area.range ? " (" + area.range + ")" : "")],
+            ["Overall RIT", formatNumber(row.currentRIT, 0)],
+            ["Difference", heatmapSigned(area.delta, 0) + " RIT"]
+          ];
+          if (student.sittings > 1) rows.push(["Sittings in view", formatInteger(student.sittings) + ", latest shown"]);
+          const note = flagged
+            ? (area.delta < 0 ? "Beyond the \u00b1" + formatNumber(floor, 1) + " RIT noise floor: behind the rest of what this student can do in " + subjectWord + "."
+              : "Beyond the \u00b1" + formatNumber(floor, 1) + " RIT noise floor: ahead of the rest of this student's " + subjectWord + ".")
+            : "Within the \u00b1" + formatNumber(floor, 1) + " RIT noise floor: measurement noise, not a profile.";
+          body += vizHeatCell(colX(i), y, cellW, rowH, {
+            fill,
+            label: flagged ? heatmapSigned(area.delta, 0) : "",
+            tip: vizTip(row.studentName + " \u00b7 " + name, rows, note),
+            focusable: focusStudents,
+            radius: 3
+          });
+        });
+      });
+      const bodyHeight = students.length * rowH + 2;
+      const bodySVG = heatmapFrame(body, {
+        width: gridW,
+        height: bodyHeight,
+        fixed: true,
+        className: "hm-svg",
+        ariaLabel: formatInteger(students.length) + " students, highest overall " + subjectWord + " RIT first. " + formatInteger(beyond) +
+          " area scores sit at or beyond the " + formatNumber(floor, 1) + " RIT noise floor, " + formatInteger(below) + " of them below the student's own level.",
+        desc: "Each cell is one instructional area minus that student's overall RIT. Gold is below their own level, purple above, grey within noise; numbers mark the differences at or beyond the noise floor." +
+          (focusStudents ? "" : " The table under the chart lists every value.")
+      });
+      const key = coded
+        ? '<ol class="hm-area-key">' + areaNames.map((name, i) => "<li><b>A" + (i + 1) + "</b> " + escapeHTML(name) + "</li>").join("") + "</ol>"
+        : "";
+      return '<div class="hm-scroll-x"><div class="hm-area-grid" style="width:' + vizNum(gridW + (tall ? 14 : 0)) + 'px">' + headSVG +
+        '<div class="hm-area-body' + (tall ? " is-tall" : "") + '"' + (tall ? ' tabindex="0" role="region" aria-label="' + escapeAttr("Student rows, scrollable") + '"' : "") + ">" +
+        bodySVG + "</div></div></div>" +
+        (gridW + (tall ? 14 : 0) > width ? '<p class="hm-scroll-hint">Scroll the grid sideways for every area.</p>' : "") + key;
+    }
+
+    function heatmapAreaTable(model) {
+      const columns = [{ key: "name", label: "Student" }, { key: "rit", label: "Overall RIT", numeric: true, format: (value) => formatNumber(value, 1) }];
+      model.areaNames.forEach((name, i) => {
+        columns.push({ key: "a" + i, label: name, numeric: true, format: (value) => (isFiniteNumber(value) ? heatmapSigned(value, 1) : "\u2013") });
+      });
+      const medianRow = { name: "Class median", rit: model.medianRIT };
+      model.medians.forEach((entry, i) => { medianRow["a" + i] = entry.median; });
+      const rows = [medianRow].concat(model.students.map((student) => {
+        const out = { name: student.row.studentName, rit: student.row.currentRIT };
+        model.areaNames.forEach((name, i) => {
+          const area = student.areas.get(name);
+          out["a" + i] = area ? area.delta : null;
+        });
+        return out;
+      }));
+      return vizTable({
+        caption: model.subject + ": area RIT minus each student's own overall RIT, highest overall RIT first",
+        columns,
+        rows
+      });
+    }
+
+    function renderHeatmapAreas() {
+      const wrap = document.getElementById("heatmapAreas");
+      if (!wrap) return;
+      heatmapLoadView();
+      // Only a Class Profile export carries instructional areas; without one
+      // this half of the section does not exist.
+      if (!hasStrandData()) {
+        wrap.hidden = true;
+        wrap.innerHTML = "";
+        return;
+      }
+      wrap.hidden = false;
+      const lead = '<div class="subsection-title">Student areas</div>' +
+        '<p class="subsection-lead">Every student\u2019s instructional areas against their own overall RIT, highest overall score first, with the class median on top. ' +
+        "The Areas section tests the class pattern and names the teaching groups; this grid shows where in the class a gap sits.</p>";
+      const subjects = heatmapAreaSubjects(state.filteredRows);
+      if (!subjects.length) {
+        wrap.innerHTML = lead + vizEmpty("No records in this view carry instructional area scores. They come from a Class Profile export; clear a filter or load one alongside your ASG file.");
+        return;
+      }
+      const subject = subjects.includes(heatmapView.area) ? heatmapView.area : subjects[0];
+      const model = heatmapAreaModel(state.filteredRows, subject);
+      const controls = subjects.length > 1
+        ? vizControls([vizSegmented({ name: "heatmap-area", label: "Subject", value: subject, options: subjects.map((item) => ({ value: item, label: item })) })])
+        : "";
+      const floorText = formatNumber(model.floor, 1) + " RIT";
+      const keyTitle = "Area RIT minus own overall RIT";
+      const card = vizCard({
+        eyebrow: "Instructional areas \u00b7 " + formatInteger(model.students.length) + (model.students.length === 1 ? " student" : " students"),
+        title: subject + ": each student\u2019s areas against their own overall RIT",
+        sub: "Gold is below the student\u2019s own level, purple above. Numbers mark the differences of at least " + floorText +
+          ", the noise floor in this file; lighter tints are inside it.",
+        body: vizChartSlot((width) => {
+          const classes = heatmapAreaKey(model.floor);
+          return '<div class="hm-legend-row">' + heatmapKeyHTML(keyTitle, classes, heatmapKeySpoken(keyTitle, classes)) + heatmapMarksLegend() + "</div>" +
+            heatmapAreaSVGs(model, width);
+        }, { minHeight: 260 }),
+        note: heatmapAreaRead(model),
+        table: vizTableToggle(heatmapAreaTable(model)),
+        wide: true,
+        className: "hm-card"
+      });
+      vizMount(wrap, lead + controls + '<div class="viz-grid">' + card + "</div>");
+    }
+
+    // ---------------------------------------------------------------------
+    // Section entry points
+    // ---------------------------------------------------------------------
+    function heatmapWire(section) {
+      if (!section || section.dataset.heatmapWired) return;
+      section.dataset.heatmapWired = "true";
+      section.addEventListener("viz-change", (event) => {
+        const detail = event.detail || {};
+        const hadFocus = section.contains(document.activeElement);
+        if (detail.name === "heatmap-rows") {
+          heatmapView.rows = detail.value;
+          vizPref.set("heatmap.rows", detail.value);
+          renderHeatmapMatrix();
+        } else if (detail.name === "heatmap-metric") {
+          heatmapView.metric = detail.value;
+          vizPref.set("heatmap.metric", detail.value);
+          renderHeatmapMatrix();
+        } else if (detail.name === "heatmap-area") {
+          heatmapView.area = detail.value;
+          vizPref.set("heatmap.area", detail.value);
+          renderHeatmapAreas();
+        } else {
+          return;
+        }
+        observeReveals();
+        // The re-render replaced the control; keep the keyboard where it was.
+        if (hadFocus) {
+          const again = section.querySelector('[data-viz-control="' + cssEscape(detail.name) + '"] [aria-checked="true"]');
+          if (again) again.focus({ preventScroll: true });
+        }
+      });
+      const exportButton = document.getElementById("exportHeatmapBtn");
+      if (exportButton) exportButton.addEventListener("click", exportHeatmap);
+    }
+
+    function renderHeatmap() {
+      const section = document.getElementById("sec-heatmap");
+      if (!section) return;
+      heatmapWire(section);
+      renderHeatmapMatrix();
+      renderHeatmapAreas();
+    }
+
+    // Every metric for the rows in view, margins included: the grid a data
+    // lead would rebuild in a spreadsheet. A share under MIN_SHARE_N records
+    // keeps its count and leaves the percentage blank, the page-wide rule.
+    function exportHeatmap() {
+      heatmapLoadView();
+      const rows = state.filteredRows;
+      if (!rows.length) {
+        toast("No records in this view to export.", "info");
+        return;
+      }
+      const dims = heatmapDimensionsFor(rows);
+      const dim = heatmapPick(dims, heatmapView.rows) || { key: "view", label: "Group", plural: "groups", get: () => "This view", format: () => "This view" };
+      const metrics = heatmapMetricsFor();
+      const models = metrics.map((metric) => heatmapMatrixModel(rows, dim, metric));
+      if (!models.length) {
+        toast("No percentiles or growth measures in this view to export.", "info");
+        return;
+      }
+      const base = models[0];
+      const lines = [];
+      base.groups.concat(base.showAllRow ? [base.all] : []).forEach((line, lineIndex) => {
+        base.subjects.concat(base.showAllCol ? [HEATMAP_ALL] : []).forEach((subject) => {
+          const record = { group: line.label, subject: subject === HEATMAP_ALL ? "All subjects" : subject, metrics: {} };
+          models.forEach((model) => {
+            const source = lineIndex < model.groups.length ? model.groups[lineIndex] : model.all;
+            record.metrics[model.metric.key] = subject === HEATMAP_ALL ? source.all : source.cells.get(subject);
+          });
+          lines.push(record);
+        });
+      });
+      const columns = [
+        ["Rows by", () => dim.label],
+        [dim.label, (line) => line.group],
+        ["Subject", (line) => line.subject]
+      ];
+      metrics.forEach((metric) => {
+        const cell = (line) => line.metrics[metric.key];
+        if (metric.share) {
+          columns.push([metric.name + " - count", (line) => cell(line).share.n]);
+          columns.push([metric.name + " - of", (line) => cell(line).share.of]);
+          columns.push([metric.name + " - %", (line) => (cell(line).share.of >= MIN_SHARE_N ? Number(cell(line).value.toFixed(1)) : "")]);
+        } else {
+          columns.push([metric.name, (line) => (isFiniteNumber(cell(line).value) ? Number(cell(line).value.toFixed(2)) : "")]);
+          columns.push([metric.nLabel, (line) => cell(line).n]);
+        }
+      });
+      columns.push(["Note", (line) => (metrics.some((metric) => { const c = line.metrics[metric.key]; return c.n > 0 && vizIsThin(c.n); })
+        ? "Rests on fewer than " + MIN_SHARE_N + " records for at least one measure: a description of these students, not a pattern; shares there are left as counts."
+        : "")]);
+      exportCSV("heatmap", lines, columns);
+    }
+    // ---- end AISA: Heatmap ----
+
     function renderCrossSubject() {
       if (!els.crossSubjectTable) return;
       const profiles = crossSubjectProfiles();
@@ -15076,6 +16288,15 @@ Suggested next steps: prioritize Intensive Support and Targeted Support students
         what: "For every student with two or more subjects: their strongest and weakest subject, the spread between them in percentile points, and in a growth file the same comparison for conditional growth.",
         read: "A spread of 30 points or more is an uneven profile. It usually means a different group in one subject than another, not a different child.",
         act: "Use it when grouping: a student who is secure in reading and intensive in maths belongs in two different groups, and one grouping decision will not carry the day."
+      },
+      "sec-heatmap": {
+        what: "A grid with a row for each class, teacher or grade in view and a column for each subject, plus an All row and column, coloured by the measure you pick: median percentile, the share at or above the 61st percentile, and in a growth file the share that met projection, median conditional growth percentile or mean RIT change. With a Class Profile export, a second grid shows every student's instructional areas against their own overall RIT, class median on top.",
+        read: "On the level measures the stronger the purple, the higher the value. Conditional growth and RIT change run either side of a centre: gold below CGP 50 or below no change, purple above, grey close to it. The colour steps are fixed, so a colour means the same after a filter. Every cell prints the records behind it; a hatched cell rests on fewer than 10, and a share there prints as a count. A difference between two cells describes the students in them; it is not a tested finding.",
+        act: "Start with the palest or most gold cell and ask what is different about that group in that subject before deciding it is the teaching. In the area grid, read down a column: a gap only near the top of the class calls for extension work in that strand, a gap all the way down for a whole-class reteach.",
+        baseline: {
+          what: "A grid with a row for each class, teacher or grade in view and a column for each subject, plus an All row and column, coloured by median percentile or by the share at or above the 61st percentile. With a Class Profile export, a second grid shows every student's instructional areas against their own overall RIT, class median on top.",
+          read: "With one test window this shows where each group starts, not how far it has moved. The stronger the purple, the higher the value, and the colour steps are fixed, so a colour means the same after a filter. A hatched cell rests on fewer than 10 records, and a share there prints as a count. A difference between two cells describes the students in them; it is not a tested finding."
+        }
       },
       "sec-strands": {
         what: "From a Class Profile export only: the instructional areas within each subject where the class stands out as a strength or a gap, and the students whose own area score sits well below their overall score.",
