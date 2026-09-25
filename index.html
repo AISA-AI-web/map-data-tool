@@ -5000,6 +5000,10 @@
          slots 1-3, all pairs          CVD 20.2 / 21.3, normal 25.2 / 21.8
          the four subject slots, all   CVD 13.7 / 10.0, normal 20.7 / 18.2
          (so a scatter coloured by subject is legal with four series)
+       Those figures hold only for the colours as painted: a categorical
+       mark is drawn at full opacity. At 62% over the panel the same four
+       failed (Language and Science ran together; dark Reading fell to 2:1),
+       so overlap is shown with the surface ring, never with transparency.
        Slots 1 and 2 are the brand purple and gold exactly as the brand lead
        set them, and both sit outside the method's lightness band (purple far
        below it in light, both above it in dark). That is the one documented
@@ -5018,8 +5022,12 @@
       --viz-cat-3: #299fcd;
       --viz-cat-4: #7c3aed;
       --viz-cat-5: #b70385;
-      /* "Other", and the de-emphasised marks of an emphasis chart. */
-      --viz-other: #aba9b8;
+      /* "Other", and the de-emphasised marks of an emphasis chart. Often
+         those marks are the data itself (one grey dot per student around a
+         purple median), so the grey clears the 3:1 a mark needs on the
+         panel in both themes (3.5:1 here, 5.0:1 dark) while still reading
+         as the quiet layer. */
+      --viz-other: #8a8799;
       /* Sequential purple, 0 = least. Light runs pale to the brand purple;
          the dark theme runs the other way (near the panel to lavender), so
          "more" always means "more contrast with the surface". */
@@ -5049,6 +5057,18 @@
       --viz-after: var(--viz-cat-1);
       /* A cell or bar with no value. */
       --viz-empty: var(--slate-soft);
+      /* The edge of a dot filled with a light NWEA band colour. Yellow and
+         Orange are 1.75:1 and 2.63:1 on white, under the 3:1 a mark needs,
+         so on the light panel they are outlined in their own ink (the
+         light --yellow-ink / --orange-ink, written out so a print from the
+         dark theme keeps them) instead of the panel ring; the fill itself
+         never changes. On the dark panel
+         the fills already clear 3:1 and keep the usual ring. */
+      --viz-edge-yellow: #854d0e;
+      --viz-edge-orange: #9a3412;
+      /* The same for a dot in the gold series (slot 2), 1.95:1 on white. */
+      --viz-edge-gold: #7A5A12;
+      --viz-edge-w: 1.25px;
       /* Chart chrome. Gridlines are the lightest line in the purple family,
          the baseline the brand border; both solid hairlines, never dashed. */
       --viz-surface: var(--panel);
@@ -5076,7 +5096,7 @@
          that one measures dE 8.8, which full-colour readers cannot separate. */
       --viz-cat-4: #856af5;
       --viz-cat-5: #d51ec3;
-      --viz-other: #5b586b;
+      --viz-other: #86829a;
       --viz-seq-0: #302853;
       --viz-seq-1: #4a3c7f;
       --viz-seq-2: #6351af;
@@ -5101,6 +5121,10 @@
       --viz-tip-text: #ffffff;
       --viz-tip-muted: #cfc9e0;
       --viz-tip-line: rgba(191, 168, 250, 0.28);
+      --viz-edge-yellow: var(--viz-surface);
+      --viz-edge-orange: var(--viz-surface);
+      --viz-edge-gold: var(--viz-surface);
+      --viz-edge-w: 2px;
     }
 
     @media (prefers-color-scheme: dark) {
@@ -5111,7 +5135,7 @@
         --viz-cat-3: #117298;
         --viz-cat-4: #856af5;
         --viz-cat-5: #d51ec3;
-        --viz-other: #5b586b;
+        --viz-other: #86829a;
         --viz-seq-0: #302853;
         --viz-seq-1: #4a3c7f;
         --viz-seq-2: #6351af;
@@ -5136,6 +5160,10 @@
         --viz-tip-text: #ffffff;
         --viz-tip-muted: #cfc9e0;
         --viz-tip-line: rgba(191, 168, 250, 0.28);
+        --viz-edge-yellow: var(--viz-surface);
+        --viz-edge-orange: var(--viz-surface);
+        --viz-edge-gold: var(--viz-surface);
+        --viz-edge-w: 2px;
       }
     }
 
@@ -5244,6 +5272,7 @@
     }
 
     .viz-band { fill: var(--viz-band-fill); stroke: none; }
+    .viz-svg .viz-mark.is-edged { stroke-width: var(--viz-edge-w); }
     .viz-line { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
     .viz-hit { fill: transparent; stroke: none; }
     .viz-thin-hatch { pointer-events: none; }
@@ -5319,6 +5348,7 @@
 
     .viz-swatch.is-line { width: 18px; height: 3px; border-radius: 2px; }
     .viz-swatch.is-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .viz-swatch.is-diamond { width: 9px; height: 9px; margin: 0 1px; border-radius: 1px; transform: rotate(45deg); }
 
     .viz-scale-legend { display: grid; gap: 4px; max-width: 320px; }
 
@@ -5359,6 +5389,10 @@
     }
 
     .viz-tooltip.is-visible { opacity: 1; transform: none; }
+    /* A tip opened by the mouse or the keyboard can be moused onto and read
+       (or its text selected) without it closing; a tapped one lets taps
+       through. */
+    .viz-tooltip.is-visible.is-hoverable { pointer-events: auto; }
     .viz-tip-title { font-weight: 800; margin-bottom: 3px; }
     .viz-tip-row { display: flex; justify-content: space-between; gap: 16px; }
     .viz-tip-label { color: var(--viz-tip-muted); }
@@ -5529,7 +5563,33 @@
     }
 
     /* --- Compact stats table ----------------------------------------------- */
-    .viz-table-scroll { overflow-x: auto; max-width: 100%; }
+    .viz-table-scroll { overflow-x: auto; max-width: 100%; border-radius: 2px; }
+
+    .viz-table-scroll:focus-visible {
+      outline: 2px solid var(--brand);
+      outline-offset: 2px;
+      box-shadow: var(--focus);
+    }
+
+    /* A table wider than its card scrolls sideways. While there is more to
+       the right, the right edge fades, so a clipped column reads as "more
+       this way" rather than as the end of the table. It follows the scroll
+       position, not a clock, so it stays on with reduced motion. */
+    @supports (animation-timeline: scroll()) {
+      .viz-table-scroll,
+      html.no-motion .viz-table-scroll {
+        animation: viz-scroll-cue linear both !important;
+        animation-timeline: scroll(self inline) !important;
+      }
+
+      @keyframes viz-scroll-cue {
+        0%, 94% {
+          -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+          mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+        }
+        100% { -webkit-mask-image: none; mask-image: none; }
+      }
+    }
 
     /* The page's data tables are wide, sticky-headed and sortable; this one
        is small and sits in a card, so it undoes those rules. */
@@ -5541,7 +5601,8 @@
       color: var(--text);
     }
 
-    .viz-table caption {
+    .viz-table-caption {
+      margin: 0;
       padding: 0 0 6px;
       color: var(--muted);
       font-size: 0.7rem;
@@ -5599,6 +5660,45 @@
     }
 
     .viz-table-toggle[open] > summary { margin-bottom: 8px; }
+
+    /* --- Forced colours (Windows High Contrast) -----------------------------
+       The system repaints backgrounds, so a selected segment or a pressed
+       toggle, which says so only with its fill, would look like the rest;
+       it takes the system's highlight pair instead. Legend swatches, scale
+       bars and meters are the key to colours the SVG marks keep, so they
+       keep theirs too. Chart chrome text follows the system text colour. */
+    @media (forced-colors: active) {
+      .viz-seg button[aria-checked="true"],
+      .explorer-toggles button[aria-pressed="true"],
+      .move-way[aria-pressed="true"] {
+        forced-color-adjust: none;
+        background: Highlight;
+        color: HighlightText;
+        outline: 2px solid CanvasText;
+        outline-offset: -2px;
+      }
+
+      .viz-swatch,
+      .viz-scale-bar,
+      .viz-meter,
+      .viz-meter > span,
+      .kpi-tile.is-thin::after {
+        forced-color-adjust: none;
+      }
+
+      /* Figures printed on a fill (a heat cell, a matrix cell, a band
+         segment) keep the ink chosen for that fill. */
+      .viz-svg text:not(.viz-cell-label):not(.hm-cell-value):not(.hm-cell-n):not(.move-cell-count):not(.move-cell-share):not(.move-cell-dash) {
+        fill: CanvasText;
+      }
+
+      .viz-svg .viz-label,
+      .viz-svg .viz-ref-label { stroke: Canvas; }
+
+      .viz-svg .viz-grid-line,
+      .viz-svg .viz-axis-line,
+      .viz-svg .viz-ref-line { stroke: CanvasText; }
+    }
 
     /* --- Print -------------------------------------------------------------
        The kit switches the page to the light tokens for the length of a print
@@ -12670,6 +12770,34 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         return { n: clean.length, mean: m, se, df, t, halfWidth: t * se, lo: m - t * se, hi: m + t * se };
       }
 
+      // The same interval when values come in clusters that move together -
+      // a student's records across subjects, pooled in one class row. Four
+      // records of one child are not four children's worth of evidence, so
+      // the standard error is the cluster-robust one (CR1: each cluster's
+      // residuals summed, squared, and scaled by G / (G - 1)) on G - 1
+      // degrees of freedom, centred on the mean of all the values. With one
+      // value per cluster it is exactly ci95Mean. clusters[i] names value i's
+      // cluster (any key); without it every value is its own.
+      function ci95MeanClustered(values, clusters) {
+        const pairs = [];
+        (Array.isArray(values) ? values : []).forEach((value, i) => {
+          if (isFiniteNumber(value)) pairs.push([value, Array.isArray(clusters) ? clusters[i] : i]);
+        });
+        const n = pairs.length;
+        if (!n) return null;
+        const m = pairs.reduce((sum, pair) => sum + pair[0], 0) / n;
+        const residuals = new Map();
+        pairs.forEach(([value, cluster]) => residuals.set(cluster, (residuals.get(cluster) || 0) + value - m));
+        const g = residuals.size;
+        if (g < 2) return { n, clusters: g, mean: m, se: null, df: 0, t: null, halfWidth: null, lo: null, hi: null };
+        let squares = 0;
+        residuals.forEach((sum) => { squares += sum * sum; });
+        const se = Math.sqrt(squares * g / (g - 1)) / n;
+        const df = g - 1;
+        const t = tCrit95(df);
+        return { n, clusters: g, mean: m, se, df, t, halfWidth: t * se, lo: m - t * se, hi: m + t * se };
+      }
+
       // Pairs that both carry a number. Pearson and OLS read x[i] with y[i],
       // so a blank on either side drops the pair, not just the blank.
       function completePairs(xs, ys) {
@@ -12821,17 +12949,22 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         return size < 0.2 ? "negligible" : size < 0.5 ? "small" : size < 0.8 ? "medium" : "large";
       }
 
-      // "p = 0.03", "p < 0.001". Never "p = 0.000".
+      // "p = 0.03", "p = 0.055", "p < 0.001". Never "p = 0.000", and never a
+      // rounding that carries p across 0.05 or 0.01, the lines the evidence
+      // words are drawn at: 0.0546 prints as 0.055, not as 0.05 beside
+      // "could be chance", and 0.0496 as 0.0496, not 0.050.
       function formatP(p) {
         if (!isFiniteNumber(p)) return "p unavailable";
         if (p < 0.001) return "p < 0.001";
-        if (p < 0.01) return "p = " + p.toFixed(3);
-        return "p = " + p.toFixed(2);
+        let digits = p < 0.1 ? 3 : 2;
+        const crosses = (text) => [0.05, 0.01].some((line) => (p < line) !== (Number(text) < line));
+        while (digits < 5 && crosses(p.toFixed(digits))) digits += 1;
+        return "p = " + p.toFixed(digits);
       }
 
       return {
         numbers, sortedNumbers, quantile, extent, mean, sd, sem, fiveNumber, boxStats, zScores,
-        lnGamma, incompleteBeta, tCDF, tTwoSidedP, tInv, tCrit95, ci95Mean,
+        lnGamma, incompleteBeta, tCDF, tTwoSidedP, tInv, tCrit95, ci95Mean, ci95MeanClustered,
         completePairs, pearson, olsFit, welchTest, pairedTest, cohensD, effectLabel, formatP
       };
     })();
@@ -13280,11 +13413,24 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       // A hidden slot (display:none, width 0) is drawn at the fallback and
       // remembered as 0, so the observer redraws it the moment it shows.
       slot.dataset.vizW = measured ? String(width) : "0";
+      // A keyboard user sitting on a mark keeps their place when the chart is
+      // redrawn under them (a theme flip, a resize): the same mark - found by
+      // its tip, else by its place in the tab order - takes focus back.
+      const active = document.activeElement;
+      let memo = null;
+      if (active && active !== slot && slot.contains(active)) {
+        memo = { tip: active.getAttribute("data-tip"), index: [...slot.querySelectorAll('[tabindex="0"]')].indexOf(active) };
+      }
       try {
         slot.innerHTML = slot.__vizDraw(width) || "";
       } catch (error) {
         console.error("Chart could not be drawn", error);
         slot.innerHTML = vizEmpty("This chart could not be drawn for the current view.");
+      }
+      if (memo) {
+        const stops = [...slot.querySelectorAll('[tabindex="0"]')];
+        const target = (memo.tip && stops.find((stop) => stop.getAttribute("data-tip") === memo.tip)) || (memo.index >= 0 ? stops[memo.index] : null);
+        if (target) target.focus({ preventScroll: true });
       }
     }
 
@@ -13365,6 +13511,18 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       return isFiniteNumber(value) ? String(Math.round(value * 10) / 10) : "0";
     }
 
+    // A signed figure the way every analytical section prints one: a fixed
+    // number of decimals (default 1), so "+7.0" lines up beside "+6.4"; "+"
+    // on a rise and the page's true minus on a fall; and a value that
+    // rounds to zero printed plain ("0", "0.0"), never "-0" or "+0".
+    function vizSigned(value, digits) {
+      if (!isFiniteNumber(value)) return "N/A";
+      const places = Number.isInteger(digits) ? digits : 1;
+      const text = Math.abs(value).toFixed(places);
+      if (!Number(text)) return (0).toFixed(places);
+      return (value > 0 ? "+" : "\u2212") + text;
+    }
+
     // --- Tooltip payloads --------------------------------------------------
     // A tip is plain text: a title line, then "label<TAB>value" rows, then an
     // optional note. The tooltip renders it with textContent, so a student's
@@ -13388,6 +13546,9 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
     // keyboard or screen-reader user gets what the pointer gets. Pass
     // focusable: false for dense marks (a 300-dot beeswarm): the table view
     // carries those values instead of 300 tab stops.
+    // A mark that does something on Enter or a click is a button, not an
+    // image: pass role: "button" with action (what it does, read after the
+    // tip: "Opens the student profile.") and, for a toggle, pressed.
     function vizTipAttrs(tip, options) {
       if (!tip) return "";
       const opts = options || {};
@@ -13397,9 +13558,14 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         const spoken = tip.replace(/\u2063/g, "").replace(/\t/g, ": ").replace(/\n/g, ". ");
         // role: false is for an HTML element that already reads well (a KPI
         // tile): it keeps its own content and gets the tip as a description.
-        out += opts.role === false
-          ? ' tabindex="0" aria-description="' + escapeAttr(spoken) + '"'
-          : ' tabindex="0" role="img" aria-label="' + escapeAttr(opts.label || spoken) + '"';
+        if (opts.role === false) {
+          out += ' tabindex="0" aria-description="' + escapeAttr(spoken) + '"';
+        } else {
+          const button = opts.role === "button";
+          const name = spoken + (button && opts.action ? (/[.!?]$/.test(spoken) ? " " : ". ") + opts.action : "");
+          out += ' tabindex="0" role="' + (button ? "button" : "img") + '" aria-label="' + escapeAttr(name) + '"' +
+            (button && typeof opts.pressed === "boolean" ? ' aria-pressed="' + opts.pressed + '"' : "");
+        }
       }
       return out;
     }
@@ -13410,12 +13576,16 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
     // and escapes every word it is given.
 
     // The outer <svg>. A chart with focusable marks is a group of labelled
-    // images (role="group"); a chart without them is one image with a
-    // <title> and <desc>. The interactive kind skips <title> on purpose:
-    // browsers show a root <title> as a native tooltip that would pop up over
-    // the kit's own. options: { width, height, ariaLabel, desc, className,
-    // fixed } - fixed draws at exactly width x height instead of filling the
-    // container (a sparkline in a tile).
+    // images (role="group"); a chart without them is one image. Either way
+    // the name goes in aria-label and the description in aria-describedby,
+    // never in a root <title>: browsers show a root <title> as a native
+    // tooltip, which would pop up over the kit's own tip on every mark (a
+    // dense chart has tips without tab stops) and over the tile a sparkline
+    // sits in. options: { width, height, ariaLabel, desc, className, fixed,
+    // standalone } - fixed draws at exactly width x height instead of
+    // filling the container (a sparkline in a tile); standalone is for an
+    // SVG saved as a file, where <title> is the file's name for itself and
+    // no page tooltip is in play.
     function vizFrame(inner, options) {
       const opts = options || {};
       const width = opts.width || VIZ_W;
@@ -13425,11 +13595,11 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       const interactive = /\stabindex="0"/.test(inner);
       const cls = "viz-svg" + (opts.fixed ? " is-fixed" : "") + (opts.className ? " " + opts.className : "");
       let head;
-      if (interactive) {
-        head = ' role="group" aria-label="' + escapeAttr(label) + '"' + (descId ? ' aria-describedby="' + descId + '"' : "") + ">";
-      } else {
+      if (opts.standalone) {
         const titleId = vizUid("viz-title");
         head = ' role="img" aria-labelledby="' + titleId + (descId ? " " + descId : "") + '"><title id="' + titleId + '">' + escapeHTML(label) + "</title>";
+      } else {
+        head = ' role="' + (interactive ? "group" : "img") + '" aria-label="' + escapeAttr(label) + '"' + (descId ? ' aria-describedby="' + descId + '"' : "") + ">";
       }
       return '<svg class="' + escapeAttr(cls) + '" viewBox="0 0 ' + vizNum(width) + " " + vizNum(height) +
         (opts.fixed ? '" width="' + vizNum(width) + '" height="' + vizNum(height) : "") +
@@ -13621,14 +13791,21 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
 
     // A data dot: an 8px+ mark with a 2px ring of panel colour (so it reads
     // where it crosses a line or another dot) inside a transparent 24px hit
-    // circle, so nobody has to land on the dot itself.
-    // options: { r (default 4.5), fill, tip, focusable, className, hitR, stroke }
+    // circle, so nobody has to land on the dot itself. shape: "diamond"
+    // draws a diamond of about the same area instead - the second cue for a
+    // pair of states that must not rest on colour alone (met / did not meet).
+    // options: { r (default 4.5), fill, tip, focusable, className, hitR,
+    // stroke, shape, role, action, pressed }
     function vizDot(cx, cy, options) {
       const opts = options || {};
       const r = isFiniteNumber(opts.r) ? opts.r : 4.5;
       const hit = isFiniteNumber(opts.hitR) ? opts.hitR : Math.max(12, r + 6);
-      const dot = '<circle class="viz-mark ' + escapeAttr(opts.className || "viz-dot") + '" cx="' + vizNum(cx) + '" cy="' + vizNum(cy) + '" r="' + vizNum(r) +
-        '" fill="' + escapeAttr(opts.fill || "var(--viz-cat-1)") + '" stroke="' + escapeAttr(opts.stroke || "var(--viz-surface)") + '" stroke-width="2"/>';
+      const paint = '" fill="' + escapeAttr(opts.fill || "var(--viz-cat-1)") + '" stroke="' + escapeAttr(opts.stroke || "var(--viz-surface)") + '" stroke-width="2"/>';
+      const d = r * 1.3;
+      const dot = opts.shape === "diamond"
+        ? '<path class="viz-mark ' + escapeAttr(opts.className || "viz-dot") + '" d="M' + vizNum(cx) + " " + vizNum(cy - d) + "L" + vizNum(cx + d) + " " + vizNum(cy) +
+          "L" + vizNum(cx) + " " + vizNum(cy + d) + "L" + vizNum(cx - d) + " " + vizNum(cy) + 'Z" stroke-linejoin="round' + paint
+        : '<circle class="viz-mark ' + escapeAttr(opts.className || "viz-dot") + '" cx="' + vizNum(cx) + '" cy="' + vizNum(cy) + '" r="' + vizNum(r) + paint;
       if (!opts.tip) return dot;
       return '<g class="viz-dot-wrap"' + vizTipAttrs(opts.tip, opts) + '><circle class="viz-hit" cx="' + vizNum(cx) + '" cy="' + vizNum(cy) + '" r="' + vizNum(hit) + '"/>' + dot + "</g>";
     }
@@ -13636,7 +13813,10 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
     // One heatmap cell. Give it the fill (from vizColor.sequential or
     // .diverging) and it picks a label ink that clears 4.5:1 on that fill,
     // leaves a 2px panel gap (gap/2 inset on each side), drops the label if it
-    // would not fit, hatches it when thin, and draws a dash on an empty cell.
+    // would not fit, hatches it when thin (the label then wears a halo of the
+    // fill, so the hatch never runs through the digits), and draws a dash on
+    // an empty cell. label is the visible text only: the accessible name is
+    // always the tip's words, which say what the number is.
     // options: { fill, label, tip, focusable, thin, empty, gap (default 2), radius }
     function vizHeatCell(x, y, width, height, options) {
       const opts = options || {};
@@ -13647,7 +13827,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       const h = Math.max(0, height - inset * 2);
       const fill = opts.empty ? VIZ_EMPTY : (opts.fill || VIZ_EMPTY);
       const radius = isFiniteNumber(opts.radius) ? opts.radius : 3;
-      let out = '<g class="viz-cell' + (opts.thin ? " is-thin" : "") + (opts.empty ? " is-empty" : "") + '"' + vizTipAttrs(opts.tip, opts) + ">" +
+      let out = '<g class="viz-cell' + (opts.thin ? " is-thin" : "") + (opts.empty ? " is-empty" : "") + '"' + vizTipAttrs(opts.tip, { focusable: opts.focusable }) + ">" +
         '<rect class="viz-mark" x="' + vizNum(cx) + '" y="' + vizNum(cy) + '" width="' + vizNum(w) + '" height="' + vizNum(h) +
         '" rx="' + vizNum(radius) + '" fill="' + escapeAttr(fill) + '"/>';
       if (opts.thin && !opts.empty) {
@@ -13661,8 +13841,11 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         // the tooltip and the table.
         if (text.length * VIZ_CHAR_PX + 8 <= w && h >= 16) {
           const ink = opts.empty ? "var(--muted)" : vizColor.textOn(fill);
+          const halo = opts.thin && !opts.empty
+            ? ' stroke="' + escapeAttr(fill) + '" stroke-width="3" paint-order="stroke" stroke-linejoin="round"'
+            : "";
           out += '<text class="viz-cell-label" x="' + vizNum(cx + w / 2) + '" y="' + vizNum(cy + h / 2) +
-            '" text-anchor="middle" dominant-baseline="central" fill="' + escapeAttr(ink) + '">' + escapeHTML(text) + "</text>";
+            '" text-anchor="middle" dominant-baseline="central" fill="' + escapeAttr(ink) + '"' + halo + ">" + escapeHTML(text) + "</text>";
         }
       }
       return out + "</g>";
@@ -13757,14 +13940,27 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
           best = candidates.find((y) => blocked.every(([lo, hi]) => y <= lo + 1e-6 || y >= hi - 1e-6));
           if (best === undefined) best = 0;
         }
+        point.offset = best;
         if (Math.abs(best) > maxOffset) {
-          best = Math.sign(best) * maxOffset;
+          point.offset = Math.sign(best) * maxOffset;
           point.clamped = true;
         }
-        point.offset = best;
-        placed.push(point);
+        // A clamped point is laid on the cap on top of others and blocks
+        // nothing: were it kept, a pile at the cap would grow with every
+        // point, and each new point would test every candidate against the
+        // whole pile - quadratic in the pile, seconds on a school file.
+        if (!point.clamped) placed.push(point);
       });
       return out.sort((a, b) => a.index - b.index).map(({ index, ...rest }) => rest);
+    }
+
+    // The ring for a dot filled with an NWEA band colour: the two light
+    // fills, Yellow and Orange, are outlined in their own ink on the light
+    // panel (see --viz-edge-*); every other band keeps the panel ring. Give
+    // the dot the class "is-edged" as well, which sets the ring's width.
+    function vizBandEdge(band) {
+      const name = band && band.name;
+      return name === "Yellow" ? "var(--viz-edge-yellow)" : name === "Orange" ? "var(--viz-edge-orange)" : null;
     }
 
     // A tiny trend line for a KPI tile: the history in the de-emphasis grey,
@@ -13796,7 +13992,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
 
     // --- HTML building blocks ----------------------------------------------
 
-    // Inline swatches. items: [{ label, color, shape: "rect"|"line"|"dot",
+    // Inline swatches. items: [{ label, color, shape: "rect"|"line"|"dot"|"diamond",
     // value, thin }]. A legend is for two or more series - one series is
     // named by the card title instead.
     function vizLegend(items, options) {
@@ -13805,7 +14001,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       if (!list.length) return "";
       return '<ul class="viz-legend"' + (opts.ariaLabel ? ' aria-label="' + escapeAttr(opts.ariaLabel) + '"' : "") + ">" +
         list.map((item) => {
-          const shape = item.shape === "line" ? " is-line" : item.shape === "dot" ? " is-dot" : "";
+          const shape = item.shape === "line" ? " is-line" : item.shape === "dot" ? " is-dot" : item.shape === "diamond" ? " is-diamond" : "";
           return '<li class="viz-legend-item"><span class="viz-swatch' + shape + (item.thin ? " is-thin" : "") +
             '" style="--sw:' + escapeAttr(item.color || "var(--viz-cat-1)") + '" aria-hidden="true"></span>' +
             escapeHTML(item.label) + (item.value !== undefined && item.value !== null && item.value !== "" ? " <b>" + escapeHTML(item.value) + "</b>" : "") + "</li>";
@@ -13863,7 +14059,9 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
     }
 
     // The compact stats table, and the chart's accessible twin. columns:
-    // [{ key, label, numeric, format(value, row) }]; rows: plain objects. A
+    // [{ key, label, numeric, format(value, row), html(value, row) }]; rows:
+    // plain objects. html returns trusted markup for the cell (a student-
+    // name button, built with escapeHTML/escapeAttr) in place of text. A
     // row with thin: true (or a cell whose column says thin(row)) is shown
     // muted and hatched, the same warning the chart gives.
     function vizTable(options) {
@@ -13878,10 +14076,19 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         const thin = typeof column.thin === "function" ? column.thin(row) : false;
         const cls = [column.numeric ? "is-num" : "", thin ? "viz-thin" : ""].filter(Boolean).join(" ");
         const tag = i === 0 && opts.rowHeaders !== false ? "th" : "td";
-        return "<" + tag + (tag === "th" ? ' scope="row"' : "") + (cls ? ' class="' + cls + '"' : "") + ">" + escapeHTML(text) + "</" + tag + ">";
+        const content = typeof column.html === "function" ? column.html(raw, row) : escapeHTML(text);
+        return "<" + tag + (tag === "th" ? ' scope="row"' : "") + (cls ? ' class="' + cls + '"' : "") + ">" + content + "</" + tag + ">";
       }).join("") + "</tr>").join("");
-      return '<div class="viz-table-scroll"><table class="viz-table">' +
-        (opts.caption ? "<caption>" + escapeHTML(opts.caption) + "</caption>" : "") +
+      // The caption sits above the scroll box rather than inside the table:
+      // a <caption> is laid out at the table's own width, so on a phone a
+      // wide table's caption ran off the visible edge with its columns. The
+      // box is a named, focusable region, so a keyboard can scroll it (Safari
+      // does not focus a scroller by itself) and a screen reader says what
+      // it holds; the caption names the table too.
+      const capId = opts.caption ? vizUid("viz-cap") : "";
+      const named = capId ? ' aria-labelledby="' + capId + '"' : ' aria-label="' + escapeAttr(opts.ariaLabel || "Table") + '"';
+      return (capId ? '<p class="viz-table-caption" id="' + capId + '">' + escapeHTML(opts.caption) + "</p>" : "") +
+        '<div class="viz-table-scroll" tabindex="0" role="region"' + named + '><table class="viz-table"' + named + ">" +
         "<thead><tr>" + head + "</tr></thead><tbody>" + body + "</tbody></table></div>";
     }
 
@@ -14038,13 +14245,38 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
     // data-tip gets it on hover, on keyboard focus and on a tap. Escape hides
     // it (and is swallowed while it is showing, so the first Escape closes the
     // tip rather than the dialog behind it).
+    // A tip opened by the pointer stays where it opened and can be moused
+    // onto (WCAG 1.4.13): moving from one mark to the next waits a beat
+    // before swapping the tip, and leaving a mark waits a beat before hiding
+    // it, so a pointer on its way to the open tip - across the gap, over a
+    // neighbouring mark - reaches it. A tapped tip lets taps through.
+    const VIZ_TIP_SWITCH_MS = 120;
+    const VIZ_TIP_GRACE_MS = 160;
     let vizTipEl = null;
     let vizTipTarget = null;
     let vizTipMode = "";
+    let vizTipPending = null;
+    let vizTipTimer = 0;
+    let vizTipPointer = { x: 0, y: 0 };
+
+    function vizTipCancel() {
+      if (vizTipTimer) clearTimeout(vizTipTimer);
+      vizTipTimer = 0;
+      vizTipPending = null;
+    }
+
+    function vizTipLater(run, delay) {
+      if (vizTipTimer) clearTimeout(vizTipTimer);
+      vizTipTimer = setTimeout(() => {
+        vizTipTimer = 0;
+        run();
+      }, delay);
+    }
 
     function vizTooltipHide() {
+      vizTipCancel();
       if (!vizTipEl) return;
-      vizTipEl.classList.remove("is-visible");
+      vizTipEl.classList.remove("is-visible", "is-hoverable");
       vizTipEl.hidden = true;
       vizTipTarget = null;
       vizTipMode = "";
@@ -14100,12 +14332,17 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
     function vizTooltipShow(target, mode, event) {
       const text = target.getAttribute("data-tip");
       if (!text || !vizTipEl) return;
+      vizTipCancel();
+      // A finger has no hover to keep: a tapped tip sits above the mark and
+      // lets the next tap through to whatever it covers.
+      const tap = mode === "pointer" && event && event.pointerType === "touch";
       if (vizTipTarget !== target) vizTooltipFill(text);
       vizTipTarget = target;
-      vizTipMode = mode;
+      vizTipMode = tap ? "tap" : mode;
       vizTipEl.hidden = false;
-      if (mode === "pointer" && event) vizTooltipPlace(event.clientX, event.clientY, null);
+      if (vizTipMode === "pointer" && event) vizTooltipPlace(event.clientX, event.clientY, null);
       else vizTooltipPlace(0, 0, target.getBoundingClientRect());
+      vizTipEl.classList.toggle("is-hoverable", !tap);
       vizTipEl.classList.add("is-visible");
     }
 
@@ -14123,24 +14360,61 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       document.body.appendChild(vizTipEl);
 
       document.addEventListener("pointerover", (event) => {
+        if (vizTipEl.contains(event.target)) {
+          vizTipCancel();
+          return;
+        }
         const target = vizTipFrom(event.target);
-        if (target) vizTooltipShow(target, "pointer", event);
+        if (!target) return;
+        if (target === vizTipTarget) {
+          vizTipCancel();
+          return;
+        }
+        if (vizTipTarget && vizTipMode !== "tap" && event.pointerType !== "touch") {
+          vizTipPending = target;
+          vizTipLater(() => {
+            if (vizTipPending === target && target.isConnected) {
+              vizTooltipShow(target, "pointer", { clientX: vizTipPointer.x, clientY: vizTipPointer.y, pointerType: "mouse" });
+            }
+            vizTipPending = null;
+          }, VIZ_TIP_SWITCH_MS);
+          return;
+        }
+        vizTooltipShow(target, "pointer", event);
       });
       document.addEventListener("pointermove", (event) => {
-        if (event.pointerType === "touch" || vizTipMode !== "pointer" || !vizTipTarget) return;
-        if (vizTipFrom(event.target) === vizTipTarget) vizTooltipPlace(event.clientX, event.clientY, null);
+        vizTipPointer = { x: event.clientX, y: event.clientY };
       }, { passive: true });
       document.addEventListener("pointerout", (event) => {
         // A lifted finger "leaves" too; a tap's tip stays until the next tap.
-        if (event.pointerType === "touch" || !vizTipTarget) return;
-        const next = vizTipFrom(event.relatedTarget);
-        if (vizTipFrom(event.target) === vizTipTarget && next !== vizTipTarget) {
-          if (next) vizTooltipShow(next, "pointer", event);
-          else if (document.activeElement === vizTipTarget) vizTooltipShow(vizTipTarget, "anchor");
-          else vizTooltipHide();
+        if (event.pointerType === "touch" || !vizTipTarget || vizTipMode === "tap") return;
+        const next = event.relatedTarget;
+        if (next && vizTipEl.contains(next)) {
+          vizTipCancel();
+          return;
         }
+        const from = vizTipEl.contains(event.target) ? vizTipEl : vizTipFrom(event.target);
+        if (from !== vizTipEl && from !== vizTipTarget && from !== vizTipPending) return;
+        const nextTarget = vizTipFrom(next);
+        if (nextTarget === vizTipTarget) {
+          vizTipCancel();
+          return;
+        }
+        // Onto another mark: its pointerover has scheduled the swap.
+        if (nextTarget && nextTarget !== from) return;
+        if (nextTarget === from) return;
+        vizTipPending = null;
+        vizTipLater(() => {
+          if (!vizTipTarget) return;
+          if (document.activeElement === vizTipTarget) vizTooltipShow(vizTipTarget, "anchor");
+          else vizTooltipHide();
+        }, VIZ_TIP_GRACE_MS);
       });
       document.addEventListener("pointerdown", (event) => {
+        if (vizTipEl.contains(event.target)) {
+          if (event.pointerType === "touch") vizTooltipHide();
+          return;
+        }
         if (!vizTipFrom(event.target)) vizTooltipHide();
       }, { passive: true });
       document.addEventListener("focusin", (event) => {
