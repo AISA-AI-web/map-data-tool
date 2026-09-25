@@ -59,21 +59,29 @@ async function shot(page, selector, options) {
 
 // The sample file is a growth export. Blanking its end window turns it into
 // the fall file a teacher uploads in September, which is the other mode the
-// guide has to show.
+// guide has to show. A student with no fall score joined later in the year
+// and would not be in a fall export at all, so that row is left out.
 function baselineFrom(sampleCSV) {
   const lines = sampleCSV.trim().split("\n");
   const header = lines[0].split(",");
-  const blank = new Set(["EndTestDate", "EndRIT", "EndPercentile", "EndTestDuration", "ObservedGrowth", "GrowthIndex",
-    "MetGrowthProjection?", "ConditionalGrowthIndex", "ConditionalGrowthPercentile", "PercentageofStudentswhoMetorExceededtheirProjectedRIT",
-    "PercentageofProjectedGrowthMet", "MedianConditionalGrowthPercentile", "StartGrowthandAchievement", "EndGrowthandAchievement",
-    "ConditionalGrowthPercentileAxis", "AchievementPercentileAxis"]);
-  const term = header.indexOf("TermTested");
-  const rows = lines.slice(1).map((line) => {
-    const cells = line.split(",");
-    header.forEach((name, index) => { if (blank.has(name)) cells[index] = ""; });
-    if (term >= 0) cells[term] = "Fall 2025";
-    return cells.join(",");
-  });
+  const blank = new Set(["EndTestDate", "EndRIT", "EndRITSEM", "EndPercentile", "EndTestDuration", "ObservedGrowth", "ObservedGrowthSE",
+    "GrowthIndex", "MetGrowthProjection?", "ConditionalGrowthIndex", "ConditionalGrowthPercentile",
+    "CountofStudentswithGrowthProjectionAvailableandValidBeginningandEndingTermScores", "CountofStudentswhoMetorExceededtheirProjectedGrowth",
+    "PercentageofStudentswhoMetorExceededtheirProjectedRIT", "PercentageofProjectedGrowthMet", "MedianConditionalGrowthPercentile",
+    "StartGrowthandAchievement", "EndGrowthandAchievement", "ConditionalGrowthPercentileAxis", "AchievementPercentileAxis",
+    "GrowthComparisonPeriod", "WIEndTerm"]);
+  const fallTerm = new Set(["TermTested", "TermRostered"]);
+  const start = header.indexOf("StartRIT");
+  const rows = lines.slice(1)
+    .map((line) => line.split(","))
+    .filter((cells) => start < 0 || cells[start] !== "")
+    .map((cells) => {
+      header.forEach((name, index) => {
+        if (blank.has(name)) cells[index] = "";
+        if (fallTerm.has(name)) cells[index] = "Fall 2025";
+      });
+      return cells.join(",");
+    });
   return header.join(",") + "\n" + rows.join("\n") + "\n";
 }
 
@@ -357,7 +365,7 @@ function buildHTML(data, pictures, baselineTitles) {
   <p>Select all the files at once when you upload and they are read as one data set. Where an ASG file and a Class Profile file describe the same test, the two are folded into one record so growth and instructional areas sit on the same student. An ASG file on its own gives you everything except the instructional areas; Class Profile files on their own give you the areas and one window, but no growth.</p>
   <div class="callout">
     <h4>Not ready to export?</h4>
-    <p>Click <em>Load Sample Data</em> on the upload panel to explore every feature with a small made-up class first. Everything in this guide was pictured with that sample.</p>
+    <p>Click <em>Load Sample Data</em> on the upload panel to explore every feature first, with a made-up grade 5 and 6 cohort of four classes, loaded the way yours would be: an ASG export and a Class Profile export together. Everything in this guide was pictured with that sample.</p>
   </div>
 </div>
 

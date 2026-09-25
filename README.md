@@ -20,6 +20,8 @@ sends anything anywhere.
 - `build-guide.js` - builds the guide from the page itself (below).
 - `check-planner.mjs` - the seating planner's regression checks (below).
 - `brand/` - the AISA marks and the script that draws them (below).
+- `sample/` - the demo data behind *Load Sample Data* and the script that
+  draws it (below).
 
 ## Checks
 
@@ -28,6 +30,22 @@ sends anything anywhere.
 must end with `All planner checks passed`. Among other things it holds the
 planner to the privacy rule the whole page keeps: nothing written to
 `localStorage` may name a student.
+
+## The sample data
+
+*Load Sample Data* loads a made-up cohort - four grade 5 and 6 classes at
+"AISA Demo School", Fall 2025 to Spring 2026 - as two exports, an ASG file and
+a spring Class Profile file, through the same multi-file path a teacher's own
+uploads take. `sample/make-sample.mjs` draws both from a seeded generator,
+scored against the norm tables in `index.html` so every percentile agrees
+with the page's own norm comparisons, and writes them to
+`sample/sample-asg.csv` and `sample/sample-class-profile.csv` and into
+`SAMPLE_CSV` and `SAMPLE_CLASS_PROFILE_CSV` in the page:
+
+    node sample/make-sample.mjs            # add --report to see the signals it built in
+
+Change the generator and rerun it rather than editing the strings by hand.
+No student, teacher or school in it is real.
 
 ## The user guide
 

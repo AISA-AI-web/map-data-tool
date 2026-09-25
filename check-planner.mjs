@@ -5,8 +5,8 @@
 //
 // Needs `playwright` resolvable (npm i -D playwright, or set
 // PLAYWRIGHT_MODULE to its index.mjs) and a CSV under FIXTURES (a comma
-// separated list of NWEA export files; defaults to the bundled sample data
-// when none is given).
+// separated list of NWEA export files; defaults to the bundled sample data,
+// filtered to its first class, when none is given).
 //
 // What it holds the planner to:
 //   - the room builds without a page error for every shape and turn;
@@ -46,6 +46,15 @@ await page.reload();
 if (FIXTURES.length) await page.setInputFiles("#csvInput", FIXTURES);
 else await page.click("#sampleBtn");
 await page.waitForTimeout(2500);
+// A seating plan is for one room. The bundled sample is four classes, so the
+// room is built for the first of them, the way a teacher filters to their own
+// class before planning a seating chart. Fixture files are used as given.
+if (!FIXTURES.length) {
+  const firstClass = await page.$$eval("#classFilter option", (options) => options.map((option) => option.value).find(Boolean));
+  await page.selectOption("#classFilter", firstClass);
+  await page.waitForTimeout(1000);
+  console.log("Sample data, filtered to class " + firstClass);
+}
 
 console.log("Room");
 await page.click("#plannerLaunch");
