@@ -5294,6 +5294,11 @@
       border-radius: var(--radius);
       padding: 14px 16px 12px;
       display: grid;
+      /* One column that may shrink below its content: an opened "Show the
+         numbers" table is wider than a phone, and an auto column would grow
+         to fit it, pushing the title and the table's own scroll box past the
+         card edge. With minmax(0, 1fr) the table scrolls inside the card. */
+      grid-template-columns: minmax(0, 1fr);
       gap: 10px;
       align-content: start;
       min-width: 0;
@@ -5907,6 +5912,7 @@
     .insights-card {
       position: relative;
       display: grid;
+      grid-template-columns: minmax(0, 1fr);
       align-content: start;
       gap: 10px;
       min-width: 0;
