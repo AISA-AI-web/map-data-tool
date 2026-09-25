@@ -1731,6 +1731,28 @@
       overflow-wrap: anywhere;
     }
 
+    /* Each seat is a size container, so a name takes as many whole lines as
+       the seat has room for: two with the score beneath, one (cut with an
+       ellipsis) when the room is scaled down for a big class, and the score
+       steps aside when even that is too tight - the full name and scores
+       are in the card's label and tooltip. The name never shrinks, so it is
+       never cut through the middle of a line. */
+    .seat { container: seat / size; }
+    .seat-name { flex: none; }
+
+    @container seat (max-height: 33px) {
+      .seat-name {
+        display: block;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow-wrap: normal;
+      }
+    }
+
+    @container seat (max-height: 22px) {
+      .seat-score { display: none; }
+    }
+
     .seat-score {
       font-size: max(8px, calc(var(--unit) * 1));
       color: var(--muted);
@@ -1915,6 +1937,21 @@
     }
 
     .plan-sentence:empty { display: none; }
+
+    /* "A seating plan is for one room": each class in view as a button. */
+    .plan-rooms {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px 8px;
+      margin: 10px 0 0;
+      color: var(--text-soft);
+      font-size: 0.84rem;
+      font-weight: 600;
+    }
+
+    .plan-rooms[hidden] { display: none; }
+    .planner-title .plan-rooms { margin-top: 6px; }
 
     /* How the machinery works, in four steps. */
     .how-grouping { margin: 12px 0 14px; }
@@ -7618,6 +7655,7 @@
           </span>
           <span class="planner-launch-cta">Open <span aria-hidden="true">&#10530;</span></span>
         </button>
+        <p class="plan-rooms" data-plan-rooms hidden></p>
         <p class="plan-sentence" id="planSentence"></p>
         <div class="planner-preview" id="plannerPreview"></div>
         <div class="group-controls" id="groupControls">
@@ -7804,6 +7842,7 @@
         <div class="planner-title">
           <h3 id="plannerTitle">Seating Planner</h3>
           <p id="plannerContext">Drag students to seats, move and turn the tables, add your furniture.</p>
+          <p class="plan-rooms" data-plan-rooms hidden></p>
         </div>
         <div class="btn-row">
           <button class="btn small ghost" id="plannerUndo" type="button" data-room-action="undo" disabled title="Undo the last move (Ctrl+Z)">Undo</button>
@@ -28565,11 +28604,13 @@ Suggested next steps: prioritize Intensive Support and Targeted Support students
       const explicit = Number(state.classroomLayout.scale) || 0;
       if (explicit > 0) return explicit;
       const count = Math.max(1, state.tableGroups.length);
-      const steps = [1, 0.9, 0.8, 0.7, 0.6, 0.5];
+      // Down to 0.3, so even a whole year group's eighteen tables fit the
+      // room without any being pushed back inside it on top of another.
+      const steps = [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.45, 0.4, 0.35, 0.3];
       for (const step of steps) {
         if (defaultTableGrid(count, step).fits) return step;
       }
-      return 0.5;
+      return steps[steps.length - 1];
     }
 
     function tableCell(count, scale) {
@@ -28936,6 +28977,18 @@ Suggested next steps: prioritize Intensive Support and Targeted Support students
         els.plannerPreview.hidden = state.plannerOpen || !tables;
         if (!els.plannerPreview.hidden) els.plannerPreview.innerHTML = plannerPreviewHTML();
       }
+      // A seating plan is for one room. With several classes in view (the
+      // sample loads four) the plan still builds, but the page says so and
+      // offers each class as a one-click filter.
+      const classes = unique(state.filteredRows.map((row) => row.className).filter((name) => name && name !== "Missing"));
+      const roomsNote = tables && classes.length > 1
+        ? '<span>A seating plan is for one room, and ' + formatInteger(classes.length) + " classes are in view. Pick one:</span>" +
+          classes.slice(0, 12).map((name) => '<button class="btn small ghost" type="button" data-plan-class="' + escapeAttr(name) + '">' + escapeHTML(name) + "</button>").join("")
+        : "";
+      document.querySelectorAll("[data-plan-rooms]").forEach((node) => {
+        node.innerHTML = roomsNote;
+        node.hidden = !roomsNote;
+      });
       if (els.planSentence) els.planSentence.innerHTML = tables ? planSentenceHTML() : "";
       if (els.tableGroups) els.tableGroups.hidden = !state.plannerOpen;
       renderHowGrouping();
