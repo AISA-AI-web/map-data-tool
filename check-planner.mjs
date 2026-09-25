@@ -1,7 +1,7 @@
 // Seating planner checks. Run with Playwright's Chromium:
 //
-//   node build/check-planner.mjs                 (checks index.html)
-//   TARGET=ensdashboards/index.html node build/check-planner.mjs
+//   node check-planner.mjs                       (checks index.html)
+//   TARGET=path/to/another/index.html node check-planner.mjs
 //
 // Needs `playwright` resolvable (npm i -D playwright, or set
 // PLAYWRIGHT_MODULE to its index.mjs) and a CSV under FIXTURES (a comma
