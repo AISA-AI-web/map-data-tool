@@ -66,6 +66,25 @@ const INDEX = path.join(root, "index.html");
 const ASG_FILE = path.join(here, "sample-asg.csv");
 const CP_FILE = path.join(here, "sample-class-profile.csv");
 const args = new Set(process.argv.slice(2));
+// Only the flags below are understood. Anything else - --help, a typo such
+// as --no-inlin - prints the usage and stops before a file is written, so a
+// slip can never rewrite the CSVs and index.html in place.
+const KNOWN_FLAGS = new Set(["--no-inline", "--report"]);
+const USAGE = [
+  "Usage:",
+  "  node sample/make-sample.mjs              write the two CSVs and inline them into index.html",
+  "  node sample/make-sample.mjs --no-inline  write the two CSVs only",
+  "  node sample/make-sample.mjs --report     also print the signals it built in"
+].join("\n");
+if (args.has("--help") || args.has("-h")) {
+  console.log(USAGE);
+  process.exit(0);
+}
+const unknownFlags = [...args].filter((arg) => !KNOWN_FLAGS.has(arg));
+if (unknownFlags.length) {
+  console.error("make-sample: unknown option " + unknownFlags.join(", ") + " - nothing was written.\n\n" + USAGE);
+  process.exit(1);
+}
 const INLINE = !args.has("--no-inline");
 const REPORT = args.has("--report");
 
