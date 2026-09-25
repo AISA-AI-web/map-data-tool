@@ -5631,6 +5631,88 @@
         print-color-adjust: exact;
       }
     }
+
+    /* ---- AISA: Distributions ---- */
+    /* The box-and-dots section (renderDistributions). The kit draws the
+       chart; these rules name the section's colours and set its row labels,
+       band zones, key and keyboard hint. */
+    #sec-distributions {
+      /* The box is neutral ink: it sits on the band zones and among band-
+         coloured dots, where no purple or gold series may appear. */
+      --dist-box: var(--muted-strong);
+      /* A growth measure shows no bands, so its dots take the two poles of
+         the kit's diverging ramp: purple met the projection, deep gold did
+         not (validated dE 35.8 normal / 33.3 CVD light, 21.8 / 21.3 dark). */
+      --dist-met: var(--viz-div-6);
+      --dist-missed: var(--viz-div-1);
+      /* No projection or no percentile: a hollow ring, a shape rather than a
+         third colour to learn. */
+      --dist-none: var(--muted);
+    }
+
+    /* The band zones are a backdrop, not data: faint in the light theme,
+       where the -soft tokens are solid pastels, and at full strength in the
+       dark theme, where they are already translucent. A print is always
+       light (body.viz-light), so it keeps the faint setting. */
+    .dist-zone { opacity: 0.6; }
+    :root[data-theme="dark"] body:not(.viz-light) .dist-zone { opacity: 1; }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) body:not(.viz-light) .dist-zone { opacity: 1; }
+    }
+
+    .dist-zone-label { font-size: 10px; font-weight: 800; letter-spacing: 0.08em; }
+    .dist-zone-range { font-weight: 600; letter-spacing: 0.02em; }
+    /* Reference labels sit on a zone, not on the marks, so they need no halo. */
+    .dist-ref-label { stroke: none; }
+    /* On a phone the row label sits inside the plot, where a reference line
+       runs behind it: the panel-coloured halo keeps the line out of the
+       letters, as the kit's own labels do. */
+    .dist-row-label {
+      fill: var(--text);
+      font-size: 12px;
+      font-weight: 800;
+      paint-order: stroke;
+      stroke: var(--viz-surface);
+      stroke-width: 3px;
+      stroke-linejoin: round;
+    }
+
+    .dist-row-meta { fill: var(--muted); font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    #sec-distributions .viz-box > rect.viz-mark { fill-opacity: 0.1; }
+    .dist-median { stroke: var(--dist-box); stroke-width: 2.5px; stroke-linecap: round; pointer-events: none; }
+    .dist-mean { fill: var(--text); stroke: var(--viz-surface); stroke-width: 1.5px; pointer-events: none; }
+    .dist-chart.is-dense .dist-dot { stroke-width: 1px; }
+
+    .dist-legend {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px 20px;
+    }
+
+    .dist-key {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .dist-key svg { flex: none; overflow: visible; }
+    .dist-key-whisker { stroke: var(--dist-box); stroke-width: 1.5; }
+    .dist-key-box { fill: var(--panel); stroke: var(--dist-box); stroke-width: 1.5; }
+    /* The kit's table sets its row headers to position: static, which lets
+       a thin row's hatch (an absolutely placed ::after) escape the cell and
+       cover the whole card. The cell is put back in charge of its hatch. */
+    #sec-distributions .viz-table tbody th.viz-thin { position: relative; }
+    .viz-swatch.dist-swatch-hollow { background: var(--viz-surface); box-shadow: inset 0 0 0 2px var(--dist-none); }
+    .dist-hint { margin: 8px 0 0; color: var(--muted); font-size: 0.78rem; line-height: 1.45; }
+
+    @media print {
+      .dist-hint { display: none; }
+    }
   </style>
 </head>
 <body>
@@ -5987,6 +6069,20 @@
           </div>
         </div>
         <div class="charts-wrap" id="chartsWrap"></div>
+      </section>
+
+      <section class="section" id="sec-distributions" aria-labelledby="distTitle">
+        <div class="section-header">
+          <div>
+            <h2 id="distTitle">Distributions</h2>
+            <p id="distNote">Every record as a dot over a box for the middle half, one row per subject. An average hides the shape of a group; this shows it.</p>
+          </div>
+          <div class="btn-row">
+            <button class="btn small" id="distExportBtn" type="button">Export Distribution CSV</button>
+          </div>
+        </div>
+        <div id="distControls"></div>
+        <div id="distWrap"></div>
       </section>
 
       <section class="section" id="sec-growth" aria-labelledby="growthAchievementTitle">
@@ -9568,6 +9664,7 @@ Spring 2026,Fall 2025,North Valley,Maple School,Rivera,Period 2,Science,Science,
       renderBaselineSection();
       renderSubjectOverview();
       renderCharts();
+      renderDistributions();
       if (hasGrowthContext()) {
         renderQuadrants();
         renderGapCards();
@@ -9602,6 +9699,7 @@ Spring 2026,Fall 2025,North Valley,Maple School,Rivera,Period 2,Science,Science,
       { id: "sec-baseline", label: "Tiers", modes: ["growth", "mixed", "baseline"] },
       { id: "sec-overview", label: "Overview", modes: ["growth", "mixed", "baseline"] },
       { id: "sec-charts", label: "Charts", modes: ["growth", "mixed", "baseline"] },
+      { id: "sec-distributions", label: "Distributions", modes: ["growth", "mixed", "baseline"] },
       { id: "sec-growth", label: "Growth", modes: ["growth", "mixed"] },
       { id: "sec-gap", label: "Gap Closure", modes: ["growth", "mixed"] },
       { id: "sec-goals", label: "Goals", modes: ["growth", "mixed", "baseline"] },
@@ -12320,6 +12418,806 @@ Spring 2026,Fall 2025,North Valley,Maple School,Rivera,Period 2,Science,Science,
 
     document.addEventListener("DOMContentLoaded", vizInit);
     // ---- end AISA viz kit ----
+
+    // =====================================================================
+    // ---- AISA: Distributions ----
+    // =====================================================================
+    // An average hides the shape of a group. A median of 55 can be twenty
+    // students between 45 and 65, or ten near 20 and ten near 90, and those
+    // two classes need different teaching. This section draws the shape: one
+    // row per bucket of the overview lens (subject, or class), each a Tukey
+    // box with every record laid over it as a dot. The dots are placed by the
+    // kit's beeswarm, which is deterministic, so the picture is the same on
+    // every load, in every screenshot and in the printed guide.
+    //
+    // Colour follows the kit's rules. A percentile or RIT measure shows the
+    // NWEA bands (faint zones behind a percentile axis, the band colour on
+    // every dot), so it carries no purple or gold series at all: the box is
+    // neutral ink and the mean an ink diamond. A growth measure has no bands
+    // on screen, so its dots take the two poles of the diverging ramp -
+    // purple met the projection, deep gold did not - and a record the export
+    // gives no projection for is a hollow ring, a shape rather than a third
+    // colour to learn. Measured with the dataviz validator against the panel:
+    // purple and gold are dE 35.8 apart (33.3 for a colour-blind reader) in
+    // the light theme and 21.8 (21.3) in the dark.
+    //
+    // Keyboard: each row's box is one tab stop. From it the arrow keys step
+    // through that row's records from lowest to highest, up and down move to
+    // the nearest record in the next row, and Enter opens the student's
+    // profile - so a 300-dot chart costs one tab stop per row, not 300.
+    const DIST_METRICS = [
+      { key: "currentPercentile", slug: "percentile", label: "Current percentile", control: "Current percentile",
+        kind: "percentile", colorBy: "band", domain: [0, 100], value: (row) => row.currentPercentile },
+      { key: "currentRIT", slug: "rit", label: "Current RIT", control: "Current RIT",
+        kind: "rit", colorBy: "band", value: (row) => row.currentRIT },
+      { key: "ritChange", slug: "rit-change", label: "RIT change", control: "RIT change",
+        kind: "change", colorBy: "met", growth: true, value: (row) => row.ritChange },
+      { key: "cgp", slug: "cgp", label: "Conditional growth percentile", control: "Growth percentile (CGP)",
+        kind: "cgp", colorBy: "met", growth: true, domain: [0, 100], value: (row) => row.conditionalGrowthPercentile }
+    ];
+    const DIST_PREF_KEY = "distMetric";
+    // Past this many records one dot each stops being a picture of anyone and
+    // costs the browser thousands of nodes; the boxes carry the chart alone
+    // and the note says how to get the dots back.
+    const DIST_DOT_CAP = 2000;
+    // Dot radii to try, largest first. The first one whose swarm fits the
+    // row wins, so a class of 25 gets 9px dots and a year group smaller ones.
+    const DIST_RADII = [4.5, 4, 3.5, 3, 2.5, 2];
+    // Each band's zone is its -soft token and its name the matching -ink:
+    // the same pair the band pills use everywhere else on the page.
+    const DIST_BAND_TOKENS = { Red: "red", Orange: "orange", Yellow: "yellow", Green: "green", Blue: "blue" };
+    const DIST_ANATOMY_BOX = "The box spans the middle half of the records (Q1 to Q3), the thick line is the median, the diamond on the box is the mean, " +
+      "and the whiskers reach the furthest record within 1.5 box-widths.";
+    const DIST_ANATOMY = "Each dot is one record, placed by its value and nudged up or down to keep the dots apart. " + DIST_ANATOMY_BOX;
+    const DIST_HINT = "Hover or tap a dot to see the student; select it to open their profile. " +
+      "Keyboard: Tab to a row, then the arrow keys step through its records and Enter opens the profile.";
+    // A function, not a constant: MIN_SHARE_N is declared further down the
+    // script, and a constant built from it here would read it too early.
+    function distStatsNote() {
+      return "Quartiles use the same method as Excel's PERCENTILE.INC, so a spreadsheet check gives the same numbers. " +
+        "The 95% interval of the mean uses the t distribution, so a small group gets a wide interval, as it should. " +
+        "Muted, hatched rows rest on fewer than " + MIN_SHARE_N + " records: describe them, but do not compare them.";
+    }
+
+    let distMetricChoice = null;
+    let distLast = null;
+
+    function renderDistributions() {
+      const wrap = document.getElementById("distWrap");
+      const controls = document.getElementById("distControls");
+      if (!wrap || !controls) return;
+      distInstall(wrap, controls);
+      const lens = currentOverviewLens();
+      const noun = lens === "class" ? "class" : "subject";
+      setText("distNote", "Every record as a dot over a box for the middle half, one row per " + noun +
+        ". An average hides the shape of a group; this shows it.");
+      distLast = null;
+      if (!state.allRows.length) {
+        distSetControls(controls, [], null);
+        vizMount(wrap, vizEmpty("Upload a CSV to see how the scores are spread within each " + noun + "."));
+        return;
+      }
+      const rows = state.filteredRows;
+      if (!rows.length) {
+        distSetControls(controls, [], null);
+        vizMount(wrap, vizEmpty("No records match the current filters. Clear a filter to see the distributions again."));
+        return;
+      }
+      const metrics = distAvailableMetrics(rows);
+      if (!metrics.length) {
+        distSetControls(controls, [], null);
+        vizMount(wrap, vizEmpty("No record in this view carries a percentile or a RIT score, so there is nothing to plot."));
+        return;
+      }
+      // A remembered measure this view cannot draw (RIT change on a baseline
+      // file, say) falls back to the first one it can, without forgetting the
+      // choice: the next growth file opens on it again.
+      const metric = metrics.find((item) => item.key === distChosenKey()) || metrics[0];
+      distSetControls(controls, metrics, metric);
+      const model = distModel(rows, metric, lens);
+      distLast = model;
+      vizMount(wrap, '<div class="viz-grid">' + distChartCard(model) + distStatsCard(model) + "</div>");
+    }
+
+    // Listeners go on the section's own containers, once, so nothing here
+    // touches the shared element cache or the page-wide handlers.
+    function distInstall(wrap, controls) {
+      if (wrap.dataset.distBound) return;
+      wrap.dataset.distBound = "1";
+      controls.addEventListener("viz-change", (event) => {
+        if (!event.detail || event.detail.name !== DIST_PREF_KEY) return;
+        distMetricChoice = event.detail.value;
+        vizPref.set(DIST_PREF_KEY, distMetricChoice);
+        // The picker has already moved itself; redrawing it would throw away
+        // the focus of a keyboard user who is arrowing through it.
+        controls.dataset.sig = (controls.dataset.keys || "") + "|" + distMetricChoice;
+        renderDistributions();
+        observeReveals();
+      });
+      wrap.addEventListener("click", (event) => {
+        const dot = event.target.closest && event.target.closest("[data-dist-student]");
+        if (!dot) return;
+        vizTooltipHide();
+        openSpotlight(dot.getAttribute("data-dist-student"));
+      });
+      wrap.addEventListener("keydown", distKeydown);
+      const exportBtn = document.getElementById("distExportBtn");
+      if (exportBtn) exportBtn.addEventListener("click", distExport);
+    }
+
+    function distChosenKey() {
+      if (distMetricChoice === null) {
+        const stored = vizPref.get(DIST_PREF_KEY, "currentPercentile");
+        distMetricChoice = DIST_METRICS.some((metric) => metric.key === stored) ? stored : "currentPercentile";
+      }
+      return distMetricChoice;
+    }
+
+    // Only measures this view can draw: growth measures need a growth file
+    // and at least one record that carries them.
+    function distAvailableMetrics(rows) {
+      return DIST_METRICS.filter((metric) =>
+        (!metric.growth || hasGrowthContext()) && rows.some((row) => isFiniteNumber(metric.value(row))));
+    }
+
+    function distSetControls(controls, metrics, metric) {
+      const keys = metrics.map((item) => item.key).join(",");
+      const signature = keys + "|" + (metric ? metric.key : "");
+      if (controls.dataset.sig === signature) return;
+      controls.dataset.sig = signature;
+      controls.dataset.keys = keys;
+      // One measure is not a choice, so it gets no picker; the card title
+      // still names it.
+      controls.innerHTML = metrics.length > 1
+        ? vizControls([vizSegmented({
+          name: DIST_PREF_KEY,
+          label: "Measure",
+          options: metrics.map((item) => ({ value: item.key, label: item.control })),
+          value: metric.key
+        })])
+        : "";
+    }
+
+    // --- The numbers --------------------------------------------------------
+    function distModel(rows, metric, lens) {
+      const groups = [];
+      const empty = [];
+      getOverviewBuckets(rows, lens).forEach((name) => {
+        const records = distRecords(bucketRows(rows, name, lens), metric);
+        if (records.length) groups.push(distGroup(name, records));
+        else empty.push(name);
+      });
+      const all = distGroup(lens === "class" ? "All classes in view" : "All subjects in view", distRecords(rows, metric));
+      return {
+        metric,
+        lens,
+        groups,
+        empty,
+        all,
+        inView: rows.length,
+        plotted: all.n,
+        subjects: unique(rows.map((row) => row.subject)).length,
+        drawDots: all.n <= DIST_DOT_CAP
+      };
+    }
+
+    // Lowest first, ties broken by name, so the swarm and the keyboard order
+    // are the same whatever order the file listed the students in.
+    function distRecords(rows, metric) {
+      return rows
+        .filter((row) => isFiniteNumber(metric.value(row)))
+        .map((row) => ({ row, value: metric.value(row) }))
+        .sort((a, b) => a.value - b.value || naturalCompare(a.row.studentName, b.row.studentName) ||
+          naturalCompare(a.row.subject, b.row.subject));
+    }
+
+    function distGroup(name, records) {
+      const values = records.map((record) => record.value);
+      return {
+        name,
+        records,
+        n: values.length,
+        box: vizStats.boxStats(values),
+        ci: vizStats.ci95Mean(values),
+        sd: vizStats.sd(values),
+        thin: vizIsThin(values.length)
+      };
+    }
+
+    function distFormat(metric, value) {
+      if (!isFiniteNumber(value)) return "N/A";
+      if (metric.kind === "change") return (value > 0 ? "+" : value < 0 ? "\u2212" : "") + formatNumber(Math.abs(value), 1);
+      return formatNumber(value, 1);
+    }
+
+    // Means and interval ends in a column read better at a fixed decimal.
+    function distFormatMean(metric, value) {
+      if (!isFiniteNumber(value)) return "\u2013";
+      return metric.kind === "change" ? formatSigned1(value) : formatFixed1(value);
+    }
+
+    function distFormatCI(metric, ci) {
+      if (!ci || !isFiniteNumber(ci.lo) || !isFiniteNumber(ci.hi)) return "\u2013";
+      return distFormatMean(metric, ci.lo) + " to " + distFormatMean(metric, ci.hi);
+    }
+
+    function distUnit(metric) {
+      return metric.kind === "rit" || metric.kind === "change" ? " RIT" : " points";
+    }
+
+    function distMeta(metric, group) {
+      // A median of one or two records is just those scores, so it is only
+      // quoted once the row has a box.
+      return "n " + formatInteger(group.n) + (group.box && group.n >= 3 ? " \u00b7 median " + distFormat(metric, group.box.median) : "");
+    }
+
+    function distClip(text, max) {
+      const value = String(text);
+      return value.length <= max ? value : value.slice(0, Math.max(1, max - 1)) + "\u2026";
+    }
+
+    // The dot's colour, the words for it, and whether it is drawn hollow.
+    function distDotStyle(metric, row) {
+      if (metric.colorBy === "band") {
+        const band = row.currentBand && row.currentBand.rank ? row.currentBand : null;
+        return band
+          ? { fill: band.color, label: band.name, key: band.name }
+          : { fill: "var(--viz-surface)", stroke: "var(--dist-none)", label: "No percentile", key: "none" };
+      }
+      if (row.metGrowth === true) return { fill: "var(--dist-met)", label: "Met", key: "met" };
+      if (row.metGrowth === false) return { fill: "var(--dist-missed)", label: "Not met", key: "missed" };
+      return { fill: "var(--viz-surface)", stroke: "var(--dist-none)", label: "No projection given", key: "none" };
+    }
+
+    // --- The words ----------------------------------------------------------
+    // The card's lead: what the rows show, in the page's descriptive voice.
+    // Comparisons use only rows with MIN_SHARE_N records or more, and say
+    // "highest" and "widest", never "better" or "because".
+    function distTakeaway(model) {
+      const metric = model.metric;
+      const format = (value) => distFormat(metric, value);
+      const solid = model.groups.filter((group) => !group.thin && group.box);
+      const parts = [];
+      if (!solid.length) {
+        parts.push(model.groups.length > 1
+          ? "Every row rests on fewer than " + MIN_SHARE_N + " records, so each describes a few students rather than a pattern."
+          : "This rests on fewer than " + MIN_SHARE_N + " records, so it describes a few students rather than a pattern.");
+      } else if (solid.length === 1) {
+        const group = solid[0];
+        parts.push((model.groups.length > 1 ? group.name + ": median " : "Median ") + format(group.box.median) +
+          ", with the middle half of the records between " + format(group.box.q1) + " and " + format(group.box.q3) + ".");
+      } else {
+        const medians = solid.map((group) => group.box.median);
+        const high = Math.max(...medians);
+        const low = Math.min(...medians);
+        // Rows that tie are named together rather than one picked at random.
+        const namesAt = (value) => listSentence(solid.filter((group) => group.box.median === value).map((group) => group.name));
+        const widest = solid.slice().sort((a, b) => b.box.iqr - a.box.iqr)[0];
+        parts.push(high === low
+          ? "Every row shares a median of " + format(high) + "."
+          : "Highest median: " + namesAt(high) + " (" + format(high) + "); lowest: " + namesAt(low) + " (" + format(low) + ").");
+        parts.push("Widest middle half: " + widest.name + ", spanning " + formatNumber(widest.box.iqr, 1) + distUnit(metric) + ".");
+      }
+      const records = model.all.records;
+      if (records.length) {
+        if (metric.kind === "percentile") {
+          parts.push(capitalizeFirst(formatShareInline(share(records, (record) => record.value >= SECURE_BENCHMARK), "records")) +
+            " sit at or above the " + ordinal(SECURE_BENCHMARK) + " percentile.");
+        } else if (metric.kind === "change") {
+          parts.push(capitalizeFirst(formatShareInline(share(records, (record) => record.value < 0), "records")) +
+            " ended with a lower RIT than they started with.");
+        } else if (metric.kind === "cgp") {
+          parts.push(capitalizeFirst(formatShareInline(share(records, (record) => record.value >= 50), "records")) +
+            " grew at or above the typical rate for their starting point (CGP 50 or higher).");
+        }
+      }
+      return parts.join(" ");
+    }
+
+    function distEyebrow(model) {
+      const span = model.metric.growth
+        ? state.dataWindow.priorWindowLabel + " to " + state.dataWindow.currentWindowLabel
+        : currentWindowName();
+      return span + " \u00b7 " + formatInteger(model.plotted) + (model.plotted === 1 ? " record" : " records");
+    }
+
+    function distAxisTitle(model) {
+      const kind = model.metric.kind;
+      if (kind === "percentile") return "Achievement percentile, " + currentWindowName();
+      if (kind === "rit") return "RIT score, " + currentWindowName();
+      if (kind === "change") return "RIT change, " + state.dataWindow.priorWindowLabel + " to " + state.dataWindow.currentWindowLabel;
+      return "Conditional growth percentile (50 is typical growth)";
+    }
+
+    // Why a record in view is not on the chart, when some are not.
+    function distNotes(model) {
+      const metric = model.metric;
+      const notes = [model.drawDots ? DIST_ANATOMY : DIST_ANATOMY_BOX + " A circle beyond a whisker is a record further out than that."];
+      const left = model.inView - model.plotted;
+      if (left > 0) {
+        const lead = formatInteger(left) + " of the " + formatInteger(model.inView) + " records in view ";
+        notes.push(metric.kind === "percentile" ? lead + (left === 1 ? "has" : "have") + " no percentile and " + (left === 1 ? "is" : "are") + " not drawn."
+          : metric.kind === "rit" ? lead + (left === 1 ? "has" : "have") + " no RIT score and " + (left === 1 ? "is" : "are") + " not drawn."
+            : metric.kind === "change" ? lead + (left === 1 ? "has" : "have") + " only one test window, so no RIT change, and " + (left === 1 ? "is" : "are") + " not drawn."
+              : lead + (left === 1 ? "carries" : "carry") + " no conditional growth percentile and " + (left === 1 ? "is" : "are") + " not drawn.");
+      }
+      if (model.empty.length) {
+        notes.push("No row for " + listSentence(model.empty) + ": nothing there to plot for this measure.");
+      }
+      if (model.lens === "class" && metric.kind === "rit" && model.subjects > 1) {
+        notes.push("Each class row pools every subject in view, and RIT runs on a different scale in each subject: filter to one subject for a like-for-like comparison.");
+      }
+      if (!model.drawDots) {
+        notes.push("With " + formatInteger(model.plotted) + " records the dots are left out and the boxes carry the chart; filter to a class or a subject to see every record.");
+      }
+      return notes.join(" ");
+    }
+
+    function distAriaLabel(model) {
+      const metric = model.metric;
+      const format = (value) => distFormat(metric, value);
+      const shown = model.groups.slice(0, 12).map((group) => group.name + ": " +
+        (group.box ? "median " + format(group.box.median) + ", middle half " + format(group.box.q1) + " to " + format(group.box.q3) + ", " : "") +
+        formatInteger(group.n) + (group.n === 1 ? " record" : " records") + (group.thin ? ", too few to read as a pattern" : ""));
+      return metric.label + " by " + (model.lens === "class" ? "class" : "subject") + ", " + formatInteger(model.plotted) + " records. " +
+        shown.join("; ") + (model.groups.length > 12 ? "; and " + formatInteger(model.groups.length - 12) + " more rows in the table." : ".");
+    }
+
+    // --- The cards ----------------------------------------------------------
+    function distChartCard(model) {
+      const noun = model.lens === "class" ? "class" : "subject";
+      return vizCard({
+        wide: true,
+        className: "dist-card",
+        eyebrow: distEyebrow(model),
+        title: model.metric.label + " by " + noun,
+        sub: distTakeaway(model),
+        legend: distLegend(model),
+        body: vizChartSlot((width) => distChart(model, width), { minHeight: distMinHeight(model) }) +
+          (model.drawDots ? '<p class="dist-hint">' + escapeHTML(DIST_HINT) + "</p>" : ""),
+        note: distNotes(model),
+        table: vizTableToggle(distRecordTable(model), "Show every record (" + formatInteger(model.plotted) + ")")
+      });
+    }
+
+    // Colour key with a count on every swatch, then a small drawn key to the
+    // box itself. The hollow ring is added by hand: vizLegend only draws
+    // filled swatches.
+    function distLegend(model) {
+      const metric = model.metric;
+      const records = model.all.records;
+      const count = (key) => records.filter((record) => distDotStyle(metric, record.row).key === key).length;
+      const items = metric.colorBy === "band"
+        ? BANDS.map((band) => ({ label: band.name, color: band.color, shape: "dot", value: formatInteger(count(band.name)) }))
+        : [
+          { label: "Met projection", color: "var(--dist-met)", shape: "dot", value: formatInteger(count("met")) },
+          { label: "Did not meet", color: "var(--dist-missed)", shape: "dot", value: formatInteger(count("missed")) }
+        ];
+      const none = count("none");
+      let legend = vizLegend(items, { ariaLabel: metric.colorBy === "band" ? "Dot colour: NWEA band, with the number of records" : "Dot colour: growth projection, with the number of records" });
+      if (none) {
+        legend = legend.replace(/<\/ul>$/, '<li class="viz-legend-item"><span class="viz-swatch is-dot dist-swatch-hollow" aria-hidden="true"></span>' +
+          escapeHTML(metric.colorBy === "band" ? "No percentile" : "No projection given") + " <b>" + escapeHTML(formatInteger(none)) + "</b></li></ul>");
+      }
+      // Without dots (a very large file) there is nothing for a colour key to
+      // point at, so only the key to the box is shown.
+      if (!model.drawDots) legend = "";
+      const key = '<span class="dist-key" aria-hidden="true">' +
+        '<svg width="58" height="18" viewBox="0 0 58 18" focusable="false">' +
+        '<line class="dist-key-whisker" x1="2" x2="56" y1="11" y2="11"/>' +
+        '<rect class="dist-key-box" x="14" y="5" width="28" height="12" rx="2"/>' +
+        '<line class="dist-median" x1="25" x2="25" y1="5" y2="17"/>' +
+        '<path class="dist-mean" d="M31 0.5l4.5 4.5l-4.5 4.5l-4.5 -4.5Z"/></svg>' +
+        "<span>box: middle half \u00b7 line: median \u00b7 \u25C6 mean</span></span>";
+      return '<div class="dist-legend">' + legend + key + "</div>";
+    }
+
+    // The chart's full table twin: every dot, in the order it is drawn.
+    function distRecordTable(model) {
+      const metric = model.metric;
+      const rows = [];
+      model.groups.forEach((group) => group.records.forEach((record) => {
+        rows.push({
+          student: record.row.studentName,
+          subject: record.row.subject,
+          className: record.row.className,
+          value: distFormat(metric, record.value),
+          colour: distDotStyle(metric, record.row).label
+        });
+      }));
+      return vizTable({
+        caption: metric.label + ", every record, lowest first within each " + (model.lens === "class" ? "class" : "subject"),
+        columns: [
+          { key: "student", label: "Student" },
+          { key: "subject", label: "Subject" },
+          { key: "className", label: "Class" },
+          { key: "value", label: metric.label, numeric: true },
+          { key: "colour", label: metric.colorBy === "band" ? "Band" : "Growth projection" }
+        ],
+        rows
+      });
+    }
+
+    function distStatRow(metric, group) {
+      const box = group.box;
+      const format = (value) => distFormat(metric, value);
+      return {
+        name: group.name,
+        n: formatInteger(group.n),
+        mean: box ? distFormatMean(metric, box.mean) : "\u2013",
+        sd: isFiniteNumber(group.sd) ? formatFixed1(group.sd) : "\u2013",
+        median: box ? format(box.median) : "\u2013",
+        quartiles: box ? format(box.q1) + " to " + format(box.q3) : "\u2013",
+        iqr: box ? formatNumber(box.iqr, 1) : "\u2013",
+        range: box ? format(box.min) + " to " + format(box.max) : "\u2013",
+        ci: distFormatCI(metric, group.ci),
+        thin: group.thin
+      };
+    }
+
+    function distStatsCard(model) {
+      const metric = model.metric;
+      const noun = model.lens === "class" ? "class" : "subject";
+      const thin = (row) => row.thin;
+      const rows = model.groups.map((group) => distStatRow(metric, group));
+      if (model.groups.length > 1) rows.push(distStatRow(metric, model.all));
+      return vizCard({
+        wide: true,
+        className: "dist-stats",
+        eyebrow: "Summary statistics",
+        title: metric.label + " by " + noun + ": centre and spread",
+        body: vizTable({
+          caption: metric.label + " by " + noun + (model.groups.length > 1 ? ", with every row pooled at the foot" : ""),
+          columns: [
+            { key: "name", label: noun === "class" ? "Class" : "Subject", thin },
+            { key: "n", label: "Records", numeric: true, thin },
+            { key: "mean", label: "Mean", numeric: true, thin },
+            { key: "sd", label: "SD", numeric: true, thin },
+            { key: "median", label: "Median", numeric: true, thin },
+            { key: "quartiles", label: "Q1 to Q3", numeric: true, thin },
+            { key: "iqr", label: "IQR", numeric: true, thin },
+            { key: "range", label: "Lowest to highest", numeric: true, thin },
+            { key: "ci", label: "95% CI of mean", numeric: true, thin }
+          ],
+          rows
+        }),
+        note: distStatsNote()
+      });
+    }
+
+    // --- The chart ----------------------------------------------------------
+    // Drawn at the slot's real width. Wide: row labels in a column on the
+    // left. Narrow (a phone): each row's label sits above its row and the
+    // plot takes the full width.
+    function distChart(model, width) {
+      const metric = model.metric;
+      const groups = model.groups;
+      const compact = width < 560;
+      const labelW = compact ? 0 : distLabelWidth(model);
+      const top = distTopMargin(metric);
+      const x = distScale(model, [compact ? 12 : labelW, width - 18]);
+      // How tall a row's swarm may grow before the dots shrink instead. Fewer
+      // rows may grow taller, so a single subject is not a thin strip and a
+      // score many students share (RIT change is a whole number) stacks into
+      // a readable column rather than a smear of tiny dots.
+      const maxHalf = groups.length <= 2 ? 60 : groups.length <= 4 ? 46 : groups.length <= 8 ? 34 : 28;
+      const swarm = model.drawDots ? distSwarm(groups, x, maxHalf) : { r: 0, placed: groups.map(() => []), half: 10 };
+      const boxH = Math.max(20, Math.round(swarm.half * 2 + 8));
+      const labelH = compact ? 22 : 0;
+      const pad = 12;
+      const rowH = Math.max(compact ? 0 : 50, labelH + boxH + pad * 2);
+      const height = top + rowH * groups.length + 46;
+      const plot = vizLayout(width, height, { top, left: compact ? 12 : labelW, right: 18, bottom: 46 });
+      const geo = { x, plot, rowH, boxH, labelH, pad, compact, swarm, width, labelChars: Math.floor((labelW - 30) / 7.4) };
+      let out = metric.kind === "percentile" ? distZones(x, plot) : "";
+      out += vizAxisBottom(x, plot, {
+        ticks: metric.domain ? [0, 20, 40, 60, 80, 100] : x.ticks(width < 480 ? 5 : 6),
+        format: (value) => distTick(metric, value),
+        grid: metric.kind !== "percentile",
+        title: distAxisTitle(model)
+      });
+      out += distRefs(metric, x, plot);
+      groups.forEach((group, i) => {
+        if (!i) return;
+        const y = plot.top + i * rowH;
+        out += '<line class="viz-grid-line" x1="0" x2="' + vizNum(width) + '" y1="' + vizNum(y) + '" y2="' + vizNum(y) + '"/>';
+      });
+      out += '<g class="dist-rows">' + groups.map((group, i) => distRow(model, group, i, geo)).join("") + "</g>";
+      return vizFrame(out, {
+        width,
+        height,
+        ariaLabel: distAriaLabel(model),
+        desc: model.drawDots
+          ? "Each dot is one record, placed by its value; the box spans the middle half, the line is the median and the diamond the mean. " +
+            "Tab to a row, then use the arrow keys to step through its records from lowest to highest, up and down to change row, and Enter to open the student's profile."
+          : "Each box spans the middle half of a row's records; the line is the median and the diamond the mean.",
+        // Small dots get a thinner surface ring, or the ring eats the dot.
+        className: "dist-chart" + (swarm.r && swarm.r < 3 ? " is-dense" : "")
+      });
+    }
+
+    // Room above the plot: band names and reference labels on a percentile
+    // axis, a reference label on a growth axis, nothing on RIT.
+    function distTopMargin(metric) {
+      return metric.kind === "percentile" ? 44 : metric.kind === "rit" ? 12 : 26;
+    }
+
+    // The least the chart can take (every row at its shortest), so the slot
+    // holds its space before the first draw without leaving a gap after it.
+    function distMinHeight(model) {
+      return distTopMargin(model.metric) + model.groups.length * 50 + 46;
+    }
+
+    function distLabelWidth(model) {
+      const names = model.groups.map((group) => group.name.length);
+      const metas = model.groups.map((group) => distMeta(model.metric, group).length);
+      return Math.round(Math.min(210, Math.max(112, Math.max(...names) * 7.4 + 30, Math.max(...metas) * 6.2 + 30)));
+    }
+
+    // Percentile measures keep their whole 0-100 scale, so a row squeezed
+    // into the middle looks squeezed. RIT and RIT change fit the data (RIT
+    // change always shows zero, where its reference line sits).
+    function distScale(model, range) {
+      const metric = model.metric;
+      if (metric.domain) return vizScaleLinear(metric.domain, range);
+      const extent = vizStats.extent(model.all.records.map((record) => record.value)) || [0, 1];
+      let lo = extent[0];
+      let hi = extent[1];
+      if (metric.kind === "change") {
+        lo = Math.min(lo, 0);
+        hi = Math.max(hi, 0);
+      }
+      const margin = Math.max(1, (hi - lo) * 0.04);
+      // Ten ticks' worth of rounding keeps the ends close to the data (170 to
+      // 260, not 160 to 280); the axis still labels about six of them.
+      return vizScaleLinear([lo - margin, hi + margin], range, { nice: true, ticks: 10 });
+    }
+
+    function distTick(metric, value) {
+      if (metric.kind === "change") return value === 0 ? "0" : (value > 0 ? "+" : "\u2212") + formatNumber(Math.abs(value), 1);
+      return formatNumber(value, 1);
+    }
+
+    // The largest dot that lets every row's swarm fit its half-height. When
+    // even the smallest will not fit (hundreds of records at one score), the
+    // swarm is laid up to the cap and the overflow spread across the row by
+    // a fixed golden-ratio sequence - a jittered strip, but the same one on
+    // every load.
+    function distSwarm(groups, scale, maxHalf) {
+      for (let i = 0; i < DIST_RADII.length; i += 1) {
+        const r = DIST_RADII[i];
+        const placed = groups.map((group) => vizBeeswarm(group.records, { value: (record) => record.value, scale, radius: r, padding: 1 }));
+        let spread = 0;
+        placed.forEach((points) => points.forEach((point) => { spread = Math.max(spread, Math.abs(point.offset)); }));
+        if (spread + r <= maxHalf) return { r, placed, half: Math.max(spread + r, r + 3) };
+      }
+      const r = DIST_RADII[DIST_RADII.length - 1];
+      const cap = maxHalf - r;
+      const placed = groups.map((group) => vizBeeswarm(group.records, { value: (record) => record.value, scale, radius: r, padding: 1, maxOffset: cap })
+        .map((point, k) => (point.clamped ? Object.assign(point, { offset: cap * (2 * distJitter(k) - 1) }) : point)));
+      return { r, placed, half: maxHalf };
+    }
+
+    function distJitter(index) {
+      const value = (index + 1) * 0.6180339887498949;
+      return value - Math.floor(value);
+    }
+
+    // The five NWEA bands as faint columns, each named at its head. A band's
+    // zone runs from its own minimum to the next band's, the same inclusive-
+    // exclusive rule getBand() uses, so the 61 line is Green's left edge.
+    function distZones(x, plot) {
+      return BANDS.map((band, i) => {
+        const x0 = x(i === 0 ? 0 : band.min);
+        const x1 = x(i === BANDS.length - 1 ? 100 : BANDS[i + 1].min);
+        const w = Math.max(0, x1 - x0 - 1);
+        const token = DIST_BAND_TOKENS[band.name];
+        let out = '<rect class="dist-zone" x="' + vizNum(x0 + 0.5) + '" y="2" width="' + vizNum(w) + '" height="' + vizNum(plot.bottom - 2) +
+          '" rx="3" fill="var(--' + token + '-soft)"/>';
+        const name = band.name.toUpperCase();
+        const range = (i === 0 ? 1 : band.min) + "\u2013" + (i === BANDS.length - 1 ? 99 : band.max);
+        const full = (name.length + range.length + 1) * 6.6 + 10 <= w;
+        if (full || name.length * 7 + 8 <= w) {
+          out += '<text class="dist-zone-label" x="' + vizNum(x0 + 0.5 + w / 2) + '" y="16" text-anchor="middle" fill="var(--' + token + '-ink)">' +
+            escapeHTML(name) + (full ? '<tspan class="dist-zone-range"> ' + escapeHTML(range) + "</tspan>" : "") + "</text>";
+        }
+        return out;
+      }).join("");
+    }
+
+    // Reference lines, labelled in the strip above the plot so a label never
+    // lands on a dot. The 50th is labelled to its left and the 61st to its
+    // right, so the pair still reads on a phone.
+    function distRefs(metric, x, plot) {
+      const refs = metric.kind === "percentile"
+        ? [{ value: 50, label: "50th", side: "left" }, { value: SECURE_BENCHMARK, label: ordinal(SECURE_BENCHMARK) + " \u00b7 secure", side: "right" }]
+        : metric.kind === "cgp" ? [{ value: 50, label: "CGP 50 \u00b7 typical growth", side: "right" }]
+          : metric.kind === "change" ? [{ value: 0, label: "No change", side: "right" }] : [];
+      return refs.map((ref) => {
+        const px = x(ref.value);
+        if (px === null || px < plot.left || px > plot.right) return "";
+        const toLeft = ref.side === "left" || px > plot.left + plot.innerW * 0.78;
+        return vizRefLine(plot, { x: px }) +
+          vizText(px + (toLeft ? -5 : 5), plot.top - 7, ref.label, { className: "viz-ref-label dist-ref-label", anchor: toLeft ? "end" : "start" });
+      }).join("");
+    }
+
+    function distRow(model, group, index, geo) {
+      const metric = model.metric;
+      const rowTop = geo.plot.top + index * geo.rowH;
+      const cy = rowTop + geo.labelH + geo.pad + geo.boxH / 2;
+      const hasBox = group.n >= 3 && Boolean(group.box);
+      let out = '<g class="dist-row" data-dist-row="' + index + '">' + distRowLabel(model, group, geo, rowTop, cy);
+      if (hasBox) {
+        const box = group.box;
+        // Every record is a dot already, so the box draws no outliers of its
+        // own; a dot beyond the whiskers says so in its tip. Without dots the
+        // box draws its outliers, untipped (the table lists every record).
+        out += vizBoxMark(model.drawDots ? Object.assign({}, box, { outliers: [] }) : box, geo.x, {
+          orient: "h", center: cy, width: geo.boxH, color: "var(--dist-box)", tip: distBoxTip(metric, group), focusable: true
+        });
+        if (group.thin) {
+          const x0 = Math.min(geo.x(box.q1), geo.x(box.q3));
+          out += '<rect class="viz-thin-hatch" x="' + vizNum(x0) + '" y="' + vizNum(cy - geo.boxH / 2) + '" width="' +
+            vizNum(Math.max(1, Math.abs(geo.x(box.q3) - geo.x(box.q1)))) + '" height="' + vizNum(geo.boxH) + '" rx="3" fill="' +
+            vizColor.hatchFor("var(--viz-surface)") + '"/>';
+        }
+      }
+      if (model.drawDots) out += distDots(model, group, geo.swarm.placed[index], geo, cy, hasBox);
+      if (hasBox) {
+        // The median is drawn again over the dots: the densest part of a
+        // swarm is exactly where the median sits. The mean rides on the
+        // box's top edge, clear of the dots.
+        const mx = geo.x(group.box.median);
+        const my = geo.x(group.box.mean);
+        const edge = cy - geo.boxH / 2;
+        out += '<line class="dist-median" x1="' + vizNum(mx) + '" x2="' + vizNum(mx) + '" y1="' + vizNum(edge) + '" y2="' + vizNum(cy + geo.boxH / 2) + '"/>';
+        if (my !== null) {
+          out += '<path class="dist-mean" d="M' + vizNum(my) + " " + vizNum(edge - 5) + 'l5 5l-5 5l-5 -5Z"/>';
+        }
+      }
+      return out + "</g>";
+    }
+
+    function distRowLabel(model, group, geo, rowTop, cy) {
+      const meta = distMeta(model.metric, group);
+      if (geo.compact) {
+        const room = Math.max(6, Math.floor((geo.width - 32 - meta.length * 6.2) / 7.4));
+        return '<text class="dist-row-label" x="' + vizNum(geo.plot.left) + '" y="' + vizNum(rowTop + 17) + '">' + escapeHTML(distClip(group.name, room)) +
+          '<tspan class="dist-row-meta" dx="8">' + escapeHTML(meta) + "</tspan></text>";
+      }
+      const x0 = geo.plot.left - 14;
+      return '<text class="dist-row-label" x="' + vizNum(x0) + '" y="' + vizNum(cy - 3) + '" text-anchor="end">' + escapeHTML(distClip(group.name, geo.labelChars)) + "</text>" +
+        '<text class="dist-row-meta" x="' + vizNum(x0) + '" y="' + vizNum(cy + 12) + '" text-anchor="end">' + escapeHTML(meta) + "</text>";
+    }
+
+    function distBoxTip(metric, group) {
+      const box = group.box;
+      const format = (value) => distFormat(metric, value);
+      return vizTip(group.name + " \u00b7 " + metric.label, [
+        ["Records", formatInteger(group.n)],
+        ["Median", format(box.median)],
+        ["Middle half", format(box.q1) + " to " + format(box.q3)],
+        ["Mean", distFormatMean(metric, box.mean)],
+        ["95% CI of mean", distFormatCI(metric, group.ci)],
+        ["Lowest to highest", format(box.min) + " to " + format(box.max)]
+      ], group.thin ? vizThinNote(group.n) : "");
+    }
+
+    // One dot per record. The kit builds the dot and its tip; the section
+    // adds what its keyboard walk and its click need. A dot's hit circle is
+    // half the gap to its nearest neighbour (never more than the kit's 12px),
+    // so in a crowded swarm the pointer finds the dot it is nearest to.
+    function distDots(model, group, placed, geo, cy, hasBox) {
+      const metric = model.metric;
+      const r = geo.swarm.r;
+      const fences = hasBox ? [group.box.lowerFence, group.box.upperFence] : null;
+      const points = placed.map((point) => ({ point, px: point.x, py: cy + point.offset }));
+      return points.map((entry, k) => {
+        const record = entry.point.item;
+        const style = distDotStyle(metric, record.row);
+        const outlier = Boolean(fences) && (record.value < fences[0] || record.value > fences[1]);
+        const tip = distDotTip(metric, record, style, outlier);
+        const spoken = tip.replace(/\u2063/g, "").replace(/\t/g, ": ").replace(/\n/g, ". ");
+        let nearest = Infinity;
+        for (let j = k - 1; j >= 0 && entry.px - points[j].px < 24; j -= 1) nearest = Math.min(nearest, Math.hypot(entry.px - points[j].px, entry.py - points[j].py));
+        for (let j = k + 1; j < points.length && points[j].px - entry.px < 24; j += 1) nearest = Math.min(nearest, Math.hypot(entry.px - points[j].px, entry.py - points[j].py));
+        // Without a box the row has no tab stop of its own, so its lowest dot is it.
+        const tabStop = !hasBox && k === 0;
+        return vizDot(entry.px, entry.py, {
+          r, fill: style.fill, stroke: style.stroke, tip, focusable: false, className: "viz-dot dist-dot",
+          hitR: Math.max(r + 1, Math.min(12, nearest / 2))
+        }).replace('<g class="viz-dot-wrap"', '<g class="viz-dot-wrap dist-dot-wrap" tabindex="' + (tabStop ? "0" : "-1") +
+          '" role="img" aria-label="' + escapeAttr(spoken) + '" data-dist-student="' + escapeAttr(record.row.studentName) +
+          '" data-dist-v="' + vizNum(record.value) + '"');
+      }).join("");
+    }
+
+    function distDotTip(metric, record, style, outlier) {
+      const row = record.row;
+      const lines = [["Subject", row.subject], ["Class", row.className], [metric.label, distFormat(metric, record.value)]];
+      if (metric.kind === "change" && isFiniteNumber(row.startRIT) && isFiniteNumber(row.endRIT)) {
+        lines.push(["Start to end RIT", formatNumber(row.startRIT, 1) + " to " + formatNumber(row.endRIT, 1)]);
+      }
+      lines.push([metric.colorBy === "band" ? "Band" : "Growth projection", style.label]);
+      return vizTip(row.studentName, lines, outlier ? "Beyond the whiskers: further than 1.5 box-widths from the box." : "");
+    }
+
+    // Arrow keys walk the swarm (see the note at the top of this block).
+    function distKeydown(event) {
+      const target = event.target;
+      const row = target && target.closest ? target.closest(".dist-row") : null;
+      if (!row || !target.hasAttribute("data-tip")) return;
+      const dots = [...row.querySelectorAll(".dist-dot-wrap")];
+      const isDot = target.classList.contains("dist-dot-wrap");
+      const index = isDot ? dots.indexOf(target) : -1;
+      const box = row.querySelector(".viz-box[data-tip]");
+      let next = null;
+      if (event.key === "Enter" || event.key === " ") {
+        if (!isDot) return;
+        event.preventDefault();
+        vizTooltipHide();
+        openSpotlight(target.getAttribute("data-dist-student"));
+        return;
+      }
+      if (event.key === "ArrowRight") next = isDot ? dots[index + 1] : dots[0];
+      else if (event.key === "ArrowLeft") next = isDot ? (index > 0 ? dots[index - 1] : box) : dots[dots.length - 1];
+      else if (event.key === "Home") next = dots[0];
+      else if (event.key === "End") next = dots[dots.length - 1];
+      else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        const rows = [...row.closest("svg").querySelectorAll(".dist-row")];
+        const other = rows[rows.indexOf(row) + (event.key === "ArrowDown" ? 1 : -1)];
+        if (other) next = isDot ? distNearestDot(other, Number(target.getAttribute("data-dist-v"))) : (other.querySelector(".viz-box[data-tip]") || other.querySelector(".dist-dot-wrap"));
+      } else {
+        return;
+      }
+      event.preventDefault();
+      if (next) next.focus();
+    }
+
+    function distNearestDot(row, value) {
+      let best = null;
+      let gap = Infinity;
+      row.querySelectorAll(".dist-dot-wrap").forEach((dot) => {
+        const distance = Math.abs(Number(dot.getAttribute("data-dist-v")) - value);
+        if (distance < gap) {
+          best = dot;
+          gap = distance;
+        }
+      });
+      return best || row.querySelector(".viz-box[data-tip]");
+    }
+
+    // The stats table as a CSV: one line per row of the chart, and the
+    // pooled line when there is more than one. Numbers only, no names.
+    function distExport() {
+      const model = distLast;
+      if (!model || !model.groups.length) {
+        toast("There is nothing to export in this view.", "info");
+        return;
+      }
+      const metric = model.metric;
+      const round = (value) => (isFiniteNumber(value) ? Math.round(value * 100) / 100 : "");
+      const pick = (key) => (group) => round(group.box ? group.box[key] : null);
+      const groups = model.groups.length > 1 ? model.groups.concat([model.all]) : model.groups;
+      exportCSV("distributions-" + metric.slug + ".csv", groups, [
+        [model.lens === "class" ? "Class" : "Subject", (group) => group.name],
+        ["Measure", () => metric.label],
+        ["Records", (group) => group.n],
+        ["Mean", pick("mean")],
+        ["SD", (group) => round(group.sd)],
+        ["Median", pick("median")],
+        ["Q1", pick("q1")],
+        ["Q3", pick("q3")],
+        ["IQR", pick("iqr")],
+        ["Lowest", pick("min")],
+        ["Highest", pick("max")],
+        ["95% CI of mean, low", (group) => round(group.ci && group.ci.lo)],
+        ["95% CI of mean, high", (group) => round(group.ci && group.ci.hi)],
+        ["Fewer than " + MIN_SHARE_N + " records", (group) => (group.thin ? "Yes" : "")]
+      ]);
+    }
+    // ---- end AISA: Distributions ----
 
     function renderCharts() {
       renderOverviewHeadings();
@@ -15043,6 +15941,15 @@ Suggested next steps: prioritize Intensive Support and Targeted Support students
         what: "For each subject: start and end achievement, projected against observed growth, met and exceeded rates, and the distribution across the five colour bands.",
         read: "Bars start at zero, so lengths compare fairly. Thin data is drawn from counts, and the same rule applies: fewer than 10 records is a handful of children, not a rate.",
         act: "Use them in a team meeting where a picture is quicker than a table, and print the page when the meeting is on paper."
+      },
+      "sec-distributions": {
+        what: "The shape of the scores, not just their average: one row per subject (or per class, with the lens switch), every record drawn as a dot over a box that spans the middle half of the group. Choose the measure above the chart: current percentile or RIT, and in a growth file RIT change or conditional growth percentile. A table of summary statistics sits underneath.",
+        read: "The thick line is the median and the box holds the middle half of the records, so a wide box is a spread-out group and a narrow one a tight group. The diamond on the box is the mean; the whiskers reach the furthest record within one and a half box-widths. On a percentile measure the faint stripes are the five NWEA bands; on a growth measure a purple dot met its projection and a gold dot did not. A row with fewer than 10 records is hatched: it describes a few students, not a pattern, and the 95% interval in the table shows how far its mean could move.",
+        act: "Look for the group whose median sits where you expected but whose box is twice as wide as the others: one lesson pitched at the middle will miss both ends of it. Select a dot to open that student's profile, and export the table for a department meeting.",
+        baseline: {
+          what: "The shape of this window's scores: one row per subject (or per class, with the lens switch), every record drawn as a dot over a box that spans the middle half of the group, by current percentile or RIT, with a table of summary statistics underneath. Growth measures appear once a second window exists.",
+          read: "The thick line is the median and the box holds the middle half of the records, so a wide box is a spread-out group and a narrow one a tight group. The diamond on the box is the mean; the whiskers reach the furthest record within one and a half box-widths. The faint stripes are the five NWEA bands. A row with fewer than 10 records is hatched: it describes a few students, not a pattern."
+        }
       },
       "sec-growth": {
         what: "NWEA's growth and achievement quadrants for the end window, the movement between quadrants since the start window, a scatter of every record, and median conditional growth by starting band.",
