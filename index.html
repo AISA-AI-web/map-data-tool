@@ -6102,6 +6102,254 @@
       .dist-hint { display: none; }
     }
     /* ---- end AISA: Distributions ---- */
+
+    /* ---- AISA: Movement ---- */
+    /* The band-transition matrix, the list of who is in a cell, and the
+       percentile dumbbell. Everything is drawn from the page and kit tokens,
+       so the dark theme needs no rules of its own. The band hues appear only
+       on the matrix headers; the cells use the kit's purple ramp. */
+    .move-scope {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .move-read {
+      margin: 14px 0 16px;
+      max-width: 78ch;
+      color: var(--text-soft);
+      font-size: 0.88rem;
+      line-height: 1.55;
+    }
+
+    /* The matrix wants more room than the list beside it; below the
+       two-column width both stack, and the dumbbell always takes the row. */
+    .move-grid { grid-template-columns: minmax(0, 1fr); }
+
+    @media (min-width: 960px) {
+      .move-grid { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+    }
+
+    .move-legend {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 10px 24px;
+    }
+
+    .move-key { gap: 6px 14px; }
+
+    .move-key-ring {
+      flex: none;
+      width: 16px;
+      height: 12px;
+      border-radius: 3px;
+      box-shadow: inset 0 0 0 1.5px var(--muted);
+    }
+
+    .move-key-glyph {
+      flex: none;
+      width: 12px;
+      color: var(--text-soft);
+      font-size: 0.66rem;
+      text-align: center;
+    }
+
+    .move-key-dot {
+      flex: none;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--text-soft);
+    }
+
+    .move-key-dot.is-hollow {
+      background: transparent;
+      box-shadow: inset 0 0 0 2px var(--text-soft);
+    }
+
+    /* Matrix marks. The gutter between cells is panel colour, so the rings
+       read on the palest and the darkest fill alike: a quiet grey ring on
+       the diagonal (stayed), a strong heading-colour ring on the cells being
+       listed. */
+    .move-cell-count {
+      font-size: 13px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      pointer-events: none;
+    }
+
+    .move-cell-share {
+      font-size: 10.5px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      pointer-events: none;
+    }
+
+    .move-cell-arrow { opacity: 0.72; pointer-events: none; }
+    /* The kit's hatch, a step softer: a matrix cell carries two lines of
+       text over it. */
+    .move-cell .viz-thin-hatch { opacity: 0.6; }
+    .move-cell-empty { fill: none; stroke: var(--line); stroke-width: 1; }
+    .move-cell-dash { fill: var(--muted); font-size: 11px; }
+    .move-diag { fill: none; stroke: var(--muted); stroke-width: 1.5; pointer-events: none; }
+
+    .move-lit {
+      fill: none;
+      stroke: var(--heading);
+      stroke-width: 2.5;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .move-cell.is-lit .move-lit { opacity: 1; }
+    .viz-svg .move-cell[data-move-cell] { cursor: pointer; }
+    .move-total { font-variant-numeric: tabular-nums; }
+
+    /* Who is in the selection: the list fills whatever height the matrix
+       card gives the row and scrolls inside it, so a long list never
+       stretches the grid. */
+    .move-list-card {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .move-ways { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .move-way {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 32px;
+      padding: 4px 11px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius-sm);
+      background: var(--panel-2);
+      color: var(--text-soft);
+      font: inherit;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background var(--dur-fast) var(--ease-soft), color var(--dur-fast) var(--ease-soft), border-color var(--dur-fast) var(--ease-soft);
+    }
+
+    .move-way b { color: var(--text); font-variant-numeric: tabular-nums; }
+    .move-way-glyph { font-size: 0.7em; }
+    .move-way:hover:not(:disabled):not([aria-pressed="true"]) { background: var(--brand-soft); border-color: var(--line-accent); color: var(--brand-ink); }
+
+    .move-way[aria-pressed="true"] {
+      background: var(--brand);
+      border-color: var(--brand);
+      color: var(--on-brand);
+    }
+
+    .move-way[aria-pressed="true"] b { color: inherit; }
+    .move-way:disabled { cursor: default; opacity: 0.55; }
+
+    .move-way:focus-visible {
+      outline: 2px solid var(--brand);
+      outline-offset: 2px;
+      box-shadow: var(--focus);
+    }
+
+    .move-list-box { position: relative; }
+
+    .move-list {
+      max-height: 360px;
+      margin: 0;
+      padding: 0 4px 0 0;
+      list-style: none;
+      overflow-y: auto;
+      border-top: 1px solid var(--line);
+    }
+
+    /* Beside the matrix the list takes the height the matrix card sets; on
+       its own (one column) it is as tall as its names, up to a scroll. */
+    @media (min-width: 960px) {
+      .move-list-box { flex: 1 1 auto; min-height: 220px; }
+      .move-list { position: absolute; inset: 0; max-height: none; }
+    }
+
+    .move-item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 3px 12px;
+      padding: 7px 2px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .move-item-who {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 2px 8px;
+      min-width: 0;
+    }
+
+    .move-item-who small { color: var(--muted); font-size: 0.74rem; }
+
+    .move-item-path {
+      grid-column: 1;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 3px 7px;
+      color: var(--text-soft);
+      font-size: 0.78rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .move-band { display: inline-flex; align-items: center; gap: 5px; }
+
+    .move-band-dot {
+      flex: none;
+      width: 9px;
+      height: 9px;
+      border-radius: 2px;
+      background: var(--sw);
+    }
+
+    .move-item-arrow { color: var(--muted); }
+
+    .move-item-change {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      color: var(--text);
+      font-size: 0.92rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    /* Dumbbell rows. The whole row is the hit target; it takes a brand wash
+       on hover and focus, and the end dot takes the kit's ring. */
+    .move-row-bg { fill: transparent; transition: fill var(--dur-fast) var(--ease-soft); }
+    .move-row:hover .move-row-bg,
+    .move-row:focus-visible .move-row-bg { fill: var(--brand-soft); }
+    .move-row-label { fill: var(--text-soft); font-size: 11px; font-weight: 600; }
+    .move-row-suffix { fill: var(--muted); font-weight: 500; }
+    .move-stem { stroke-width: 2; stroke-linecap: round; }
+    .move-start { fill: var(--viz-surface); stroke-width: 2; }
+    .move-end { stroke: var(--viz-surface); stroke-width: 2; }
+    .move-showall { margin-top: 10px; }
+
+    /* On paper the list prints whole (it is the selection the teacher
+       chose), so neither card stretches to the other's height. */
+    @media print {
+      .move-showall,
+      .move-ways { display: none !important; }
+      .move-grid > .viz-card { align-self: start; }
+      .move-list-box { min-height: 0; }
+      .move-list { position: static; max-height: none; overflow: visible; }
+      .move-item { break-inside: avoid; }
+    }
+    /* ---- end AISA: Movement ---- */
   </style>
 </head>
 <body>
@@ -6520,6 +6768,21 @@
         <p class="subsection-lead">Whether this group grew its lowest starters as well as its highest. A class average can look healthy while one end of the roster stands still.</p>
         <div class="equity-rows" id="growthEquity"></div>
         <p class="footer-note" id="growthEquityRead"></p>
+      </section>
+
+      <section class="section" id="sec-movement" aria-labelledby="movementTitle">
+        <div class="section-header">
+          <div>
+            <h2 id="movementTitle">Movement</h2>
+            <p id="movementNote">Where each record started and where it ended: the five percentile bands as a transition matrix, and every student's percentile change from the prior window to this one.</p>
+          </div>
+          <div class="btn-row">
+            <button class="btn small" id="exportMovementBtn" type="button">Export Movement CSV</button>
+          </div>
+        </div>
+        <div id="movementControls"></div>
+        <div class="move-wrap" id="movementWrap"></div>
+        <p class="sr-only" id="movementStatus" aria-live="polite"></p>
       </section>
 
       <section class="section" id="sec-gap" aria-labelledby="gapTitle">
@@ -10077,6 +10340,7 @@ Spring 2026,Fall 2025,North Valley,Maple School,Rivera,Period 2,Science,Science,
       renderGoals();
       renderActionBoard();
       renderGrowthEquity();
+      renderMovement();
       renderTargets();
       renderCrossSubject();
       renderStrands();
@@ -10108,6 +10372,7 @@ Spring 2026,Fall 2025,North Valley,Maple School,Rivera,Period 2,Science,Science,
       { id: "sec-charts", label: "Charts", modes: ["growth", "mixed", "baseline"] },
       { id: "sec-distributions", label: "Distributions", modes: ["growth", "mixed", "baseline"] },
       { id: "sec-growth", label: "Growth", modes: ["growth", "mixed"] },
+      { id: "sec-movement", label: "Movement", modes: ["growth", "mixed"] },
       { id: "sec-gap", label: "Gap Closure", modes: ["growth", "mixed"] },
       { id: "sec-goals", label: "Goals", modes: ["growth", "mixed", "baseline"] },
       { id: "sec-actions", label: "Actions", modes: ["growth", "mixed", "baseline"] },
@@ -13740,6 +14005,813 @@ Spring 2026,Fall 2025,North Valley,Maple School,Rivera,Period 2,Science,Science,
           "Current window on top, prior window below, so band movement is visible as a shift in colour.")
       ].join("");
     }
+
+    // ---- AISA: Movement ----
+    // =====================================================================
+    // Where each record went between the two windows, two ways. The band
+    // transition matrix crosses the start band with the end band, so the
+    // shape of the movement is one picture: the diagonal stayed, the cells to
+    // its right moved up, the cells to its left moved down. The dumbbell under
+    // it gives every record its own line from start percentile to end
+    // percentile, sorted by the size of the change, so the reader can see who
+    // moved and how far. Both read state.filteredRows, so the filter bar
+    // scopes them; one picker above them narrows both to a subject (or to a
+    // class, when the overview lens is on classes).
+    //
+    // Only records with both windows are compared. A new arrival has no start
+    // band: counting them as "stayed" would flatter the diagonal, and leaving
+    // them out without a word would misstate the class, so they are counted
+    // in the note under the tiles instead.
+    //
+    // Names appear on screen only. The picker, the selected cell and the
+    // show-all switch live in memory; nothing here is written to storage.
+
+    // Past MOVEMENT_FOLD_AT records the dumbbell shows the MOVEMENT_CAP
+    // largest changes (half rises, half falls) until "Show all" is pressed.
+    // Folding away a handful of middle rows would save nothing, hence the
+    // margin between the two.
+    const MOVEMENT_CAP = 40;
+    const MOVEMENT_FOLD_AT = 50;
+    // The kit's rule of thumb: past about sixty marks, tab stops stop helping
+    // and the table carries the values instead.
+    const MOVEMENT_FOCUSABLE_MAX = 60;
+    const MOVEMENT_SUBJECT_SHORT = { Language: "Lang", Reading: "Read", Mathematics: "Math", Science: "Sci" };
+    // Direction is carried three ways, never by colour alone: the dot order
+    // (hollow start, filled end), the word in the tip, and the colour.
+    // Purple for a rise and the gold end of the diverging ramp for a fall,
+    // because a percentile change is a value either side of zero.
+    const MOVEMENT_WAYS = [
+      { key: "up", label: "Moved up", long: "Moved up a band", glyph: "\u25b2", color: "var(--viz-cat-1)" },
+      { key: "stayed", label: "Stayed", long: "Stayed in band", glyph: "\u25a1", color: "var(--viz-other)" },
+      { key: "down", label: "Moved down", long: "Moved down a band", glyph: "\u25bc", color: "var(--viz-div-0)" }
+    ];
+
+    const movementView = {
+      group: "all",
+      lens: "",
+      // null (the default: the records that slipped, if any), or
+      // { kind: "cell", from, to } with 0-based band indexes, or
+      // { kind: "way", key }.
+      selection: null,
+      showAll: false,
+      bound: false,
+      // What the current render drew, so a click can be answered without
+      // recomputing the view.
+      matrix: null,
+      scope: null
+    };
+
+    function movementEl(id) {
+      return document.getElementById(id);
+    }
+
+    // Records with a band in both windows: the only ones that can move.
+    function movementPaired(rows) {
+      return rows.filter((row) => row.startBand && row.startBand.rank && row.endBand && row.endBand.rank);
+    }
+
+    function movementWayOf(row) {
+      const diff = row.endBand.rank - row.startBand.rank;
+      return diff > 0 ? "up" : diff < 0 ? "down" : "stayed";
+    }
+
+    function movementWayText(diff) {
+      if (!diff) return "Stayed in band";
+      const bands = Math.abs(diff) === 1 ? " band" : " bands";
+      return (diff > 0 ? "Up " : "Down ") + Math.abs(diff) + bands;
+    }
+
+    // "+12", "0", or a fall with the page's minus sign; one decimal at most.
+    function movementSigned(value) {
+      if (!isFiniteNumber(value)) return "N/A";
+      return (value > 0 ? "+" : value < 0 ? "\u2212" : "") + formatNumber(Math.abs(value), 1);
+    }
+
+    function movementPlural(count, noun) {
+      return formatInteger(count) + " " + noun + (count === 1 ? "" : "s");
+    }
+
+    // The picker follows the overview lens: subjects by default, classes when
+    // the page is looking class by class. "all" is always the first choice.
+    function movementScope(rows) {
+      const lens = currentOverviewLens();
+      if (movementView.lens !== lens) {
+        movementView.lens = lens;
+        movementView.group = "all";
+      }
+      const buckets = getOverviewBuckets(rows, lens);
+      if (movementView.group !== "all" && !buckets.includes(movementView.group)) movementView.group = "all";
+      const group = movementView.group;
+      const scoped = group === "all" ? rows : bucketRows(rows, group, lens);
+      const noun = lens === "class" ? "class" : "subject";
+      return {
+        lens,
+        buckets,
+        group,
+        rows: scoped,
+        label: group === "all" ? (buckets.length === 1 ? buckets[0] : "all " + noun + (noun === "class" ? "es" : "s") + " in view") : group,
+        multiSubject: unique(scoped.map((row) => row.subject)).length > 1,
+        multiClass: unique(scoped.map((row) => row.className)).length > 1
+      };
+    }
+
+    function movementMatrix(records) {
+      const cells = BANDS.map(() => BANDS.map(() => []));
+      records.forEach((row) => cells[row.startBand.rank - 1][row.endBand.rank - 1].push(row));
+      const rowTotals = cells.map((line) => line.reduce((sum, cell) => sum + cell.length, 0));
+      const colTotals = BANDS.map((band, j) => cells.reduce((sum, line) => sum + line[j].length, 0));
+      const counts = { up: 0, stayed: 0, down: 0 };
+      let jumps = 0;
+      cells.forEach((line, i) => line.forEach((cell, j) => {
+        counts[j > i ? "up" : j < i ? "down" : "stayed"] += cell.length;
+        if (Math.abs(j - i) >= 2) jumps += cell.length;
+      }));
+      return { cells, rowTotals, colTotals, counts, jumps, n: records.length, records };
+    }
+
+    // The selection the list is showing: the one the teacher picked while it
+    // still has records in it, otherwise the records that slipped a band
+    // (the first question at a data meeting), then those that rose.
+    function movementResolvedSelection(matrix) {
+      const sel = movementView.selection;
+      if (sel && sel.kind === "cell" && matrix.cells[sel.from] && matrix.cells[sel.from][sel.to] && matrix.cells[sel.from][sel.to].length) return sel;
+      if (sel && sel.kind === "way" && matrix.counts[sel.key]) return sel;
+      const key = matrix.counts.down ? "down" : matrix.counts.up ? "up" : "stayed";
+      return { kind: "way", key, isDefault: true };
+    }
+
+    function movementSelectionRows(matrix, sel) {
+      let rows;
+      let order;
+      if (sel.kind === "cell") {
+        rows = matrix.cells[sel.from][sel.to].slice();
+        order = sel.to < sel.from ? 1 : -1;
+      } else {
+        rows = matrix.records.filter((row) => movementWayOf(row) === sel.key);
+        order = sel.key === "down" ? 1 : -1;
+      }
+      // Largest move first: biggest rise for up and stayed, biggest fall for down.
+      return rows.sort((a, b) =>
+        order * ((a.percentileChange ?? 0) - (b.percentileChange ?? 0)) ||
+        String(a.studentName).localeCompare(String(b.studentName)));
+    }
+
+    // The default list lights nothing: the matrix opens clean, and the rings
+    // appear once the teacher asks for a cell or a direction.
+    function movementCellIsLit(sel, i, j) {
+      if (!sel || sel.isDefault) return false;
+      if (sel.kind === "cell") return sel.from === i && sel.to === j;
+      return (j > i ? "up" : j < i ? "down" : "stayed") === sel.key;
+    }
+
+    function renderMovement() {
+      const controls = movementEl("movementControls");
+      const wrap = movementEl("movementWrap");
+      if (!controls || !wrap) return;
+      movementBind();
+      if (!hasGrowthContext()) {
+        // A single-window file has nothing to move between; SECTION_PLAN
+        // hides the section, and this keeps it from holding stale rows.
+        controls.innerHTML = "";
+        vizMount(wrap, "");
+        movementView.matrix = null;
+        return;
+      }
+      const scope = movementScope(state.filteredRows);
+      const noun = scope.lens === "class" ? "Class" : "Subject";
+      const choices = [{ value: "all", label: scope.lens === "class" ? "All classes" : "All subjects" }]
+        .concat(scope.buckets.map((bucket) => ({ value: bucket, label: bucket })));
+      // One choice is no choice: with a single subject in view the picker
+      // would only repeat the card titles.
+      controls.innerHTML = scope.buckets.length > 1
+        ? vizControls(choices.length <= 5
+          ? vizSegmented({ name: "movementGroup", label: noun, options: choices, value: movementView.group })
+          : vizSelect({ name: "movementGroup", label: noun, options: choices, value: movementView.group }))
+        : "";
+      renderMovementBody(scope);
+    }
+
+    function renderMovementBody(scopeIn) {
+      const wrap = movementEl("movementWrap");
+      if (!wrap) return;
+      const scope = scopeIn || movementScope(state.filteredRows);
+      movementView.scope = scope;
+      const prior = state.dataWindow.priorWindowLabel || "the prior window";
+      const current = currentWindowName();
+      if (!state.filteredRows.length) {
+        movementView.matrix = null;
+        vizMount(wrap, vizEmpty("No records in this view. Clear a filter to see how students moved between windows."));
+        return;
+      }
+      const paired = movementPaired(scope.rows);
+      if (!paired.length) {
+        movementView.matrix = null;
+        vizMount(wrap, vizEmpty("None of the " + movementPlural(scope.rows.length, "record") + " in " + scope.label +
+          " has a percentile in both " + prior + " and " + current + ", so there is no movement to show yet. New arrivals appear here after their second test."));
+        return;
+      }
+      const matrix = movementMatrix(paired);
+      movementView.matrix = matrix;
+      const sel = movementResolvedSelection(matrix);
+      vizMount(wrap,
+        '<p class="move-scope">' + escapeHTML(scope.label) + " \u00b7 " + escapeHTML(movementPlural(matrix.n, "record")) + " with both windows</p>" +
+        movementKpis(matrix) +
+        '<p class="move-read">' + escapeHTML(movementTakeaway(matrix, scope)) + "</p>" +
+        '<div class="viz-grid move-grid">' +
+        movementMatrixCard(matrix, scope) +
+        '<article class="viz-card reveal move-list-card" id="movementSelection">' + movementSelectionInner(matrix, sel, scope) + "</article>" +
+        '<div class="is-wide move-dumbbell-wrap" id="movementDumbbell">' + movementDumbbellCard(matrix, scope) + "</div>" +
+        "</div>");
+      if (typeof observeReveals === "function") observeReveals();
+    }
+
+    function movementKpis(matrix) {
+      const n = matrix.n;
+      const thin = vizIsThin(n);
+      const tiles = MOVEMENT_WAYS.map((way) => vizKpiTile({
+        label: way.long,
+        value: formatShare({ n: matrix.counts[way.key], of: n }),
+        context: thin ? vizThinNote(n) : formatInteger(matrix.counts[way.key]) + " of " + movementPlural(n, "record"),
+        thin
+      }));
+      const changes = vizStats.numbers(matrix.records.map((row) => row.percentileChange));
+      const middle = vizStats.quantile(changes, 0.5);
+      tiles.push(vizKpiTile({
+        label: "Median percentile change",
+        value: movementSigned(middle),
+        unit: isFiniteNumber(middle) ? " pts" : "",
+        context: vizIsThin(changes.length) ? vizThinNote(changes.length) : "the middle of " + formatInteger(changes.length) + " changes: half above it, half below",
+        thin: vizIsThin(changes.length)
+      }));
+      return vizKpiRow(tiles);
+    }
+
+    // The sentence the tiles add up to. It describes; it never says why.
+    function movementTakeaway(matrix, scope) {
+      const n = matrix.n;
+      const c = matrix.counts;
+      const prior = state.dataWindow.priorWindowLabel || "the prior window";
+      const current = currentWindowName();
+      const part = (count) => formatShare({ n: count, of: n });
+      let text;
+      if (vizIsThin(n)) {
+        text = "Only " + movementPlural(n, "record") + " here " + (n === 1 ? "has" : "have") + " both windows \u2013 too few to read as a pattern: " +
+          formatInteger(c.up) + " moved up a band, " + formatInteger(c.stayed) + " stayed and " + formatInteger(c.down) + " moved down.";
+      } else {
+        text = "Of " + movementPlural(n, "record") + " with both windows, " + part(c.up) + " moved up at least one band, " +
+          part(c.stayed) + " stayed and " + part(c.down) + " moved down" +
+          (c.up > c.down ? ", so more rose than fell." : c.up < c.down ? ", so more fell than rose." : ", as many rising as falling.");
+        if (matrix.jumps) text += " " + (matrix.jumps === 1 ? "One record" : formatInteger(matrix.jumps) + " records") + " crossed two bands or more.";
+        // Only rows that can go the way in question, and only rows big
+        // enough to read: Blue cannot rise and Red cannot fall.
+        const rates = BANDS.map((band, i) => {
+          const line = matrix.cells[i];
+          const total = matrix.rowTotals[i];
+          return {
+            band,
+            total,
+            up: line.slice(i + 1).reduce((sum, cell) => sum + cell.length, 0) / (total || 1),
+            down: line.slice(0, i).reduce((sum, cell) => sum + cell.length, 0) / (total || 1),
+            canUp: i < BANDS.length - 1,
+            canDown: i > 0
+          };
+        }).filter((entry) => !vizIsThin(entry.total));
+        const rising = rates.filter((entry) => entry.canUp && entry.up > 0).sort((a, b) => b.up - a.up)[0];
+        const slipping = rates.filter((entry) => entry.canDown && entry.down > 0).sort((a, b) => b.down - a.down)[0];
+        const rate = (value, entry) => formatPercentWhole(value * 100) + " of " + formatInteger(entry.total);
+        let clause = "";
+        if (rising && slipping && rising.band === slipping.band) {
+          clause = rising.band.name + " starters were both the most likely to move up (" + rate(rising.up, rising) + ") and the most likely to slip (" + rate(slipping.down, slipping) + ")";
+        } else {
+          clause = [
+            rising ? rising.band.name + " starters were the most likely to move up (" + rate(rising.up, rising) + ")" : "",
+            slipping ? slipping.band.name + " starters " + (rising ? "" : "were ") + "the most likely to slip (" + rate(slipping.down, slipping) + ")" : ""
+          ].filter(Boolean).join(", and ");
+        }
+        if (clause) text += " Among starting bands with at least " + MIN_SHARE_N + " records, " + clause + ".";
+      }
+      const noStart = scope.rows.filter((row) => row.endBand && row.endBand.rank && !(row.startBand && row.startBand.rank)).length;
+      const noEnd = scope.rows.filter((row) => row.startBand && row.startBand.rank && !(row.endBand && row.endBand.rank)).length;
+      const left = [];
+      if (noStart) left.push(movementPlural(noStart, "record") + " with no " + prior + " score (new since then)");
+      if (noEnd) left.push(movementPlural(noEnd, "record") + " with no " + current + " score");
+      if (left.length) text += " Not counted: " + listSentence(left) + ".";
+      return text;
+    }
+
+    // --- The transition matrix --------------------------------------------
+    function movementMatrixCard(matrix, scope) {
+      const prior = state.dataWindow.priorWindowLabel || "Prior window";
+      const current = currentWindowName();
+      const tableRows = BANDS.map((band, i) => {
+        const entry = { start: band.name, total: matrix.rowTotals[i], thin: vizIsThin(matrix.rowTotals[i]) };
+        BANDS.forEach((end, j) => { entry["b" + j] = matrix.cells[i][j].length; });
+        return entry;
+      });
+      const totalsRow = { start: "Total", total: matrix.n, thin: false, isTotal: true };
+      BANDS.forEach((end, j) => { totalsRow["b" + j] = matrix.colTotals[j]; });
+      const cellText = (value, row) => {
+        if (row.isTotal) return formatInteger(value);
+        if (!value) return "\u2013";
+        return row.thin ? formatInteger(value) + " of " + formatInteger(row.total) : formatInteger(value) + " (" + formatPercentWhole(value / row.total * 100) + ")";
+      };
+      const table = vizTable({
+        caption: "Records by start band (rows) and end band (columns), with each cell's share of its row",
+        columns: [{ key: "start", label: "Started in" }]
+          .concat(BANDS.map((band, j) => ({ key: "b" + j, label: band.name, numeric: true, format: cellText, thin: (row) => row.thin })))
+          .concat([{ key: "total", label: "Total", numeric: true, format: (value) => formatInteger(value) }]),
+        rows: tableRows.concat([totalsRow])
+      });
+      const legend = '<div class="move-legend">' +
+        vizScaleLegend({ kind: "sequential", min: 0, max: 100, format: (value) => formatNumber(value, 0) + "%", title: "Share of the starting band" }) +
+        '<ul class="viz-legend move-key" aria-label="How to read the cells">' +
+        '<li class="viz-legend-item"><span class="move-key-ring" aria-hidden="true"></span>Outlined: stayed in band</li>' +
+        '<li class="viz-legend-item"><span class="move-key-glyph" aria-hidden="true">\u25b2</span>Right of it: moved up</li>' +
+        '<li class="viz-legend-item"><span class="move-key-glyph" aria-hidden="true">\u25bc</span>Left of it: moved down</li>' +
+        (BANDS.some((band, i) => matrix.rowTotals[i] && vizIsThin(matrix.rowTotals[i]))
+          ? '<li class="viz-legend-item"><span class="viz-swatch is-thin" style="--sw:var(--viz-seq-2)" aria-hidden="true"></span>Hatched: fewer than ' + MIN_SHARE_N + " starters</li>"
+          : "") +
+        "</ul></div>";
+      return vizCard({
+        eyebrow: "Band transitions",
+        title: "Start band \u2192 end band \u00b7 " + scope.label,
+        sub: "Rows: the band in " + prior + ". Columns: the band in " + current + ". Each cell is a count; its shade is that count's share of the row. Click a cell to list its students.",
+        body: vizChartSlot((width) => movementMatrixChart(matrix, width, scope), { minHeight: 300 }) + legend,
+        table: vizTableToggle(table),
+        className: "move-matrix-card"
+      });
+    }
+
+    function movementMatrixChart(matrix, width, scope) {
+      const prior = state.dataWindow.priorWindowLabel || "Prior window";
+      const current = currentWindowName();
+      const size = BANDS.length;
+      const longest = BANDS.reduce((max, band) => Math.max(max, band.name.length), 0) * VIZ_CHAR_PX;
+      const narrow = width < 400;
+      const titleW = 20;
+      const headW = Math.ceil(longest) + 18;
+      const totalW = narrow ? 34 : 52;
+      const gridLeft = titleW + headW;
+      const step = Math.max(30, Math.min(112, Math.floor((width - gridLeft - totalW - 2) / size)));
+      const cellH = Math.round(Math.max(38, Math.min(62, step * 0.66)));
+      const turn = longest > step - 6;
+      const stripY = 20 + (turn ? Math.ceil(longest * Math.sin(35 * Math.PI / 180) + 14) : 20);
+      const gridTop = stripY + 9;
+      const gridBottom = gridTop + cellH * size;
+      const totalX = gridLeft + step * size + totalW / 2;
+      const height = gridBottom + 30;
+      const sel = movementResolvedSelection(matrix);
+      let out = "";
+
+      // Axis titles: the columns are the later window, the rows the earlier.
+      out += '<text class="viz-axis-title" x="' + vizNum(gridLeft) + '" y="11">' + escapeHTML("Ended in " + current + " \u2192") + "</text>";
+      out += '<text class="viz-axis-title" transform="translate(9 ' + vizNum((gridTop + gridBottom) / 2) + ') rotate(-90)" text-anchor="middle" dominant-baseline="central">' +
+        escapeHTML("Started in " + prior) + "</text>";
+
+      // Band headers: the name, and a strip of the band's own colour. The
+      // band colours stay on the headers; the cells use the purple ramp, so
+      // a band hue never has to be read as an amount.
+      BANDS.forEach((band, j) => {
+        const cx = gridLeft + step * j + step / 2;
+        out += turn
+          ? '<text class="viz-tick is-band" transform="translate(' + vizNum(cx - 2) + " " + vizNum(stripY - 6) + ') rotate(-35)" text-anchor="start" dominant-baseline="central">' + escapeHTML(band.name) + "</text>"
+          : '<text class="viz-tick is-band" x="' + vizNum(cx) + '" y="' + vizNum(stripY - 7) + '" text-anchor="middle">' + escapeHTML(band.name) + "</text>";
+        out += '<rect class="move-strip" x="' + vizNum(gridLeft + step * j + 3) + '" y="' + vizNum(stripY) + '" width="' + vizNum(step - 6) + '" height="4" rx="2" fill="' + escapeAttr(band.color) + '"/>';
+      });
+      out += '<text class="viz-tick" x="' + vizNum(totalX) + '" y="' + vizNum(stripY - 7) + '" text-anchor="middle">' + (narrow ? "n" : "Total") + "</text>";
+
+      BANDS.forEach((start, i) => {
+        const y = gridTop + cellH * i;
+        const rowN = matrix.rowTotals[i];
+        const thin = vizIsThin(rowN);
+        out += '<rect class="move-strip" x="' + vizNum(titleW + 2) + '" y="' + vizNum(y + 3) + '" width="4" height="' + vizNum(cellH - 6) + '" rx="2" fill="' + escapeAttr(start.color) + '"/>';
+        out += '<text class="viz-tick is-band" x="' + vizNum(titleW + 12) + '" y="' + vizNum(y + cellH / 2) + '" dominant-baseline="central">' + escapeHTML(start.name) + "</text>";
+        BANDS.forEach((end, j) => {
+          out += movementCellMark(matrix, i, j, {
+            x: gridLeft + step * j, y, w: step, h: cellH, rowN, thin,
+            lit: movementCellIsLit(sel, i, j),
+            pressed: sel.kind === "cell" && sel.from === i && sel.to === j
+          });
+        });
+        out += '<text class="viz-label is-muted move-total" x="' + vizNum(totalX) + '" y="' + vizNum(y + cellH / 2) + '" text-anchor="middle" dominant-baseline="central">' + escapeHTML(formatInteger(rowN)) + "</text>";
+      });
+
+      // Column totals, and the grand total in the corner.
+      out += '<line class="viz-axis-line" x1="' + vizNum(titleW) + '" x2="' + vizNum(gridLeft + step * size + totalW) + '" y1="' + vizNum(gridBottom + 5) + '" y2="' + vizNum(gridBottom + 5) + '"/>';
+      out += '<text class="viz-tick is-band" x="' + vizNum(titleW + 12) + '" y="' + vizNum(gridBottom + 19) + '" dominant-baseline="central">Total</text>';
+      BANDS.forEach((end, j) => {
+        out += '<text class="viz-label is-muted move-total" x="' + vizNum(gridLeft + step * j + step / 2) + '" y="' + vizNum(gridBottom + 19) + '" text-anchor="middle" dominant-baseline="central">' +
+          escapeHTML(formatInteger(matrix.colTotals[j])) + "</text>";
+      });
+      out += '<text class="viz-label move-total" x="' + vizNum(totalX) + '" y="' + vizNum(gridBottom + 19) + '" text-anchor="middle" dominant-baseline="central">' + escapeHTML(formatInteger(matrix.n)) + "</text>";
+
+      const c = matrix.counts;
+      return vizFrame(out, {
+        width,
+        height,
+        className: "move-matrix",
+        ariaLabel: "Band transitions for " + scope.label + ": of " + movementPlural(matrix.n, "record") + ", " + formatInteger(c.up) + " moved up a band, " +
+          formatInteger(c.stayed) + " stayed and " + formatInteger(c.down) + " moved down.",
+        desc: "Rows are the start band in " + prior + ", columns the end band in " + current + ", both from Red to Blue. Cells on the outlined diagonal stayed in their band; cells to the right of it moved up, cells to the left moved down. Each cell is a button that lists its students."
+      });
+    }
+
+    // One cell: a count on a fill from the sequential ramp (its share of the
+    // row), with a panel-coloured gutter so the rings sit clear of the fill.
+    // The diagonal carries a quiet ring, a lit cell (the one listed, or every
+    // cell in the direction listed) a strong one, and moved-up and
+    // moved-down cells a small corner arrow, so direction never rests on
+    // position alone.
+    function movementCellMark(matrix, i, j, box) {
+      const rows = matrix.cells[i][j];
+      const count = rows.length;
+      const diff = j - i;
+      const start = BANDS[i];
+      const end = BANDS[j];
+      const inset = 3;
+      const fx = box.x + inset;
+      const fy = box.y + inset;
+      const fw = box.w - inset * 2;
+      const fh = box.h - inset * 2;
+      const ring = (cls) => '<rect class="' + cls + '" x="' + vizNum(box.x + 0.75) + '" y="' + vizNum(box.y + 0.75) + '" width="' + vizNum(box.w - 1.5) +
+        '" height="' + vizNum(box.h - 1.5) + '" rx="6"/>';
+      if (!count) {
+        return '<g class="move-cell is-empty" aria-hidden="true"><rect class="move-cell-empty" x="' + vizNum(fx + 0.5) + '" y="' + vizNum(fy + 0.5) + '" width="' + vizNum(fw - 1) +
+          '" height="' + vizNum(fh - 1) + '" rx="4"/>' +
+          '<text class="move-cell-dash" x="' + vizNum(fx + fw / 2) + '" y="' + vizNum(fy + fh / 2) + '" text-anchor="middle" dominant-baseline="central">\u2013</text>' +
+          (diff === 0 ? ring("move-diag") : "") + "</g>";
+      }
+      const shareValue = count / box.rowN;
+      const fill = vizColor.sequential(shareValue);
+      const ink = vizColor.textOn(fill);
+      const shareText = box.thin ? "of " + formatInteger(box.rowN) : formatPercentWhole(shareValue * 100);
+      const countText = formatInteger(count);
+      const tip = vizTip("Started " + start.name + ", ended " + end.name, [
+        ["Records", countText],
+        ["Share of " + start.name + " starters", formatShare({ n: count, of: box.rowN })],
+        ["Movement", movementWayText(diff)]
+      ], (box.thin ? vizThinNote(box.rowN) + " " : "") + "Click, or press Enter, to list these students.");
+      const label = start.name + " to " + end.name + ": " + movementPlural(count, "record") + ", " +
+        (box.thin ? formatInteger(count) + " of " + formatInteger(box.rowN) : formatPercentWhole(shareValue * 100) + " of") + " " + start.name + " starters, " + movementWayText(diff).toLowerCase();
+      let out = '<g class="move-cell' + (box.lit ? " is-lit" : "") + (box.thin ? " is-thin" : "") + '" data-move-cell="' + i + "-" + j + '"' +
+        vizTipAttrs(tip, { focusable: false }) + ' tabindex="0" role="button" aria-pressed="' + (box.pressed ? "true" : "false") + '" aria-label="' + escapeAttr(label) + '">' +
+        '<rect class="viz-mark" x="' + vizNum(fx) + '" y="' + vizNum(fy) + '" width="' + vizNum(fw) + '" height="' + vizNum(fh) + '" rx="4" fill="' + escapeAttr(fill) + '"/>';
+      if (box.thin) {
+        out += '<rect class="viz-thin-hatch" x="' + vizNum(fx) + '" y="' + vizNum(fy) + '" width="' + vizNum(fw) + '" height="' + vizNum(fh) + '" rx="4" fill="' + vizColor.hatchFor(fill) + '"/>';
+      }
+      const twoLines = fh >= 34 && shareText.length * 6 + 8 <= fw;
+      const countFits = countText.length * 8 + 6 <= fw;
+      if (countFits) {
+        out += '<text class="move-cell-count" x="' + vizNum(fx + fw / 2) + '" y="' + vizNum(fy + fh / 2 - (twoLines ? 7 : 0)) + '" text-anchor="middle" dominant-baseline="central" fill="' + escapeAttr(ink) + '">' + escapeHTML(countText) + "</text>";
+        if (twoLines) {
+          out += '<text class="move-cell-share" x="' + vizNum(fx + fw / 2) + '" y="' + vizNum(fy + fh / 2 + 9) + '" text-anchor="middle" dominant-baseline="central" fill="' + escapeAttr(ink) + '">' + escapeHTML(shareText) + "</text>";
+        }
+      }
+      // The corner arrow: top-right pointing up, bottom-left pointing down.
+      if (diff && fw >= 40 && fh >= 32) {
+        const d = diff > 0
+          ? "M" + vizNum(fx + fw - 7.5) + " " + vizNum(fy + 4) + "l3.5 5h-7z"
+          : "M" + vizNum(fx + 7.5) + " " + vizNum(fy + fh - 4) + "l3.5 -5h-7z";
+        out += '<path class="move-cell-arrow" d="' + d + '" fill="' + escapeAttr(ink) + '"/>';
+      }
+      if (diff === 0) out += ring("move-diag");
+      out += ring("move-lit");
+      return out + "</g>";
+    }
+
+    // --- Who is in the selection ------------------------------------------
+    function movementSelectionInner(matrix, sel, scope) {
+      const rows = movementSelectionRows(matrix, sel);
+      let title;
+      let sub;
+      if (sel.kind === "cell") {
+        const start = BANDS[sel.from];
+        const end = BANDS[sel.to];
+        const rowN = matrix.rowTotals[sel.from];
+        title = sel.from === sel.to ? "Started and ended in " + start.name : "Started " + start.name + ", ended " + end.name;
+        sub = movementPlural(rows.length, "record") + " \u00b7 " + formatShareInline({ n: rows.length, of: rowN }, "the " + start.name + " starters") + " \u00b7 " + movementWayText(sel.to - sel.from).toLowerCase();
+      } else {
+        const way = MOVEMENT_WAYS.find((entry) => entry.key === sel.key) || MOVEMENT_WAYS[0];
+        title = way.long;
+        const ofAll = formatShareInline({ n: rows.length, of: matrix.n }, "records with both windows");
+        sub = (vizIsThin(matrix.n) ? ofAll : movementPlural(rows.length, "record") + " \u00b7 " + ofAll) +
+          (sel.isDefault && sel.key === "down" ? " \u00b7 listed first: check these before the rest" : "");
+      }
+      const buttons = '<div class="move-ways" role="group" aria-label="List the students who">' +
+        MOVEMENT_WAYS.map((way) => {
+          const count = matrix.counts[way.key];
+          const on = sel.kind === "way" && sel.key === way.key;
+          return '<button type="button" class="move-way is-' + way.key + '" data-move-way="' + way.key + '" aria-pressed="' + on + '"' + (count ? "" : " disabled") + ">" +
+            '<span class="move-way-glyph" aria-hidden="true">' + way.glyph + "</span>" + escapeHTML(way.label) + " <b>" + formatInteger(count) + "</b></button>";
+        }).join("") + "</div>";
+      const items = rows.map((row) => {
+        const meta = [scope.multiSubject ? row.subject : "", scope.multiClass ? row.className : ""].filter(Boolean).join(" \u00b7 ");
+        return '<li class="move-item">' +
+          '<span class="move-item-who">' + studentLink(row) + (meta ? "<small>" + escapeHTML(meta) + "</small>" : "") + "</span>" +
+          '<span class="move-item-path">' +
+          '<span class="move-band"><i class="move-band-dot" style="--sw:' + escapeAttr(row.startBand.color) + '" aria-hidden="true"></i>' + escapeHTML(row.startBand.name + " " + ordinal(row.startPercentile)) + "</span>" +
+          '<span class="move-item-arrow" aria-hidden="true">\u2192</span><span class="sr-only"> to </span>' +
+          '<span class="move-band"><i class="move-band-dot" style="--sw:' + escapeAttr(row.endBand.color) + '" aria-hidden="true"></i>' + escapeHTML(row.endBand.name + " " + ordinal(row.endPercentile)) + "</span>" +
+          "</span>" +
+          '<span class="move-item-change"><span class="sr-only">change </span>' + escapeHTML(movementSigned(row.percentileChange)) + "</span>" +
+          "</li>";
+      }).join("");
+      return '<div class="viz-card-head"><span class="viz-eyebrow">Who is in it</span>' +
+        '<h3 class="viz-card-title">' + escapeHTML(title) + "</h3>" +
+        '<p class="viz-card-sub">' + escapeHTML(sub) + "</p></div>" +
+        buttons +
+        '<div class="move-list-box"><ul class="move-list" aria-label="' + escapeAttr(title) + '">' + items + "</ul></div>" +
+        '<p class="viz-note">Percentiles, ' + escapeHTML((state.dataWindow.priorWindowLabel || "prior window") + " \u2192 " + currentWindowName()) +
+        ", with the change in percentile points. Open a name for that student's spotlight.</p>";
+    }
+
+    // Answer a click on a cell or a direction button without redrawing the
+    // chart: the list is rewritten and the cells' lit state is flipped in
+    // place, so keyboard focus stays exactly where it was.
+    function movementSelect(next) {
+      const matrix = movementView.matrix;
+      if (!matrix) return;
+      movementView.selection = next;
+      const sel = movementResolvedSelection(matrix);
+      const card = movementEl("movementSelection");
+      const active = document.activeElement;
+      const refocusWay = active && active.closest && card && card.contains(active) && active.getAttribute("data-move-way");
+      if (card) card.innerHTML = movementSelectionInner(matrix, sel, movementView.scope || movementScope(state.filteredRows));
+      if (refocusWay && card) {
+        const again = card.querySelector('[data-move-way="' + cssEscape(refocusWay) + '"]');
+        if (again) again.focus();
+      }
+      document.querySelectorAll("#movementWrap .move-cell[data-move-cell]").forEach((cell) => {
+        const [i, j] = cell.getAttribute("data-move-cell").split("-").map(Number);
+        cell.classList.toggle("is-lit", movementCellIsLit(sel, i, j));
+        // Pressed is the cell's own state; a direction lights cells without
+        // pressing them.
+        cell.setAttribute("aria-pressed", sel.kind === "cell" && sel.from === i && sel.to === j ? "true" : "false");
+      });
+      const count = movementSelectionRows(matrix, sel).length;
+      const heading = card && card.querySelector(".viz-card-title");
+      const status = movementEl("movementStatus");
+      if (status) status.textContent = (heading ? heading.textContent : "Selection") + ": " + movementPlural(count, "record") + " listed.";
+    }
+
+    // --- The dumbbell -----------------------------------------------------
+    function movementDumbbellCard(matrix, scope) {
+      const prior = state.dataWindow.priorWindowLabel || "Prior window";
+      const current = currentWindowName();
+      const records = movementSorted(matrix.records);
+      const n = records.length;
+      const capped = n > MOVEMENT_FOLD_AT && !movementView.showAll;
+      const tableColumns = [{ key: "name", label: "Student" }]
+        .concat(scope.multiSubject ? [{ key: "subject", label: "Subject" }] : [])
+        .concat(scope.multiClass ? [{ key: "className", label: "Class" }] : [])
+        .concat([
+          { key: "start", label: prior, numeric: true, format: (value) => ordinal(value) },
+          { key: "end", label: current, numeric: true, format: (value) => ordinal(value) },
+          { key: "change", label: "Change", numeric: true, format: (value) => movementSigned(value) },
+          { key: "met", label: "Met projection" }
+        ]);
+      const table = vizTable({
+        caption: "Percentile in each window, sorted by change",
+        columns: tableColumns,
+        rows: records.map((row) => ({
+          name: row.studentName,
+          subject: row.subject,
+          className: row.className,
+          start: row.startPercentile,
+          end: row.endPercentile,
+          change: row.percentileChange,
+          met: movementMetText(row)
+        }))
+      });
+      const legend = '<ul class="viz-legend" aria-label="Key">' +
+        '<li class="viz-legend-item"><span class="move-key-dot is-hollow" aria-hidden="true"></span>' + escapeHTML(prior) + "</li>" +
+        '<li class="viz-legend-item"><span class="move-key-dot" aria-hidden="true"></span>' + escapeHTML(current) + "</li>" +
+        MOVEMENT_WAYS.map((way) => '<li class="viz-legend-item"><span class="viz-swatch is-line" style="--sw:' + way.color + '" aria-hidden="true"></span>' +
+          escapeHTML(way.key === "up" ? "Rose" : way.key === "down" ? "Fell" : "No change") + "</li>").join("") +
+        "</ul>";
+      const toggle = n > MOVEMENT_FOLD_AT
+        ? '<button type="button" class="btn small ghost move-showall" data-move-showall aria-expanded="' + (movementView.showAll ? "true" : "false") + '">' +
+          escapeHTML(movementView.showAll ? "Show only the " + MOVEMENT_CAP + " largest changes" : "Show all " + formatInteger(n) + " records") + "</button>"
+        : "";
+      const shown = capped
+        ? "Showing the " + MOVEMENT_CAP / 2 + " largest rises and the " + MOVEMENT_CAP / 2 + " largest falls of " + movementPlural(n, "record") + "; the table below lists every one. "
+        : "";
+      return vizCard({
+        eyebrow: "Percentile change",
+        title: "Start \u2192 end percentile by student \u00b7 " + scope.label,
+        sub: "One line per student record, sorted by the change from " + prior + " to " + current + ". Hover or focus a line for the detail.",
+        legend,
+        body: vizChartSlot((width) => movementDumbbellChart(records, width, scope), { minHeight: 240 }) + toggle,
+        note: shown + "Dashed lines: the 50th percentile (the national median) and the " + ordinal(SECURE_BENCHMARK) +
+          " (this dashboard's secure line). A change of a few percentile points can be measurement error rather than real movement.",
+        table: vizTableToggle(table),
+        className: "move-dumbbell-card"
+      });
+    }
+
+    function movementSorted(records) {
+      return records.filter((row) => isFiniteNumber(row.startPercentile) && isFiniteNumber(row.endPercentile))
+        .sort((a, b) => (b.percentileChange ?? 0) - (a.percentileChange ?? 0) ||
+          String(a.studentName).localeCompare(String(b.studentName)) ||
+          String(a.subject).localeCompare(String(b.subject)));
+    }
+
+    function movementMetText(row) {
+      if (row.metGrowth === true) return row.metGrowthInferred ? "Yes (inferred)" : "Yes";
+      if (row.metGrowth === false) return row.metGrowthInferred ? "No (inferred)" : "No";
+      return "Not reported";
+    }
+
+    function movementDumbbellChart(records, width, scope) {
+      const prior = state.dataWindow.priorWindowLabel || "Prior window";
+      const current = currentWindowName();
+      const n = records.length;
+      const capped = n > MOVEMENT_FOLD_AT && !movementView.showAll;
+      const half = MOVEMENT_CAP / 2;
+      const shown = capped ? records.slice(0, half).concat(records.slice(n - half)) : records;
+      const hidden = capped ? records.slice(half, n - half) : [];
+      const focusable = shown.length <= MOVEMENT_FOCUSABLE_MAX;
+      const rowH = 20;
+      const gapH = capped ? 30 : 0;
+
+      // Row labels: the name, and the subject when more than one is in view.
+      // Long names are cut to fit; the tip and the table keep them whole.
+      const maxLabel = Math.min(Math.round(width * 0.4), 210);
+      const labels = shown.map((row) => {
+        const suffix = scope.multiSubject ? " \u00b7 " + (MOVEMENT_SUBJECT_SHORT[row.subject] || row.subject) : "";
+        let name = String(row.studentName || "");
+        const room = Math.floor((maxLabel - suffix.length * VIZ_CHAR_PX) / VIZ_CHAR_PX);
+        if (name.length > room) name = name.slice(0, Math.max(3, room - 1)) + "\u2026";
+        return { name, suffix, px: (name.length + suffix.length) * VIZ_CHAR_PX };
+      });
+      const labelW = Math.min(maxLabel, Math.max(60, ...labels.map((label) => label.px))) + 12;
+      const top = 36;
+      const bottomAxis = shown.length > 20;
+      const plot = vizLayout(width, top + shown.length * rowH + gapH + (bottomAxis ? 30 : 8), {
+        top, left: labelW, right: 30, bottom: bottomAxis ? 30 : 8
+      });
+      const x = vizScaleLinear([0, 100], [plot.left, plot.right]);
+      const ticks = x.ticks(width < 420 ? 3 : 5);
+      let out = "";
+
+      ticks.forEach((tick) => {
+        const px = x(tick);
+        out += '<line class="viz-grid-line" x1="' + vizNum(px) + '" x2="' + vizNum(px) + '" y1="' + vizNum(plot.top - 4) + '" y2="' + vizNum(plot.bottom) + '"/>';
+        out += '<text class="viz-tick" x="' + vizNum(px) + '" y="' + vizNum(plot.top - 10) + '" text-anchor="middle">' + escapeHTML(formatNumber(tick, 0)) + "</text>";
+      });
+      out += '<text class="viz-axis-title" x="' + vizNum(plot.left - 12) + '" y="' + vizNum(plot.top - 10) + '" text-anchor="end">Percentile</text>';
+      // The two reference lines, labelled above the plot and pointing away
+      // from each other so the two labels never meet.
+      const x50 = x(50);
+      const xSecure = x(SECURE_BENCHMARK);
+      out += vizRefLine(plot, { x: x50 });
+      out += vizRefLine(plot, { x: xSecure });
+      out += '<text class="viz-ref-label" x="' + vizNum(x50 - 4) + '" y="11" text-anchor="end">50th</text>';
+      out += '<text class="viz-ref-label" x="' + vizNum(xSecure + 4) + '" y="11" text-anchor="start">' + escapeHTML(ordinal(SECURE_BENCHMARK) + (width >= 520 ? " \u00b7 secure" : "")) + "</text>";
+
+      let y = plot.top;
+      shown.forEach((row, index) => {
+        if (capped && index === half) {
+          const from = hidden[0].percentileChange;
+          const to = hidden[hidden.length - 1].percentileChange;
+          const fold = movementPlural(hidden.length, "more record") + (width < 480 ? ", " : ", changes ") + movementSigned(from) + " to " + movementSigned(to);
+          out += '<text class="viz-label is-muted" x="' + vizNum(width / 2) + '" y="' + vizNum(y + gapH / 2) + '" text-anchor="middle" dominant-baseline="central">' +
+            escapeHTML("\u22ef " + fold + " \u22ef") + "</text>";
+          y += gapH;
+        }
+        const cy = y + rowH / 2;
+        const change = row.percentileChange;
+        const way = change > 0 ? MOVEMENT_WAYS[0] : change < 0 ? MOVEMENT_WAYS[2] : MOVEMENT_WAYS[1];
+        const xs = x(row.startPercentile);
+        const xe = x(row.endPercentile);
+        const title = row.studentName + (scope.multiSubject ? " \u00b7 " + row.subject : "");
+        const tipRows = [
+          [prior, ordinal(row.startPercentile) + " (" + row.startBand.name + ")"],
+          [current, ordinal(row.endPercentile) + " (" + row.endBand.name + ")"],
+          ["Change", movementSigned(change) + (Math.abs(change) === 1 ? " point" : " points")],
+          ["Met projection", movementMetText(row)]
+        ];
+        if (scope.multiClass) tipRows.push(["Class", row.className]);
+        const tip = vizTip(title, tipRows, row.metCertainty === "too-close" ? "Met or not is too close to call: inside the test's measurement error." : "");
+        const label = labels[index];
+        out += '<g class="move-row"' + vizTipAttrs(tip, { focusable }) + ">" +
+          '<rect class="move-row-bg" x="0" y="' + vizNum(y) + '" width="' + vizNum(width) + '" height="' + vizNum(rowH) + '" rx="4"/>' +
+          '<text class="move-row-label" x="' + vizNum(plot.left - 12) + '" y="' + vizNum(cy) + '" text-anchor="end" dominant-baseline="central">' +
+          escapeHTML(label.name) + (label.suffix ? '<tspan class="move-row-suffix">' + escapeHTML(label.suffix) + "</tspan>" : "") + "</text>";
+        if (change) {
+          out += '<line class="move-stem" x1="' + vizNum(xs) + '" x2="' + vizNum(xe) + '" y1="' + vizNum(cy) + '" y2="' + vizNum(cy) + '" stroke="' + way.color + '"/>' +
+            '<circle class="move-start" cx="' + vizNum(xs) + '" cy="' + vizNum(cy) + '" r="3.5" stroke="' + way.color + '"/>';
+        }
+        out += '<circle class="viz-mark move-end" cx="' + vizNum(xe) + '" cy="' + vizNum(cy) + '" r="4.5" fill="' + way.color + '"/>';
+        out += "</g>";
+        // The two ends of the sort carry their number; the rest are in the
+        // tip and the table.
+        if (change && (index === 0 || index === shown.length - 1)) {
+          const right = change > 0;
+          let lx = right ? xe + 9 : xe - 9;
+          let anchor = right ? "start" : "end";
+          if (!right && lx - 30 < plot.left) { lx = xs + 9; anchor = "start"; }
+          if (right && lx + 30 > width) { lx = xs - 9; anchor = "end"; }
+          out += '<text class="viz-label" x="' + vizNum(lx) + '" y="' + vizNum(cy) + '" text-anchor="' + anchor + '" dominant-baseline="central">' + escapeHTML(movementSigned(change)) + "</text>";
+        }
+        y += rowH;
+      });
+      if (bottomAxis) {
+        out += vizAxisBottom(x, plot, { ticks, format: (value) => formatNumber(value, 0) });
+      }
+      const rises = records.filter((row) => row.percentileChange > 0).length;
+      const falls = records.filter((row) => row.percentileChange < 0).length;
+      return vizFrame(out, {
+        width,
+        height: plot.height,
+        className: "move-dumbbell",
+        ariaLabel: "Percentile change by student for " + scope.label + ": " + formatInteger(rises) + " of " + movementPlural(n, "record") + " rose, " +
+          formatInteger(falls) + " fell and " + formatInteger(n - rises - falls) + " did not change." +
+          (n ? " Largest rise " + movementSigned(records[0].percentileChange) + ", largest fall " + movementSigned(records[n - 1].percentileChange) + " points." : ""),
+        desc: "Each line runs from the " + prior + " percentile (hollow dot) to the " + current + " percentile (filled dot) on a 0 to 100 scale, with dashed lines at the 50th and " +
+          ordinal(SECURE_BENCHMARK) + " percentiles." + (capped ? " The middle " + movementPlural(hidden.length, "record") + " are folded; the table lists every record." : "")
+      });
+    }
+
+    function movementToggleAll() {
+      movementView.showAll = !movementView.showAll;
+      const holder = movementEl("movementDumbbell");
+      const matrix = movementView.matrix;
+      if (!holder || !matrix) return;
+      vizMount(holder, movementDumbbellCard(matrix, movementView.scope || movementScope(state.filteredRows)));
+      if (typeof observeReveals === "function") observeReveals();
+      const again = holder.querySelector("[data-move-showall]");
+      if (again) again.focus();
+      const status = movementEl("movementStatus");
+      if (status) status.textContent = movementView.showAll ? "Showing every record." : "Showing the " + MOVEMENT_CAP + " largest changes.";
+    }
+
+    function exportMovement() {
+      const matrix = movementView.matrix;
+      if (!matrix || !matrix.n) {
+        toast("No records with both windows to export.", "warning");
+        return;
+      }
+      exportCSV("band-movement", movementSorted(matrix.records), [
+        ["Student name", (row) => row.studentName],
+        ["Student ID", (row) => row.studentID],
+        ["Subject", (row) => row.subject],
+        ["Class", (row) => row.className],
+        ["Teacher", (row) => row.teacher],
+        ["Start band", (row) => row.startBand.name],
+        ["End band", (row) => row.endBand.name],
+        ["Band movement", (row) => movementWayText(row.endBand.rank - row.startBand.rank)],
+        ["Start percentile", (row) => row.startPercentile],
+        ["End percentile", (row) => row.endPercentile],
+        ["Percentile change", (row) => row.percentileChange],
+        ["Met growth projection", (row) => movementMetText(row)]
+      ]);
+    }
+
+    // Listeners go on the section's own containers, once. The markup inside
+    // is replaced on every render, so everything is delegated.
+    function movementBind() {
+      if (movementView.bound) return;
+      const controls = movementEl("movementControls");
+      const wrap = movementEl("movementWrap");
+      if (!controls || !wrap) return;
+      movementView.bound = true;
+      controls.addEventListener("viz-change", (event) => {
+        if (!event.detail || event.detail.name !== "movementGroup") return;
+        movementView.group = String(event.detail.value || "all");
+        movementView.selection = null;
+        movementView.showAll = false;
+        renderMovementBody();
+        const status = movementEl("movementStatus");
+        const scope = movementView.scope;
+        if (status && scope) status.textContent = "Movement now shows " + scope.label + ".";
+      });
+      const pickCell = (cell) => {
+        const [from, to] = cell.getAttribute("data-move-cell").split("-").map(Number);
+        const sel = movementView.selection;
+        const same = sel && sel.kind === "cell" && sel.from === from && sel.to === to;
+        movementSelect(same ? null : { kind: "cell", from, to });
+      };
+      wrap.addEventListener("click", (event) => {
+        const cell = event.target.closest("[data-move-cell]");
+        if (cell) { pickCell(cell); return; }
+        const way = event.target.closest("[data-move-way]");
+        if (way && !way.disabled) { movementSelect({ kind: "way", key: way.getAttribute("data-move-way") }); return; }
+        if (event.target.closest("[data-move-showall]")) movementToggleAll();
+      });
+      // The cells are SVG groups with role="button", so they need the keys a
+      // real button gets for free.
+      wrap.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        const cell = event.target.closest && event.target.closest("[data-move-cell]");
+        if (!cell || cell !== event.target) return;
+        event.preventDefault();
+        pickCell(cell);
+      });
+      const exportBtn = movementEl("exportMovementBtn");
+      if (exportBtn) exportBtn.addEventListener("click", exportMovement);
+    }
+    // ---- end AISA: Movement ----
 
     function renderQuadrants() {
       renderOverviewHeadings();
@@ -18095,6 +19167,11 @@ Suggested next steps: prioritize Intensive Support and Targeted Support students
         what: "NWEA's growth and achievement quadrants for the end window, the movement between quadrants since the start window, a scatter of every record, and median conditional growth by starting band.",
         read: "Achievement is where a score sits; growth is how far it moved compared with students who started in the same place, where 50 is typical. High achievement can hide low growth, and a low start can hide strong growth. Bands with fewer than 5 records are drawn but never read.",
         act: "Look for the two patterns that matter most: secure students who are coasting, and low starters whose catch-up growth is working and needs protecting."
+      },
+      "sec-movement": {
+        what: "Where each record started and where it ended. The matrix crosses the start-window band (rows) with the end-window band (columns): the outlined diagonal stayed in the same band, cells to the right of it moved up and cells to the left moved down. Below it, a dumbbell for every student record runs from the start percentile (hollow dot) to the end percentile (filled dot), sorted by the size of the change; past 50 records it shows the 20 largest rises and the 20 largest falls until you ask for all of them.",
+        read: "Each cell's shade is its share of the row, so a row answers \"of the students who started in this band, where did they end up?\" A row resting on fewer than 10 records is hatched and prints counts, not percentages. A student who started in Blue can only stay or slip, and one who started in Red can only stay or rise, so compare rows with that in mind. A change of a few percentile points can be measurement error rather than real movement, and only records with both windows are counted: new arrivals appear in the note, not the matrix.",
+        act: "Click any cell, or one of the moved up, stayed and moved down buttons, to list the students in it, and open a name for their spotlight. Start with the records that slipped a band. Then read the row for the band most of your class started in: a strong diagonal there means those students held their place, and a heavy right-hand side means they are climbing. Export the list when you need it in a planning document."
       },
       "sec-gap": {
         what: "Among records that started below the 61st percentile: how many closed the gap, reduced it or widened it, and the pooled share of the total distance that was closed. Also band movement, and whether secure starters extended or slipped.",
