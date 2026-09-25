@@ -23,7 +23,7 @@ const ROOT = path.resolve(__dirname, "..");
 // and its name. Point GUIDE_INDEX at the page and GUIDE_OUTPUT at the PDF.
 const INDEX = "file://" + path.resolve(ROOT, process.env.GUIDE_INDEX || "index.html");
 const OUTPUT = path.resolve(ROOT, process.env.GUIDE_OUTPUT || "teacher-dashboard-guide.pdf");
-const TITLE = process.env.GUIDE_TITLE || "NWEA MAP ASG Teacher Dashboard";
+const TITLE = process.env.GUIDE_TITLE || "Teacher MAP Dashboard | AISA";
 // For checking the text without opening the PDF.
 const HTML_OUT = process.env.GUIDE_HTML ? path.resolve(ROOT, process.env.GUIDE_HTML) : null;
 const HIDE_STICKY = ".filter-bar,.section-nav,.toast-stack,.support-dock,.back-to-top,.celebrate-layer{display:none!important}";
@@ -112,7 +112,10 @@ async function main() {
     secure: SECURE_BENCHMARK,
     posterMin: POSTER_MIN_STUDENTS,
     posters: POSTERS.map((poster) => ({ id: poster.id, title: poster.title, blurb: poster.blurb })),
-    sample: SAMPLE_CSV
+    sample: SAMPLE_CSV,
+    // The guide wears the page's own brand: its wordmark and its DM Sans,
+    // read from the page so the two can never disagree.
+    brand: { school: BRAND.school, wordmarkReverse: BRAND.wordmarkReverse, fontCSS: BRAND_FONT_CSS }
   }));
 
   // ---- pictures: growth mode --------------------------------------------
@@ -168,8 +171,8 @@ async function main() {
     preferCSSPageSize: false,
     margin: { top: "18mm", bottom: "18mm", left: "16mm", right: "16mm" },
     displayHeaderFooter: true,
-    headerTemplate: '<div style="font-size:8px;color:#5d6a7e;width:100%;padding:0 16mm;font-family:Segoe UI,Arial,sans-serif;">' + escapeHTML(TITLE) + ' - User guide</div>',
-    footerTemplate: '<div style="font-size:8px;color:#5d6a7e;width:100%;padding:0 16mm;font-family:Segoe UI,Arial,sans-serif;display:flex;justify-content:space-between;"><span>Your file never leaves your computer.</span><span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span></div>'
+    headerTemplate: '<div style="font-size:8px;color:#555555;width:100%;padding:0 16mm;font-family:DM Sans,ui-sans-serif,system-ui,sans-serif;">' + escapeHTML(TITLE) + ' - User guide</div>',
+    footerTemplate: '<div style="font-size:8px;color:#555555;width:100%;padding:0 16mm;font-family:DM Sans,ui-sans-serif,system-ui,sans-serif;display:flex;justify-content:space-between;"><span>Your file never leaves your computer.</span><span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span></div>'
   });
   await printer.close();
   fs.rmSync(tempDir, { recursive: true, force: true });
@@ -238,11 +241,14 @@ function buildHTML(data, pictures, baselineTitles) {
 
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${escapeHTML(TITLE)} - User guide</title>
 <style>
-  :root { --ink: #172033; --muted: #5d6a7e; --brand: #2454a6; --brand-deep: #173d7d; --wash: #e9f0ff; --line: #dbe2ee; --green: #0f7a45; --amber: #b45309; }
+  ${data.brand.fontCSS}
+  /* The AISA palette: purple for structure, gold for the accent, the purple
+     tint as the only off-white, and the gold ink wherever gold is read. */
+  :root { --ink: #1A1A1A; --muted: #555555; --brand: #21076C; --brand-deep: #21076C; --gold: #D8B664; --gold-ink: #7A5A12; --wash: #F2EFFA; --line: #e4dff3; --border: #C8BEE8; --green: #0f7a45; --amber: #b45309; }
   * { box-sizing: border-box; }
-  body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, Arial, sans-serif; color: var(--ink); font-size: 10.5pt; line-height: 1.5; margin: 0; }
+  body { font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif; color: var(--ink); font-size: 10.5pt; line-height: 1.5; margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   h1, h2, h3, h4 { margin: 0; line-height: 1.2; letter-spacing: -0.01em; }
-  h2 { font-size: 20pt; color: var(--brand-deep); margin: 0 0 10pt; padding-bottom: 6pt; border-bottom: 2px solid var(--brand); break-after: avoid; }
+  h2 { font-size: 20pt; color: var(--brand-deep); margin: 0 0 10pt; padding-bottom: 6pt; border-bottom: 1px solid var(--border); break-after: avoid; }
   h3 { font-size: 13.5pt; margin: 16pt 0 6pt; color: var(--ink); break-after: avoid; }
   h4 { font-size: 8.5pt; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--brand-deep); margin: 0 0 3pt; }
   p { margin: 0 0 7pt; }
@@ -250,27 +256,30 @@ function buildHTML(data, pictures, baselineTitles) {
   li { margin-bottom: 3pt; }
   .chapter { break-before: page; }
   .cover { height: 250mm; display: flex; flex-direction: column; justify-content: space-between; }
-  .cover .eyebrow { color: var(--brand); font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; font-size: 9pt; }
-  .cover h1 { font-size: 34pt; color: var(--brand-deep); margin: 8pt 0 12pt; }
-  .cover .lede { font-size: 13pt; color: var(--muted); max-width: 130mm; }
-  .cover .stripe { height: 6mm; background: linear-gradient(90deg, #2563eb, #0f7a45, #e5c11a, #f77f00, #a50f1a); border-radius: 3mm; }
+  /* The cover is the AISA cover: a purple block with the wordmark, a gold
+     eyebrow and a white title, ruled off in gold. */
+  .cover-band { background: var(--brand); color: #ffffff; border-radius: 8px; padding: 12mm 12mm 14mm; border-bottom: 2mm solid var(--gold); }
+  .cover-band img { display: block; height: 13mm; width: auto; margin-bottom: 22mm; }
+  .cover .eyebrow { color: var(--gold); font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; font-size: 9pt; margin: 0; }
+  .cover h1 { font-size: 34pt; color: #ffffff; margin: 6pt 0 0; }
+  .cover .lede { font-size: 13pt; color: var(--muted); max-width: 130mm; margin-top: 12mm; }
   .cover .meta { color: var(--muted); font-size: 9.5pt; }
   .contents { break-before: page; }
   .contents ol { list-style: none; margin: 0; }
   .contents li { display: flex; gap: 10pt; padding: 6pt 0; border-bottom: 1px solid var(--line); font-size: 12pt; }
-  .contents li span { color: var(--brand); font-weight: 800; min-width: 18pt; }
+  .contents li span { color: var(--gold-ink); font-weight: 700; min-width: 18pt; }
   figure { margin: 8pt 0 10pt; break-inside: avoid; }
   figure img { display: block; max-width: 100%; max-height: 190mm; width: auto; margin: 0 auto; border: 1px solid var(--line); border-radius: 4pt; }
   .keep { break-inside: avoid; }
   figcaption { font-size: 8.5pt; color: var(--muted); margin-top: 3pt; }
   .triple { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10pt; margin: 4pt 0 8pt; break-inside: avoid; }
-  .triple div { background: var(--wash); border: 1px solid #c9d8f5; border-radius: 4pt; padding: 8pt 9pt; font-size: 9.5pt; }
+  .triple div { background: var(--wash); border: 1px solid var(--border); border-radius: 6pt; padding: 8pt 9pt; font-size: 9.5pt; }
   .triple p:last-child { margin-bottom: 0; }
   .baseline-box { border-left: 3px solid var(--amber); background: #fff7ed; padding: 7pt 10pt; margin: 0 0 10pt; font-size: 9.5pt; break-inside: avoid; }
   .baseline-box h4 { color: var(--amber); }
   .baseline-box p:last-child { margin-bottom: 0; }
   .note { font-size: 9.5pt; color: var(--muted); font-style: italic; }
-  .callout { border: 1px solid var(--line); border-left: 4px solid var(--brand); border-radius: 4pt; padding: 8pt 10pt; margin: 8pt 0 10pt; background: #f9fbff; break-inside: avoid; }
+  .callout { border: 1px solid var(--line); border-left: 4px solid var(--gold); border-radius: 6pt; padding: 8pt 10pt; margin: 8pt 0 10pt; background: var(--wash); break-inside: avoid; }
   .callout p:last-child { margin-bottom: 0; }
   .callout.good { border-left-color: var(--green); }
   table { width: 100%; border-collapse: collapse; margin: 6pt 0 12pt; font-size: 9.5pt; break-inside: auto; }
@@ -287,9 +296,11 @@ function buildHTML(data, pictures, baselineTitles) {
 
 <div class="cover">
   <div>
-    <div class="stripe"></div>
-    <p class="eyebrow" style="margin-top:28mm">${escapeHTML(TITLE)}</p>
-    <h1>User guide</h1>
+    <div class="cover-band">
+      <img src="${data.brand.wordmarkReverse}" alt="${escapeHTML(data.brand.school)}">
+      <p class="eyebrow">${escapeHTML(TITLE)}</p>
+      <h1>User guide</h1>
+    </div>
     <p class="lede">How to get your files out of NWEA, what every number means, what each section of the dashboard tells you, and what to do about it before the next data conversation.</p>
   </div>
   <div class="meta">

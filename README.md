@@ -1,103 +1,99 @@
-# teachermap.ensdashboards.xyz
+# Teacher MAP Dashboard | AISA
 
-This directory is **generated**. Do not edit `index.html` here.
+An NWEA MAP Growth (ASG) dashboard for teachers at the American International
+School in Abu Dhabi. The whole product is one file, `index.html`: it opens in
+a browser, reads the teacher's CSV exports on their own machine, and never
+sends anything anywhere.
 
-It is built from the repository root `index.html` by:
+## The files
 
-    node build/build-clone.mjs
+- `index.html` - the dashboard. Everything it needs is inside it, including
+  the DM Sans typeface and the AISA marks, as data URIs.
+- `vercel.json` - security headers for hosting. The Content-Security-Policy
+  is deliberately strict: no scripts, styles, fonts or images from anywhere,
+  and `connect-src 'none'`, so the page cannot make a network request even if
+  one were somehow introduced. That is the promise the upload panel makes to
+  teachers, enforced by the browser rather than trusted.
+- `teacher-dashboard-guide.pdf` - the user guide the page links to.
+  `vercel.json` exempts it from the frame-denying headers, because a
+  browser's PDF viewer loads the document inside a frame.
+- `build-guide.js` - builds the guide from the page itself (below).
+- `check-planner.mjs` - the seating planner's regression checks (below).
+- `brand/` - the AISA marks and the script that draws them (below).
 
-The build applies the differences that make this a separate instance — the
-teal and wine palette, the ENS Dashboards title and favicon, and the removal
-of the support prompt — and asserts that every one of them matched. If the
-upstream page changes in a way that moves a token or a block, the build fails
-rather than shipping a half-themed page.
+## Checks
 
-So the workflow for any dashboard change is: edit the root `index.html`, run
-the build, commit both.
+    PLAYWRIGHT_MODULE=/path/to/playwright/index.mjs node check-planner.mjs
+
+must end with `All planner checks passed`. Among other things it holds the
+planner to the privacy rule the whole page keeps: nothing written to
+`localStorage` may name a student.
 
 ## The user guide
 
-`teacher-dashboard-guide.pdf` in this directory is the instance's own copy of
-the guide, built from this instance's page so the pictures carry its colours
-and its name. The page links to it relatively, so it has to be here or the
-link is dead. Rebuild it after the clone build whenever a section changes:
+The section titles and the "what it shows / how to read it / what to do with
+it" text come out of `index.html` (`SECTION_PLAN` and `SECTION_HELP`), and
+every picture is the page rendered with its own sample data, so rebuild the
+guide whenever a section changes. `build-guide.js` resolves paths from the
+directory above it, so from the parent of this repository:
 
-    GUIDE_INDEX=ensdashboards/index.html \
-    GUIDE_OUTPUT=ensdashboards/teacher-dashboard-guide.pdf \
-    GUIDE_TITLE="Teacher MAP Dashboard | ENS Dashboards" \
-    node guide/build-guide.js
+    GUIDE_INDEX=map-data-tool/index.html \
+    GUIDE_OUTPUT=map-data-tool/teacher-dashboard-guide.pdf \
+    NODE_PATH=/path/to/global/node_modules \
+    node map-data-tool/build-guide.js
 
-`vercel.json` exempts the PDF from the frame-denying headers the page itself
-carries, because a browser's PDF viewer loads the document inside a frame.
+## The brand
 
-## Where the brand comes from
+The dashboard follows the AISA brand guide: DM Sans throughout, Deep Royal
+Purple `#21076C` for structure and Warm Mustard Gold `#D8B664` for emphasis,
+white surfaces, the purple tint `#F2EFFA` as the only off-white, and `#C8BEE8`
+for borders. The tokens live at the top of the stylesheet in `index.html`:
+the `--aisa-*` values are the brand's own and are the same in both themes;
+the component tokens (`--brand`, `--accent`, `--accent-ink`, `--heading`,
+`--line`, ...) are built from them and have a light and a dark value each.
 
-The logo is the Emirates National Schools mark, checked in at
-`build/assets/ens-logo.png` (the full lockup) and `build/assets/ens-symbol.png`
-(the symbol alone, for the favicon — 709x130 of Arabic and English is a smear
-at 16px). Replace either file and rebuild; nothing else needs editing.
+Two rules worth knowing before adding anything:
 
-Both are inlined as data URIs. A logo on a CDN would be the one request that
-breaks the promise the upload panel makes, and the first thing to vanish on a
-school network that blocks image hosts.
+- **Gold is never small text on a light surface.** `#D8B664` is 1.95:1 on
+  white. It is for fills, bars, big numbers on purple, and the one chip on
+  the masthead that has dark ink on it. Gold you need to *read* on a light
+  surface is `--accent-ink` / `--aisa-gold-ink`, `#7A5A12` (6.4:1 on white).
+- **The five NWEA band colours are not brand colours.** NWEA names the
+  quintiles Red, Orange, Yellow, Green and Blue, and a chart that prints a
+  purple square under the word "Blue" is wrong in a way no brand guide
+  outranks. They are never recoloured, and gold is kept out of any chart that
+  also shows the Yellow band.
 
-The palette steps come from the ENS Dashboards portal (`rainetech/ens-portal`,
-`tailwind.config.ts`), so this dashboard and the portal that links to it read
-as one product. The portal calls the second colour *plum*, so this does too.
+The dark theme is not an inversion: surfaces are a deep purple-black, the
+brand purple is lifted to a lavender (`#bfa8fa`) that clears 7.6:1 on every
+surface, the gold is used as it is, and the masthead keeps the real
+`#21076C` in both themes.
 
-### The logo and the brand colours do not match
+### The marks
 
-Worth knowing before anyone tries to "fix" it. The logo file is plain sRGB and
-contains **teal #007c85 and plum #a30046**. The brand colours specified for
-this instance — and the ones the portal's config uses — are **#007272 and
-#8e2344**. That is a CIE76 Delta E of 6.8 and 13.4: not a colour-management
-artefact, and far enough apart to look like a printing error if the two teals
-ever share an edge.
+No official AISA logo file was available, so the marks are a typeset
+wordmark - "AISA" in DM Sans Bold beside the school's full name - drawn by
+`brand/make-brand-assets.mjs` from the same DM Sans the page embeds:
 
-The interface therefore uses the specified colours, and the logo is always
-placed on white, where its own teal never abuts the interface's. If the logo
-file is the canonical brand rather than the hex values, the fix is to change
-the palette in `build/build-clone.mjs` — not to recolour the logo.
+- `brand/aisa-wordmark.png` - purple, for white paper (the poster footer and
+  the printed sheets);
+- `brand/aisa-wordmark-reverse.png` - gold and white, for the purple bands
+  (the masthead, the goal sheets, the seating plans, the guide cover);
+- `brand/aisa-symbol.png` - a gold A on a purple tile, for the favicon.
 
-## The Vercel project
+Every copy on the page and on every printed sheet is read from one constant,
+`BRAND`, near the top of `<body>`. To swap in a real logo, replace the two
+wordmark PNGs (keeping roughly their 7:1 shape) and run
 
-Already created and building from this directory:
+    PLAYWRIGHT_MODULE=/path/to/playwright/index.mjs node brand/make-brand-assets.mjs --inline-only
 
-- Project: `teachermap` (`prj_Ty8HzQDdj0dv0k6jLM0KAtU2u7kH`)
-- Team: `ENS_Platforms` (slug `ensplatforms`, `team_Iwl363H4TKfoqdwtWfICSO0V`)
-- Linked to `rainetech/teachermapdata.github.io`, production branch `main`
-- Root Directory: `ensdashboards`
+which writes them into `BRAND` and the favicon and checks every substitution.
+Run it without `--inline-only` to redraw the typeset marks.
 
-Pushing to `main` redeploys it. GitHub Pages still serves the repository root
-independently, so both sites come from the same commit.
+### The typeface
 
-### Why the .vercel.app URL asks you to log in
-
-Deployment protection is left at Vercel's default, `Vercel Authentication`
-scoped to *all except custom domains*. That means `teachermap.vercel.app` and
-every preview URL sit behind a Vercel login, and the custom domain is public.
-That is the right way round for this project - teachers reach it on the real
-domain, and half-finished preview builds are not indexable - so if the
-`.vercel.app` link asks for a login, it is working as intended rather than
-broken.
-
-## Deploying
-
-Vercel project settings:
-
-- **Root Directory**: `ensdashboards`
-- **Framework Preset**: Other
-- **Build Command**: none (leave empty — the file is already built)
-- **Output Directory**: leave empty
-
-`vercel.json` sets the security headers. The Content-Security-Policy is
-deliberately strict: the dashboard loads no scripts, styles, fonts or images
-from anywhere, and `connect-src 'none'` means the page cannot make a network
-request even if one were somehow introduced. That is the same promise the
-upload panel makes to teachers, enforced by the browser rather than trusted.
-
-## Custom domain
-
-Add `teachermap.ensdashboards.xyz` in the Vercel project's Domains tab, then
-create the DNS record Vercel shows you on the `ensdashboards.xyz` zone —
-normally a CNAME on the `teachermap` host pointing at `cname.vercel-dns.com`.
+DM Sans (SIL Open Font License 1.1, from `@fontsource-variable/dm-sans`) is
+embedded as two variable-weight WOFF2 files - latin and latin-ext, because
+student names carry accents - in `<style id="brandFonts">` in the head. The
+print sheets open as separate documents, so they are handed the same rules
+through `BRAND_FONT_CSS` rather than a second copy of the font.
