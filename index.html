@@ -6504,6 +6504,267 @@
       .hm-area-body.is-tall { max-height: none; overflow: visible; border-bottom: 0; }
     }
     /* ---- end AISA: Heatmap ---- */
+
+    /* ---- AISA: Explorer ---- */
+    /* The scatter builder. Chart on the left, its figures and the pinned
+       student in a column on the right; one column under 960px. Built on
+       the kit's card, KPI tiles, legend and table - only the arrangement
+       and the scatter's own marks are styled here. */
+    .explorer-axes {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .explorer-axes .viz-select select { width: min(320px, 100%); }
+    .explorer-axes .viz-control { max-width: 100%; }
+
+    .explorer-swap {
+      min-height: 38px;
+      min-width: 38px;
+      font-size: 1rem;
+      line-height: 1;
+    }
+
+    /* On a phone the swap button rides beside the X picker rather than on a
+       line of its own: X and swap on the first row, Y under X. */
+    @media (max-width: 600px) {
+      .explorer-axes {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        width: 100%;
+      }
+
+      .explorer-axes .viz-select select { width: 100%; }
+    }
+
+    .explorer-toggles button[aria-pressed="true"] {
+      background: var(--brand);
+      color: var(--on-brand);
+    }
+
+    .explorer-toggles button:disabled,
+    #sec-explorer .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .explorer-toggles button:disabled:hover { background: transparent; color: var(--text-soft); }
+
+    .explorer-toggles button:focus-visible {
+      outline: 2px solid var(--brand);
+      outline-offset: 2px;
+      box-shadow: var(--focus);
+    }
+
+    /* Three areas: the chart, its figures, and the notes on how the pair is
+       built. Wide: figures in a column beside the chart, notes under it. On
+       a phone they stack chart, figures, notes - the reading order. */
+    .explorer-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(250px, 300px);
+      grid-template-rows: auto 1fr;
+      grid-template-areas: "main side" "notes side";
+      gap: 16px 20px;
+      align-items: start;
+    }
+
+    .explorer-main { grid-area: main; display: grid; gap: 10px; min-width: 0; }
+    .explorer-side { grid-area: side; display: grid; gap: 12px; align-content: start; min-width: 0; }
+    .explorer-caveats { grid-area: notes; }
+
+    @media (max-width: 960px) {
+      .explorer-layout {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: none;
+        grid-template-areas: "main" "side" "notes";
+      }
+    }
+
+    /* The four figures as a compact 2 x 2 of the kit's tiles: purple number,
+       gold rule, small caps label - smaller than a page KPI, because they
+       annotate a chart rather than lead the page. */
+    .explorer-stats .kpi-row {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .explorer-stats .kpi-tile { padding: 12px 12px 10px; }
+    .explorer-stats .kpi-value { font-size: 1.45rem; }
+    .explorer-stats .kpi-context { font-size: 0.74rem; }
+
+    .explorer-equation {
+      display: grid;
+      gap: 2px;
+      margin: 0;
+      color: var(--heading);
+      font-size: 0.88rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .explorer-reading {
+      margin: 0;
+      color: var(--text-soft);
+      font-size: 0.86rem;
+      line-height: 1.5;
+    }
+
+    /* A note on how a pair is built: the purple tint with a gold edge, the
+       brand's callout, so it reads as a caution without shouting. */
+    .explorer-caveats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+      gap: 10px;
+    }
+
+    .explorer-caveat {
+      margin: 0;
+      padding: 8px 10px;
+      border-left: 3px solid var(--accent);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      background: var(--panel-3);
+      color: var(--text-soft);
+      font-size: 0.8rem;
+      line-height: 1.45;
+    }
+
+    /* --- The scatter's marks ------------------------------------------------ */
+    /* A little transparency so a pile of points darkens where it is deep; the
+       surface ring stays solid, so each dot keeps its edge. */
+    .explorer-plot .explorer-pt .viz-dot { fill-opacity: 0.82; }
+    .explorer-plot.is-dense .explorer-pt .viz-dot { fill-opacity: 0.62; }
+    .explorer-plot .explorer-pt.is-hollow .viz-dot { fill-opacity: 1; }
+    .explorer-pt { cursor: pointer; transition: opacity var(--dur-fast) var(--ease-soft); }
+    .explorer-pt.is-dim { opacity: 0.22; }
+
+    .explorer-plot .explorer-pt.is-pinned .viz-dot {
+      fill-opacity: 1;
+      stroke: var(--viz-hover);
+      stroke-width: 2.5px;
+    }
+
+    .explorer-link {
+      fill: none;
+      stroke: var(--viz-hover);
+      stroke-width: 1.5;
+      stroke-linejoin: round;
+      opacity: 0.55;
+    }
+
+    .explorer-pin-label { font-size: 11.5px; font-weight: 800; }
+
+    /* The trend line stays neutral ink: it sits over purple, gold, teal and
+       the NWEA bands alike, and must never read as a series. Its 95% band is
+       the kit's .viz-band wash. */
+    .explorer-trend { stroke: var(--text-soft); }
+
+    /* A centre line (CGP 50, no change, the norm mean) is a baseline, so it
+       is solid; only the median guides are dashed. */
+    .explorer-center-line {
+      stroke: var(--viz-axis);
+      stroke-width: 1.5;
+      shape-rendering: crispEdges;
+    }
+
+    .explorer-center-label { font-size: 10.5px; }
+
+    .explorer-hollow-swatch {
+      background: var(--viz-surface);
+      box-shadow: inset 0 0 0 2px var(--muted-strong);
+    }
+
+    /* Only ever read inside the hidden holder the SVG download draws in. */
+    .explorer-export-title { fill: var(--heading); font-size: 16px; font-weight: 800; }
+    .explorer-export-sub { fill: var(--text-soft); font-size: 11.5px; font-weight: 600; }
+    .explorer-export-legend { fill: var(--text-soft); font-size: 11px; font-weight: 700; }
+    .explorer-export-foot { fill: var(--muted); font-size: 10px; font-weight: 600; }
+
+    .explorer-export-holder {
+      position: fixed;
+      top: 0;
+      left: -20000px;
+      width: 960px;
+      pointer-events: none;
+    }
+
+    /* --- The pinned student ------------------------------------------------- */
+    .explorer-pin-hint {
+      margin: 0;
+      padding: 10px 12px;
+      border: 1px dashed var(--line-strong);
+      border-radius: var(--radius-sm);
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.45;
+    }
+
+    .explorer-pin {
+      display: grid;
+      gap: 6px;
+      padding: 12px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: var(--panel-2);
+    }
+
+    .explorer-pin-name { color: var(--heading); font-size: 1rem; font-weight: 800; line-height: 1.25; }
+    .explorer-pin-meta { color: var(--muted); font-size: 0.78rem; }
+
+    .explorer-pin-list {
+      display: grid;
+      gap: 6px;
+      margin: 4px 0 2px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .explorer-pin-list li {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      column-gap: 8px;
+      align-items: baseline;
+      font-size: 0.82rem;
+    }
+
+    .explorer-pin-list .viz-swatch { box-shadow: inset 0 0 0 1px var(--line-strong); }
+    .explorer-pin-subject { font-weight: 800; color: var(--text); }
+    .explorer-pin-values { grid-column: 2; color: var(--text-soft); font-variant-numeric: tabular-nums; }
+    .explorer-pin-away { display: block; color: var(--muted); font-size: 0.76rem; }
+    .explorer-pin-list li.is-off .explorer-pin-subject { color: var(--muted); }
+    .explorer-pin-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+
+    /* Every plotted record is a long list: it scrolls in its own box, under
+       a header that stays put. */
+    .explorer-points .viz-table-scroll {
+      max-height: 440px;
+      overflow: auto;
+      margin-top: 12px;
+    }
+
+    .explorer-points thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: var(--panel);
+    }
+
+    @media print {
+      .explorer-points .viz-table-scroll { max-height: none; overflow: visible; }
+
+      .explorer-layout {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: none;
+        grid-template-areas: "main" "side" "notes";
+      }
+
+      .explorer-pin-actions,
+      .explorer-pin-hint { display: none !important; }
+    }
+    /* ---- end AISA: Explorer ---- */
   </style>
 </head>
 <body>
@@ -7132,6 +7393,20 @@
         </div>
         <textarea class="summary-report" id="summaryReport" aria-label="Class summary report. Editable - your edits are kept until you regenerate." spellcheck="true"></textarea>
         <p class="summary-edit-note" id="summaryEditNote" hidden>You have edited this text, so it will no longer update when you change the filters. Regenerate to go back to the generated version.</p>
+      </section>
+
+      <section class="section" id="sec-explorer" aria-labelledby="explorerTitle">
+        <div class="section-header">
+          <div>
+            <h2 id="explorerTitle">Explorer</h2>
+            <p id="explorerNote">Plot any two measures against each other: see whether they move together, how closely, and who sits away from the pattern.</p>
+          </div>
+          <div class="btn-row">
+            <button class="btn small" id="explorerSvgBtn" type="button" title="The chart as it stands, as an SVG image for a slide or a document">Download SVG</button>
+            <button class="btn small ghost" id="explorerCsvBtn" type="button" title="Every plotted point, with its distance from the trend line">Export CSV</button>
+          </div>
+        </div>
+        <div class="explorer-wrap" id="explorerWrap"></div>
       </section>
 
       <section class="section" id="sec-tables" aria-labelledby="tableGroupsTitle">
@@ -10514,6 +10789,7 @@ Spring 2026,Fall 2025,North Valley,Maple School,Rivera,Period 2,Science,Science,
       renderHeatmap();
       renderStrands();
       renderSummaryReport();
+      renderExplorer();
       // A filter change rewrites the briefing, so anything mid-sentence is now
       // narrating numbers that are no longer on screen.
       if (briefing.playing) pauseBriefing();
@@ -10552,6 +10828,7 @@ Spring 2026,Fall 2025,North Valley,Maple School,Rivera,Period 2,Science,Science,
       // exists only when the loaded files actually have them.
       { id: "sec-strands", label: "Areas", modes: ["growth", "mixed", "baseline"], available: hasStrandData },
       { id: "sec-summary", label: "Summary", modes: ["growth", "mixed", "baseline"] },
+      { id: "sec-explorer", label: "Explorer", modes: ["growth", "mixed", "baseline"] },
       { id: "sec-tables", label: "Table Groups", modes: ["growth", "mixed", "baseline"] },
       { id: "sec-grouping", label: "Grouping", modes: ["growth", "mixed", "baseline"] },
       { id: "sec-priority", label: "Priority", modes: ["growth", "mixed", "baseline"] },
@@ -20204,6 +20481,1224 @@ Spring 2026,Fall 2025,North Valley,Maple School,Rivera,Period 2,Science,Science,
       if (wasPlaying && !briefing.voices.length) runSilentBriefing();
     }
 
+    // =====================================================================
+    // ---- AISA: Explorer ----
+    // =====================================================================
+    // An analyst's scatter builder. Any two numeric measures in the view go
+    // against each other, one point per record, coloured by band, subject,
+    // class or the growth call, with a least-squares trend line and the
+    // figures that belong to it: Pearson r, R squared, n, and the slope with
+    // its 95% interval. The words under the figures describe a pattern in
+    // this group and never a cause, and they say so when a pair is linked by
+    // the way it is calculated (end RIT against start RIT, change against
+    // start) rather than by anything that happened in a classroom.
+    //
+    // The section has its own subject switch, so an analyst can look at one
+    // subject here without refiltering the whole page. The axes and toggles
+    // a teacher last chose are remembered through vizPref - field names and
+    // booleans, never a student. The pinned student lives in memory only.
+    const explorerState = {
+      subject: "all",
+      pinKey: "",
+      // className -> categorical slot. Kept across renders so a filter never
+      // repaints a class that is still on the chart.
+      classSlots: new Map(),
+      lastClasses: new Set(),
+      slotRows: null,
+      // What this session picked, so the choice holds even when the browser
+      // refuses localStorage (a private window, a locked-down laptop).
+      prefs: {},
+      axes: { x: null, y: null },
+      model: null
+    };
+
+    const EXPLORER_GROWTH = ["growth", "mixed"];
+    const EXPLORER_ALL = ["growth", "mixed", "baseline"];
+    // Past this many points a tab stop per point is a wall, not a chart: the
+    // marks stop being focusable and the table and the pin picker carry them.
+    const EXPLORER_FOCUSABLE_MAX = 60;
+    const EXPLORER_TABLE_MAX = 400;
+
+    // Every measure the Explorer can put on an axis. family and window say
+    // what a number is made from, which is how the notes spot a pair that is
+    // linked by construction: "rit"/"pct" achievement, "cgp" conditional
+    // growth, "projection" NWEA's own target, "test" test-taking behaviour;
+    // window "start", "end" (the latest score) or "change".
+    const EXPLORER_FIELDS = [
+      { key: "startPercentile", label: "Start percentile", short: "Start %ile", slug: "start-percentile", modes: EXPLORER_GROWTH, scale: "percentile", family: "pct", window: "start" },
+      { key: "endPercentile", label: "End percentile", short: "End %ile", slug: "end-percentile", modes: EXPLORER_GROWTH, scale: "percentile", family: "pct", window: "end" },
+      { key: "currentPercentile", label: "Percentile", short: "Percentile", slug: "percentile", modes: ["baseline"], scale: "percentile", family: "pct", window: "end", windowName: true },
+      { key: "startRIT", label: "Start RIT", short: "Start RIT", slug: "start-rit", modes: EXPLORER_GROWTH, family: "rit", window: "start" },
+      { key: "endRIT", label: "End RIT", short: "End RIT", slug: "end-rit", modes: EXPLORER_GROWTH, family: "rit", window: "end" },
+      { key: "currentRIT", label: "RIT", short: "RIT", slug: "rit", modes: ["baseline"], family: "rit", window: "end", windowName: true },
+      { key: "ritChange", label: "RIT change", short: "RIT change", slug: "rit-change", modes: EXPLORER_GROWTH, family: "rit", window: "change", signed: true, center: 0, centerLabel: "No change" },
+      { key: "percentileChange", label: "Percentile change", short: "%ile change", slug: "percentile-change", modes: EXPLORER_GROWTH, family: "pct", window: "change", signed: true, center: 0, centerLabel: "No change" },
+      { key: "observedGrowth", label: "Observed growth (RIT)", short: "Observed growth", slug: "observed-growth", modes: EXPLORER_GROWTH, family: "rit", window: "change", signed: true, center: 0, centerLabel: "No change" },
+      { key: "projectedGrowth", label: "Projected growth (RIT)", baselineLabel: "Projected growth to the next window (RIT)", short: "Projected growth", slug: "projected-growth", modes: EXPLORER_ALL, family: "projection", window: "start" },
+      { key: "projectedRIT", label: "Projected RIT", short: "Projected RIT", slug: "projected-rit", modes: EXPLORER_ALL, family: "projection", window: "start" },
+      { key: "growthIndex", label: "Growth index (observed minus projected)", short: "Growth index", slug: "growth-index", modes: EXPLORER_GROWTH, family: "growth", window: "change", signed: true, center: 0, centerLabel: "Projection met" },
+      { key: "conditionalGrowthIndex", label: "Conditional growth index (CGI)", short: "CGI", slug: "cgi", modes: EXPLORER_GROWTH, family: "cgp", window: "change", signed: true, decimals: 2, center: 0, centerLabel: "Typical growth" },
+      { key: "conditionalGrowthPercentile", label: "Conditional growth percentile (CGP)", short: "CGP", slug: "cgp", modes: EXPLORER_GROWTH, scale: "percentile", family: "cgp", window: "change", center: 50, centerLabel: "CGP 50" },
+      { key: "usNormDeltaRIT", label: "RIT above or below the US norm mean", short: "RIT vs US norm", slug: "rit-vs-norm", modes: EXPLORER_ALL, family: "rit", window: "end", signed: true, decimals: 1, center: 0, centerLabel: "US norm mean" },
+      { key: "rapidGuessedPct", label: "Rapid-guessed items (%)", short: "Rapid guessing %", slug: "rapid-guessing", modes: EXPLORER_ALL, family: "test", window: "end", floorZero: true },
+      { key: "lexile", label: "Lexile measure", short: "Lexile", slug: "lexile", modes: EXPLORER_ALL, family: "rit", window: "end", measure: true },
+      { key: "quantile", label: "Quantile measure", short: "Quantile", slug: "quantile", modes: EXPLORER_ALL, family: "rit", window: "end", measure: true }
+    ];
+
+    // The pair each kind of file opens on. A growth file asks the question
+    // NWEA's own quadrant chart asks - did growth depend on where a student
+    // started? A single-window file asks how much NWEA expects each starting
+    // point to grow, when the export carries the projection, and otherwise
+    // how RIT maps onto percentile across the grades in view.
+    const EXPLORER_DEFAULTS = {
+      growth: {
+        x: ["startPercentile", "startRIT"],
+        y: ["conditionalGrowthPercentile", "percentileChange", "ritChange", "observedGrowth", "endPercentile", "endRIT"]
+      },
+      baseline: {
+        x: ["currentRIT", "currentPercentile"],
+        y: ["projectedGrowth", "currentPercentile", "usNormDeltaRIT"]
+      }
+    };
+
+    const EXPLORER_COLOR_LABELS = { band: "Band", subject: "Subject", class: "Class", met: "Growth projection", none: "" };
+
+    function explorerModeKey() {
+      return isBaselineMode() ? "baseline" : "growth";
+    }
+
+    function explorerPrefGet(key, fallback) {
+      return Object.prototype.hasOwnProperty.call(explorerState.prefs, key) ? explorerState.prefs[key] : vizPref.get(key, fallback);
+    }
+
+    function explorerPrefSet(key, value) {
+      explorerState.prefs[key] = value;
+      vizPref.set(key, value);
+    }
+
+    // Lexile and Quantile arrive as text: "850L", "BR120L" (a beginning
+    // reader, below zero on the scale), "EM200Q", or a range such as
+    // "785L-935L", which is read at its midpoint.
+    function explorerParseMeasure(text) {
+      if (isFiniteNumber(text)) return text;
+      if (text === null || text === undefined) return null;
+      const parts = String(text).toUpperCase().match(/(?:BR|EM)?\s*\d+(?:\.\d+)?/g);
+      if (!parts || parts.length > 2) return null;
+      const values = parts.map((part) => {
+        const below = /^(BR|EM)/.test(part);
+        const value = parseFloat(part.replace(/^(BR|EM)\s*/, ""));
+        return below ? -value : value;
+      });
+      return values.length === 2 ? (values[0] + values[1]) / 2 : values[0];
+    }
+
+    function explorerValue(row, field) {
+      const raw = field.measure ? explorerParseMeasure(row[field.key]) : row[field.key];
+      return isFiniteNumber(raw) ? raw : null;
+    }
+
+    function explorerLabel(field) {
+      if (isBaselineMode() && field.baselineLabel) return field.baselineLabel;
+      const windowName = currentWindowName();
+      if (field.windowName && windowName && windowName !== "Current window") return field.label + " (" + windowName + ")";
+      return field.label;
+    }
+
+    // "Start percentile" -> "start percentile" for use mid-sentence, while
+    // "RIT change" and "CGP" keep their capitals.
+    function explorerLower(text) {
+      return String(text).replace(/^([A-Z])(?=[a-z])/, (letter) => letter.toLowerCase());
+    }
+
+    function explorerCapital(text) {
+      const value = String(text);
+      return value.charAt(0).toUpperCase() + value.slice(1);
+    }
+
+    // Values print the way the rest of the page prints them: whole numbers
+    // for scores, a sign on anything that is a change, and a real minus.
+    function explorerFormat(field, value) {
+      if (!isFiniteNumber(value)) return "N/A";
+      const digits = isFiniteNumber(field.decimals) ? field.decimals : Number.isInteger(value) ? 0 : 1;
+      const text = formatNumber(Math.abs(value), digits);
+      if (value < 0) return "\u2212" + text;
+      return field.signed && value > 0 ? "+" + text : text;
+    }
+
+    // A coefficient (a slope, an intercept, a distance from the line) with
+    // as many figures as its size can use.
+    function explorerCoef(value, signed) {
+      if (!isFiniteNumber(value)) return "N/A";
+      const size = Math.abs(value);
+      const text = size >= 100 ? size.toFixed(0) : size >= 10 ? size.toFixed(1) : size >= 1 ? size.toFixed(2) : size === 0 ? "0" : size.toPrecision(2);
+      if (value < 0 && Number(text) !== 0) return "\u2212" + text;
+      return signed && value > 0 && Number(text) !== 0 ? "+" + text : text;
+    }
+
+    // r always to two places, the way it is conventionally reported.
+    function explorerR(r) {
+      if (!isFiniteNumber(r)) return "N/A";
+      const text = Math.abs(r).toFixed(2);
+      return r < 0 && Number(text) !== 0 ? "\u2212" + text : text;
+    }
+
+    // A distance from the trend line, in the Y measure's units, to a fixed
+    // number of places so a column of them lines up.
+    function explorerAway(field, value, signed) {
+      if (!isFiniteNumber(value)) return "N/A";
+      const text = Math.abs(value).toFixed(isFiniteNumber(field.decimals) ? field.decimals : 1);
+      if (Number(text) === 0) return text;
+      return value < 0 ? "\u2212" + text : signed ? "+" + text : text;
+    }
+
+    function explorerStudentKey(row) {
+      const id = cleanString(row.studentID);
+      return id && id !== "Missing" ? "id:" + id : "name:" + row.studentName;
+    }
+
+    // Jitter has to be deterministic: the same student lands in the same
+    // place on every redraw, so the chart never shimmers when it is resized
+    // or the theme flips. FNV-1a over the student and subject.
+    function explorerHash01(text) {
+      let hash = 0x811c9dc5;
+      for (let i = 0; i < text.length; i += 1) {
+        hash ^= text.charCodeAt(i);
+        hash = Math.imul(hash, 0x01000193);
+      }
+      return (hash >>> 0) / 4294967296;
+    }
+
+    function explorerSubjects(rows) {
+      const present = unique(rows.map((row) => row.subject));
+      return SUBJECTS.filter((subject) => present.includes(subject)).concat(present.filter((subject) => !SUBJECTS.includes(subject)));
+    }
+
+    // Only measures this view actually has numbers for: two values at least,
+    // or there is nothing to put a second axis against.
+    function explorerFields(rows) {
+      const mode = state.dataWindow.mode;
+      return EXPLORER_FIELDS.filter((field) => field.modes.includes(mode)).filter((field) => {
+        let count = 0;
+        for (let i = 0; i < rows.length; i += 1) {
+          if (explorerValue(rows[i], field) !== null) count += 1;
+          if (count >= 2) return true;
+        }
+        return false;
+      });
+    }
+
+    // A remembered axis wins while this view has it; otherwise the default
+    // for the file's shape. The remembered choice is not overwritten, so it
+    // comes back when a filter brings its measure back.
+    function explorerAxes(fields) {
+      const keys = fields.map((field) => field.key);
+      const mode = explorerModeKey();
+      const pick = (stored, preferred, avoid) => {
+        if (keys.includes(stored) && stored !== avoid) return stored;
+        return preferred.find((key) => keys.includes(key) && key !== avoid) || keys.find((key) => key !== avoid) || null;
+      };
+      const x = pick(explorerPrefGet("explorer." + mode + ".x", ""), EXPLORER_DEFAULTS[mode].x, null);
+      const y = pick(explorerPrefGet("explorer." + mode + ".y", ""), EXPLORER_DEFAULTS[mode].y, x);
+      return { x, y };
+    }
+
+    function explorerColorOptions() {
+      const options = [{ value: "band", label: "Band" }, { value: "subject", label: "Subject" }, { value: "class", label: "Class" }];
+      if (hasGrowthContext()) options.push({ value: "met", label: "Met projection" });
+      options.push({ value: "none", label: "None" });
+      return options;
+    }
+
+    // Until a teacher picks, the colour follows the overview lens: a page
+    // looking at classes colours by class, one looking at subjects by
+    // subject (or by band when only one subject is in view).
+    function explorerColorBy(subjects) {
+      const stored = explorerPrefGet("explorer.color", "");
+      if (explorerColorOptions().some((option) => option.value === stored)) return stored;
+      if (currentOverviewLens() === "class") return "class";
+      return subjects.length > 1 ? "subject" : "band";
+    }
+
+    // Colour follows the class, never its position in the current list.
+    // Classes that were on the last chart keep their slot; a class coming
+    // back gets its old slot if nothing on screen has taken it; anything
+    // new takes the lowest free slot, and past five classes the rest fold
+    // into Other (there is never a sixth hue).
+    function explorerClassSlots(classes) {
+      if (explorerState.slotRows !== state.allRows) {
+        explorerState.slotRows = state.allRows;
+        explorerState.classSlots = new Map();
+        explorerState.lastClasses = new Set();
+      }
+      const memory = explorerState.classSlots;
+      const current = new Map();
+      const taken = new Set();
+      const keep = (name) => {
+        const slot = memory.get(name);
+        if (isFiniteNumber(slot) && slot >= 0 && !taken.has(slot)) {
+          current.set(name, slot);
+          taken.add(slot);
+        }
+      };
+      classes.filter((name) => explorerState.lastClasses.has(name)).forEach(keep);
+      classes.filter((name) => !current.has(name)).forEach(keep);
+      classes.forEach((name) => {
+        if (current.has(name)) return;
+        let slot = -1;
+        for (let i = 0; i < VIZ_CATEGORICAL_SLOTS; i += 1) {
+          if (!taken.has(i)) { slot = i; break; }
+        }
+        if (slot >= 0) taken.add(slot);
+        current.set(name, slot);
+      });
+      current.forEach((slot, name) => memory.set(name, slot));
+      explorerState.lastClasses = new Set(classes);
+      return current;
+    }
+
+    function explorerGroupOf(row, colorBy, slots) {
+      if (colorBy === "band") {
+        const band = row.currentBand && row.currentBand.rank ? row.currentBand : null;
+        return band
+          ? { key: band.name, label: band.name, color: band.color, order: band.rank }
+          : { key: "no-band", label: "No band", color: VIZ_OTHER, order: 9 };
+      }
+      if (colorBy === "subject") {
+        const index = SUBJECTS.indexOf(row.subject);
+        return { key: row.subject, label: row.subject, color: vizColor.subject(row.subject), order: index >= 0 ? index : 9 };
+      }
+      if (colorBy === "class") {
+        const slot = slots.get(row.className);
+        return isFiniteNumber(slot) && slot >= 0
+          ? { key: row.className, label: row.className, color: vizColor.categorical(slot), order: slot }
+          : { key: "other-classes", label: "Other classes", color: VIZ_OTHER, order: 99 };
+      }
+      if (colorBy === "met") {
+        // Met and missed sit either side of the projection, so they take the
+        // two poles of the diverging ramp: purple for met, the gold ink for
+        // missed (6.4:1 on white, so it reads as a mark, unlike the gold).
+        if (row.metGrowth === true) return { key: "met", label: "Met projection", color: "var(--viz-cat-1)", order: 1 };
+        if (row.metGrowth === false) return { key: "missed", label: "Did not meet", color: "var(--viz-div-0)", order: 2 };
+        return { key: "no-projection", label: "No projection", color: VIZ_OTHER, order: 3 };
+      }
+      return { key: "all", label: "Records", color: "var(--viz-cat-1)", order: 1 };
+    }
+
+    // Everything the chart, the figures, the tables and both exports read,
+    // worked out once per render from state.filteredRows.
+    function explorerModel() {
+      const base = state.filteredRows;
+      const subjects = explorerSubjects(base);
+      if (explorerState.subject !== "all" && !subjects.includes(explorerState.subject)) explorerState.subject = "all";
+      const rows = explorerState.subject === "all" ? base : base.filter((row) => row.subject === explorerState.subject);
+      const model = { base, rows, subjects, fields: [], points: [], missing: 0, groups: [] };
+      if (!base.length) {
+        model.empty = "No records in this view. Load a file, or widen the filters above.";
+        return model;
+      }
+      model.fields = explorerFields(rows);
+      if (model.fields.length < 2) {
+        model.empty = "This view has fewer than two measures with numbers in them, so there is nothing to plot one against the other.";
+        return model;
+      }
+      const axes = explorerAxes(model.fields);
+      explorerState.axes = axes;
+      model.xField = model.fields.find((field) => field.key === axes.x);
+      model.yField = model.fields.find((field) => field.key === axes.y);
+      model.xLabel = explorerLabel(model.xField);
+      model.yLabel = explorerLabel(model.yField);
+      model.colorBy = explorerColorBy(subjects);
+      model.colorLabel = EXPLORER_COLOR_LABELS[model.colorBy] || "";
+      const slots = explorerClassSlots(unique(rows.map((row) => row.className)));
+      rows.forEach((row) => {
+        const x = explorerValue(row, model.xField);
+        const y = explorerValue(row, model.yField);
+        if (x === null || y === null) {
+          model.missing += 1;
+          return;
+        }
+        model.points.push({
+          row,
+          x,
+          y,
+          key: explorerStudentKey(row),
+          id: explorerStudentKey(row) + "|" + row.subject,
+          group: explorerGroupOf(row, model.colorBy, slots),
+          hollow: model.colorBy === "met" && row.metCertainty === "too-close"
+        });
+      });
+      // A fixed drawing order, so a redraw never changes which dot is on top.
+      model.points.sort((a, b) => naturalCompare(a.row.studentName, b.row.studentName) || naturalCompare(a.row.subject, b.row.subject));
+      const xs = model.points.map((point) => point.x);
+      const ys = model.points.map((point) => point.y);
+      model.n = model.points.length;
+      model.students = new Set(model.points.map((point) => point.key)).size;
+      model.pearson = vizStats.pearson(xs, ys);
+      model.fit = vizStats.olsFit(xs, ys);
+      model.xFlat = model.n > 1 && !vizStats.sd(xs);
+      model.yFlat = model.n > 1 && !vizStats.sd(ys);
+      model.medianX = vizStats.quantile(xs, 0.5);
+      model.medianY = vizStats.quantile(ys, 0.5);
+      model.xInteger = model.n > 0 && xs.every(Number.isInteger);
+      model.yInteger = model.n > 0 && ys.every(Number.isInteger);
+      model.showTrend = explorerPrefGet("explorer.trend", true) !== false;
+      model.showMedians = explorerPrefGet("explorer.medians", false) === true;
+      model.jitter = explorerPrefGet("explorer.jitter", false) === true;
+      model.thin = vizIsThin(model.n);
+      // Under MIN_SHARE_N records a fitted line is a guess drawn with a
+      // ruler, so the figures are shown, hatched, and the line is not.
+      model.trendDrawn = model.showTrend && Boolean(model.fit) && !model.thin;
+      const groups = new Map();
+      model.points.forEach((point) => {
+        if (!groups.has(point.group.key)) groups.set(point.group.key, Object.assign({ points: [] }, point.group));
+        groups.get(point.group.key).points.push(point);
+      });
+      model.groups = [...groups.values()].sort((a, b) => a.order - b.order || naturalCompare(a.label, b.label));
+      if (explorerState.pinKey && !model.points.some((point) => point.key === explorerState.pinKey)) explorerState.pinKey = "";
+      model.pinKey = explorerState.pinKey;
+      model.focusable = model.n <= EXPLORER_FOCUSABLE_MAX;
+      model.title = model.yLabel + " against " + explorerLower(model.xLabel);
+      model.scope = explorerState.subject !== "all" ? explorerState.subject : subjects.length === 1 ? subjects[0] : "All subjects";
+      return model;
+    }
+
+    // Cohen's conventional sizes for r (0.1 / 0.3 / 0.5). Words only - the
+    // number is always printed beside them.
+    function explorerStrength(r) {
+      const size = Math.abs(r);
+      return size < 0.1 ? "no clear" : size < 0.3 ? "weak" : size < 0.5 ? "moderate" : "strong";
+    }
+
+    function explorerRelation(r) {
+      const strength = explorerStrength(r);
+      return strength === "no clear" ? "No clear straight-line relationship" : explorerCapital(strength) + " " + (r > 0 ? "positive" : "negative") + " relationship";
+    }
+
+    // The plain-language reading. It says what the points do, how sure the
+    // group size lets anyone be, and - once - that a pattern is not a cause.
+    function explorerReading(model) {
+      const x = explorerLower(model.xLabel);
+      const y = explorerLower(model.yLabel);
+      if (model.n < 3) {
+        return (model.n ? "Only " + formatInteger(model.n) + (model.n === 1 ? " record carries" : " records carry") : "No record carries") +
+          " both measures here, so there is no relationship to describe.";
+      }
+      const r = model.pearson.r;
+      if (!isFiniteNumber(r)) {
+        return explorerCapital(model.xFlat ? x : y) + " is the same for every plotted record, so nothing here can vary with it.";
+      }
+      if (model.thin) {
+        return vizThinNote(model.n) + " With so few, r = " + explorerR(r) + " can swing with a single student, so no trend line is drawn.";
+      }
+      if (explorerStrength(r) === "no clear") {
+        return "No clear straight-line relationship: " + y + " barely moves with " + x + " in this view.";
+      }
+      let text = explorerRelation(r) + ": records with a higher " + x + " tend to have a " + (r > 0 ? "higher " : "lower ") + y + ".";
+      text += isFiniteNumber(model.pearson.p) && model.pearson.p >= 0.05
+        ? " A pattern this size could easily be chance with " + formatInteger(model.n) + " records."
+        : " It describes this group; it does not show that one causes the other.";
+      return text;
+    }
+
+    // Pairs whose relationship is partly or wholly arithmetic. These are the
+    // readings most often mistaken for a finding, so the note names the
+    // mechanism. At most two notes, most important first.
+    function explorerCaveats(model) {
+      const notes = [];
+      const a = model.xField;
+      const b = model.yField;
+      const pair = (test) => test(a, b) || test(b, a);
+      const isStart = (field) => field.window === "start" && (field.family === "rit" || field.family === "pct");
+      const isLevel = (field) => (field.family === "rit" || field.family === "pct") && field.window !== "change";
+      if (a.family === "cgp" && b.family === "cgp") {
+        notes.push("CGP is the conditional growth index turned into a percentile: the same measure twice, so the two line up by definition.");
+      } else if (pair((p, q) => p.family === "cgp" && isStart(q))) {
+        notes.push("Conditional growth is already measured against students who started at the same score, so NWEA expects no slope here: a clear one means growth in this group differed by starting point.");
+      } else if (pair((p, q) => p.family === "projection" && isLevel(q) && (q.window === "start" || isBaselineMode()))) {
+        notes.push("NWEA sets the projection from the starting score and grade, so this slope is NWEA's norms at work rather than anything this group did.");
+      } else if (pair((p, q) => p.window === "change" && p.family !== "cgp" && isStart(q))) {
+        notes.push("Part of any downward slope here is regression to the mean: a start score that was lucky or unlucky on the day tends to be followed by a smaller or larger change, whatever the teaching.");
+      } else if (pair((p, q) => p.family === "cgp" && q.window === "change")) {
+        notes.push("Conditional growth is built from the same gain, set against students who started in the same place, so part of this relationship is built in.");
+      } else if (a.window === "change" && b.window === "change") {
+        notes.push("These are two versions of the same change, so they move together almost by definition.");
+      } else if (pair((p, q) => p.window === "change" && p.family !== "cgp" && q.window === "end" && q.family === p.family)) {
+        notes.push("The change is worked out from the end score, so part of this relationship is built into the arithmetic.");
+      } else if (isLevel(a) && isLevel(b) && a.window === b.window) {
+        notes.push("Both come from the same test: percentiles, Lexiles, Quantiles and norm distances are all worked out from the RIT, so these two are linked by construction. What the chart adds is who sits off the line.");
+      } else if (isLevel(a) && isLevel(b)) {
+        notes.push("These are two sittings of the same kind of test, so a strong relationship is expected; the useful part is who sits far from the line.");
+      }
+      const usesRIT = [a, b].some((field) => field.family === "rit" && field.window !== "change" && field.key !== "usNormDeltaRIT");
+      if (usesRIT && explorerState.subject === "all" && new Set(model.points.map((point) => point.row.subject)).size > 1) {
+        notes.push("RIT scales differ by subject, so pooling them can blur or even reverse a pattern: pick one subject above for a cleaner read.");
+      }
+      if (model.fit && isFiniteNumber(model.pearson.r) && !model.thin && model.students < model.n) {
+        notes.push("Each student counts once per subject, so the points are not all independent and the p-value is on the generous side.");
+      }
+      return notes.slice(0, 2);
+    }
+
+    function explorerEquation(model) {
+      const fit = model.fit;
+      if (!fit) return "";
+      const y = model.yField.short || model.yLabel;
+      const x = model.xField.short || model.xLabel;
+      const sign = fit.slope < 0 ? " \u2212 " : " + ";
+      return y + " = " + explorerCoef(fit.intercept) + sign + explorerCoef(Math.abs(fit.slope)) + " \u00d7 " + x;
+    }
+
+    function explorerStatsHTML(model) {
+      const r = model.pearson.r;
+      const fit = model.fit;
+      const yShort = model.yField.short || model.yLabel;
+      const xShort = model.xField.short || model.xLabel;
+      const countContext = [];
+      if (model.students < model.n) countContext.push(formatInteger(model.students) + " students");
+      if (model.missing) countContext.push(formatInteger(model.missing) + " missing a measure, left out");
+      // The interval's ends take the slope's own number of decimals, so
+      // "-0.19 to 0.065" reads as "-0.190 to 0.065".
+      const slopeText = fit ? explorerCoef(fit.slope, true) : "";
+      const decimals = slopeText.includes(".") ? slopeText.split(".")[1].length : 0;
+      const end = (value) => (value < 0 ? "\u2212" : "") + Math.abs(value).toFixed(decimals);
+      const slopeCI = fit && fit.slopeCI95 && fit.slopeCI95.every(isFiniteNumber)
+        ? " \u00b7 95% CI " + end(fit.slopeCI95[0]) + " to " + end(fit.slopeCI95[1])
+        : "";
+      const tiles = [
+        vizKpiTile({
+          label: "Correlation",
+          value: isFiniteNumber(r) ? explorerR(r) : "N/A",
+          context: isFiniteNumber(r)
+            ? "Pearson r \u00b7 " + (explorerStrength(r) === "no clear" ? "no clear line" : explorerStrength(r) + " " + (r > 0 ? "positive" : "negative")) + " \u00b7 " + vizStats.formatP(model.pearson.p)
+            : "Pearson r needs three records that vary",
+          thin: model.thin
+        }),
+        vizKpiTile({
+          label: "R\u00b2",
+          value: fit && isFiniteNumber(fit.r2) ? fit.r2.toFixed(2) : "N/A",
+          context: fit && isFiniteNumber(fit.r2) ? "The line accounts for " + formatPercentWhole(fit.r2 * 100) + " of the spread in " + yShort : "No line to fit",
+          thin: model.thin
+        }),
+        vizKpiTile({
+          label: "Records",
+          value: formatInteger(model.n),
+          context: countContext.join(" \u00b7 ") || "One point per record",
+          thin: model.thin
+        }),
+        vizKpiTile({
+          label: "Slope",
+          value: fit ? slopeText : "N/A",
+          context: fit ? yShort + " per 1 " + xShort + slopeCI : "No line to fit",
+          thin: model.thin
+        })
+      ];
+      return '<div class="explorer-stats">' + vizKpiRow(tiles) + "</div>";
+    }
+
+    function explorerLegendHTML(model) {
+      const items = model.colorBy === "none" ? [] : model.groups.map((group) => ({
+        label: group.label, color: group.color, shape: "dot", value: formatInteger(group.points.length)
+      }));
+      if (model.trendDrawn) items.push({ label: "Trend line", color: "var(--text-soft)", shape: "line" });
+      if (items.length < 2) return "";
+      let html = vizLegend(items, { ariaLabel: model.colorLabel ? "Points coloured by " + explorerLower(model.colorLabel) : "Legend" });
+      // The one mark vizLegend has no shape for: a ring for a growth call
+      // that sits inside measurement error.
+      if (model.colorBy === "met" && model.points.some((point) => point.hollow)) {
+        html = html.replace(/<\/ul>$/, '<li class="viz-legend-item"><span class="viz-swatch is-dot explorer-hollow-swatch" aria-hidden="true"></span>Ring: too close to call</li></ul>');
+      }
+      return html;
+    }
+
+    function explorerTip(model, point) {
+      const row = point.row;
+      const rows = [
+        ["Subject", row.subject],
+        ["Class", row.className],
+        [model.xField.short || model.xLabel, explorerFormat(model.xField, point.x)],
+        [model.yField.short || model.yLabel, explorerFormat(model.yField, point.y)]
+      ];
+      if (model.colorBy === "band" || model.colorBy === "met") {
+        rows.push([model.colorLabel, point.group.label + (point.hollow ? " (too close to call)" : "")]);
+      }
+      if (model.trendDrawn) rows.push(["From the trend line", explorerAway(model.yField, point.y - model.fit.predict(point.x), true)]);
+      const note = model.thin ? vizThinNote(model.n)
+        : point.key === model.pinKey ? "Pinned. Select again to unpin." : "Select to pin this student.";
+      return vizTip(row.studentName, rows, note);
+    }
+
+    function explorerChartHeight(width) {
+      return Math.round(Math.max(300, Math.min(480, width * 0.62)));
+    }
+
+    // Percentiles always run 0 to 100, so a point's place means the same
+    // thing on every chart; anything else is fitted to the data with a
+    // little air and widened to whole ticks by the scale.
+    function explorerDomain(field, values) {
+      if (field.scale === "percentile") return [0, 100];
+      const extent = vizStats.extent(values);
+      if (!extent) return [0, 1];
+      const pad = (extent[1] - extent[0]) * 0.05;
+      const low = field.floorZero && extent[0] >= 0 ? 0 : extent[0] - pad;
+      return [low, extent[1] + pad];
+    }
+
+    function explorerAxisTitle(field, length) {
+      const label = explorerLabel(field);
+      return label.length * VIZ_CHAR_PX > length - 12 ? (field.short || label) : label;
+    }
+
+    function explorerCenterLine(field, scale, plot, axis) {
+      if (!isFiniteNumber(field.center)) return "";
+      const [d0, d1] = scale.domain;
+      if (!(field.center > Math.min(d0, d1) && field.center < Math.max(d0, d1))) return "";
+      const at = scale(field.center);
+      if (axis === "x") {
+        return '<line class="explorer-center-line" x1="' + vizNum(at) + '" x2="' + vizNum(at) + '" y1="' + vizNum(plot.top) + '" y2="' + vizNum(plot.bottom) + '"/>' +
+          vizText(at + 5, plot.bottom - 6, field.centerLabel, { className: "viz-label is-muted explorer-center-label" });
+      }
+      return '<line class="explorer-center-line" x1="' + vizNum(plot.left) + '" x2="' + vizNum(plot.right) + '" y1="' + vizNum(at) + '" y2="' + vizNum(at) + '"/>' +
+        vizText(plot.left + 5, at - 5, field.centerLabel, { className: "viz-label is-muted explorer-center-label" });
+    }
+
+    function explorerStatsLine(model) {
+      const r = model.pearson.r;
+      const parts = ["n = " + formatInteger(model.n)];
+      if (isFiniteNumber(r)) parts.push("r = " + explorerR(r), explorerRelation(r).toLowerCase());
+      if (model.fit && isFiniteNumber(model.fit.r2)) parts.push("R\u00b2 = " + model.fit.r2.toFixed(2));
+      if (model.trendDrawn) parts.push("trend " + explorerEquation(model));
+      if (model.thin) parts.push("too few records to read as a pattern");
+      return parts.join(" \u00b7 ");
+    }
+
+    // The scatter itself, drawn at the width it is shown at. options.exporting
+    // draws the stand-alone version for the SVG download: the title, the
+    // figures and the legend go inside the picture, and no mark carries a tip.
+    function explorerChart(model, width, options) {
+      const exporting = Boolean(options && options.exporting);
+      const exportHead = exporting ? explorerExportHead(model, width) : null;
+      const head = exportHead ? exportHead.height : 0;
+      const foot = exporting ? 28 : 0;
+      const height = explorerChartHeight(width) + head + foot;
+      const xs = model.points.map((point) => point.x);
+      const ys = model.points.map((point) => point.y);
+      const xCount = width < 480 ? 5 : 8;
+      const yCount = height - head - foot < 340 ? 5 : 7;
+      const yDomain = explorerDomain(model.yField, ys);
+      // The left margin is the widest y tick label plus the axis title, so a
+      // Lexile axis (1,250) gets the room a percentile axis does not need.
+      const probe = vizScaleLinear(yDomain, [1, 0], { nice: true, ticks: yCount });
+      const widest = probe.ticks(yCount).reduce((max, tick) => Math.max(max, explorerFormat(model.yField, tick).length), 1);
+      const plot = vizLayout(width, height, { top: head + 16, right: 20, bottom: foot + 48, left: Math.max(52, Math.round(widest * 6.4 + 32)) });
+      const x = vizScaleLinear(explorerDomain(model.xField, xs), [plot.left, plot.right], { nice: true, ticks: xCount });
+      const y = vizScaleLinear(yDomain, [plot.bottom, plot.top], { nice: true, ticks: yCount });
+      let chart = vizAxisLeft(y, plot, { ticks: y.ticks(yCount), format: (value) => explorerFormat(model.yField, value), title: explorerAxisTitle(model.yField, plot.innerH) }) +
+        vizAxisBottom(x, plot, { ticks: x.ticks(xCount), format: (value) => explorerFormat(model.xField, value), grid: true, title: explorerAxisTitle(model.xField, plot.innerW) }) +
+        explorerCenterLine(model.xField, x, plot, "x") + explorerCenterLine(model.yField, y, plot, "y");
+
+      // The trend line runs only across the x values the data covers - a
+      // line drawn past the last point is a forecast nobody made - with its
+      // 95% band, clipped to the plot.
+      if (model.trendDrawn) {
+        const fit = model.fit;
+        const range = vizStats.extent(xs);
+        const upper = [];
+        const lower = [];
+        for (let i = 0; i <= 40; i += 1) {
+          const value = range[0] + (range[1] - range[0]) * i / 40;
+          const band = fit.ci95At(value);
+          if (!band) continue;
+          upper.push(vizNum(x(value)) + " " + vizNum(y(band[1])));
+          lower.unshift(vizNum(x(value)) + " " + vizNum(y(band[0])));
+        }
+        const clip = vizUid("explorer-clip");
+        chart += '<defs><clipPath id="' + clip + '"><rect x="' + vizNum(plot.left) + '" y="' + vizNum(plot.top) + '" width="' + vizNum(plot.innerW) + '" height="' + vizNum(plot.innerH) + '"/></clipPath></defs>' +
+          '<g clip-path="url(#' + clip + ')">' +
+          (upper.length > 1 ? '<path class="viz-band explorer-trend-band" d="M' + upper.join("L") + "L" + lower.join("L") + 'Z"/>' : "") +
+          '<path class="viz-line explorer-trend" d="M' + vizNum(x(range[0])) + " " + vizNum(y(fit.predict(range[0]))) + "L" + vizNum(x(range[1])) + " " + vizNum(y(fit.predict(range[1]))) + '"/>' +
+          "</g>";
+      }
+
+      if (model.showMedians && isFiniteNumber(model.medianX) && isFiniteNumber(model.medianY)) {
+        chart += vizRefLine(plot, { x: x(model.medianX), label: "Median " + explorerFormat(model.xField, model.medianX) }) +
+          vizRefLine(plot, { y: y(model.medianY), label: "Median " + explorerFormat(model.yField, model.medianY) });
+      }
+
+      // Jitter moves a point by up to 0.4 of one whole-number step (never
+      // more than 7px), so two students on the same score part without
+      // either leaving the value they scored. It only applies to an axis
+      // whose values are all whole numbers; the tip always shows the real
+      // values.
+      const jitterX = model.jitter && model.xInteger ? Math.min(0.4 * Math.abs(x(1) - x(0)), 7) : 0;
+      const jitterY = model.jitter && model.yInteger ? Math.min(0.4 * Math.abs(y(1) - y(0)), 7) : 0;
+      const dense = model.n > EXPLORER_FOCUSABLE_MAX;
+      // Bigger dots while there are few enough to find one by eye; never
+      // under the 8px the kit's marks keep.
+      const radius = model.n <= EXPLORER_FOCUSABLE_MAX ? 5.5 : model.n > 250 ? 4 : 4.5;
+      const layers = { dim: "", base: "", top: "" };
+      const pinned = [];
+      model.points.forEach((point) => {
+        let cx = x(point.x);
+        let cy = y(point.y);
+        if (jitterX) cx = Math.max(plot.left, Math.min(plot.right, cx + jitterX * (explorerHash01(point.id + "|x") * 2 - 1)));
+        if (jitterY) cy = Math.max(plot.top, Math.min(plot.bottom, cy + jitterY * (explorerHash01(point.id + "|y") * 2 - 1)));
+        const isPinned = Boolean(model.pinKey) && point.key === model.pinKey;
+        const mark = vizDot(cx, cy, {
+          r: isPinned ? 6 : radius,
+          fill: point.hollow ? "var(--viz-surface)" : point.group.color,
+          stroke: point.hollow ? point.group.color : undefined,
+          tip: exporting ? "" : explorerTip(model, point),
+          focusable: model.focusable,
+          hitR: dense ? 9 : 12
+        });
+        const group = '<g class="explorer-pt' + (isPinned ? " is-pinned" : model.pinKey ? " is-dim" : "") + (point.hollow ? " is-hollow" : "") +
+          '" data-explorer-key="' + escapeAttr(point.key) + '" data-explorer-point="' + escapeAttr(point.id) + '">' + mark + "</g>";
+        if (isPinned) {
+          layers.top += group;
+          pinned.push({ cx, cy, point });
+        } else if (model.pinKey) {
+          layers.dim += group;
+        } else {
+          layers.base += group;
+        }
+      });
+      chart += layers.dim + layers.base;
+
+      // A pinned student: their records joined by a hairline in subject
+      // order, each labelled with its subject, and the name once, beside the
+      // highest point.
+      if (pinned.length) {
+        pinned.sort((a, b) => naturalCompare(a.point.row.subject, b.point.row.subject));
+        if (pinned.length > 1) {
+          chart += '<path class="explorer-link" d="M' + pinned.map((p) => vizNum(p.cx) + " " + vizNum(p.cy)).join("L") + '"/>';
+        }
+        chart += layers.top;
+        const highest = pinned.reduce((best, p) => (p.cy < best.cy ? p : best), pinned[0]);
+        pinned.forEach((p) => {
+          const text = (p === highest ? p.point.row.studentName + (pinned.length > 1 ? " \u00b7 " : "") : "") + (pinned.length > 1 ? p.point.row.subject : "");
+          const right = p.cx > plot.left + plot.innerW * 0.7;
+          chart += vizText(p.cx + (right ? -10 : 10), p.cy - 8, text, { className: "viz-label explorer-pin-label", anchor: right ? "end" : "start" });
+        });
+      } else {
+        chart += layers.top;
+      }
+
+      if (exportHead) {
+        const scope = [model.scope].concat(explorerFilterWords()).join(" \u00b7 ");
+        chart = exportHead.html + chart +
+          vizText(16, height - 10, "American International School in Abu Dhabi \u00b7 NWEA MAP Growth \u00b7 " + scope + " \u00b7 " + new Date().toISOString().slice(0, 10), { className: "explorer-export-foot" });
+      }
+
+      const label = explorerAriaLabel(model);
+      const svg = vizFrame(chart, {
+        width,
+        height,
+        ariaLabel: label,
+        desc: explorerDesc(model),
+        className: "explorer-plot" + (dense ? " is-dense" : "")
+      });
+      if (exporting) return svg;
+      // Past EXPLORER_FOCUSABLE_MAX the marks are not focusable, so vizFrame
+      // names the chart with a root <title> - which the browser also shows
+      // as its own tooltip over every point, on top of the kit's. On screen
+      // the same words go in aria-label instead; the file keeps its title.
+      return svg.replace(/ aria-labelledby="(viz-title-\d+)(?: (viz-desc-\d+))?"><title id="\1">[^<]*<\/title>/,
+        (match, titleId, descId) => ' aria-label="' + escapeAttr(label) + '"' + (descId ? ' aria-describedby="' + descId + '"' : "") + ">");
+    }
+
+    // The top of the downloaded picture: title, the figures in one line, and
+    // the legend, wrapped onto as many rows as it needs. Returns the markup
+    // and the height it takes, which the plot starts below.
+    function explorerExportHead(model, width) {
+      let html = vizText(16, 26, model.title, { className: "explorer-export-title" }) +
+        vizText(16, 46, explorerStatsLine(model), { className: "explorer-export-sub" });
+      const items = model.colorBy === "none" ? [] : model.groups.map((group) => ({ label: group.label + " (" + formatInteger(group.points.length) + ")", color: group.color }));
+      if (model.trendDrawn) items.push({ label: "Trend line with 95% band", line: true });
+      let lx = 16;
+      let ly = 66;
+      items.forEach((item) => {
+        const key = item.line ? 20 : 14;
+        const itemWidth = key + item.label.length * 6.4 + 16;
+        if (lx > 16 && lx + itemWidth > width - 16) {
+          lx = 16;
+          ly += 18;
+        }
+        html += item.line
+          ? '<line class="explorer-trend" x1="' + vizNum(lx) + '" x2="' + vizNum(lx + 14) + '" y1="' + vizNum(ly - 4) + '" y2="' + vizNum(ly - 4) + '" stroke-width="2"/>'
+          : '<circle cx="' + vizNum(lx + 5) + '" cy="' + vizNum(ly - 4) + '" r="5" fill="' + escapeAttr(item.color) + '"/>';
+        html += vizText(lx + key, ly, item.label, { className: "explorer-export-legend" });
+        lx += itemWidth;
+      });
+      return { html, height: (items.length ? ly : 50) + 16 };
+    }
+
+    // The page filters in force, in words, for the export footer.
+    function explorerFilterWords() {
+      const filters = typeof getFilters === "function" ? getFilters() : {};
+      return [filters.teacher, filters.className, filters.grade ? "Grade " + filters.grade : ""].filter(Boolean);
+    }
+
+    function explorerAriaLabel(model) {
+      const r = model.pearson.r;
+      return "Scatter plot of " + explorerLower(model.yLabel) + " against " + explorerLower(model.xLabel) + ", " + formatInteger(model.n) +
+        (model.n === 1 ? " record" : " records") + (isFiniteNumber(r) && !model.thin ? ". " + explorerRelation(r) + ", r = " + explorerR(r) : "") + ".";
+    }
+
+    function explorerDesc(model) {
+      const parts = ["Each point is one record: a student in one subject."];
+      if (model.colorLabel) parts.push("Colour shows " + explorerLower(model.colorLabel) + ".");
+      if (model.trendDrawn) parts.push("Trend line: " + explorerEquation(model) + ", with its 95% confidence band.");
+      if (model.showMedians && isFiniteNumber(model.medianX)) {
+        parts.push("Dashed guides mark the medians: " + explorerFormat(model.xField, model.medianX) + " across and " + explorerFormat(model.yField, model.medianY) + " up.");
+      }
+      if (model.pinKey) {
+        const mine = model.points.filter((point) => point.key === model.pinKey);
+        if (mine.length) parts.push(mine[0].row.studentName + " is highlighted.");
+      }
+      if (!model.focusable) parts.push("The values are in the table under the chart.");
+      return parts.join(" ");
+    }
+
+    // The pinned student's card: every record of theirs in the page's view,
+    // with the two measures and how far each sits from the trend line, or
+    // why it is not on this chart.
+    function explorerPinHTML(model) {
+      if (!model.pinKey) {
+        return '<p class="explorer-pin-hint">Select a point to pin that student: their other subjects stay lit, the rest step back, and their figures appear here. Escape clears it.</p>';
+      }
+      const mine = model.points.filter((point) => point.key === model.pinKey);
+      if (!mine.length) return "";
+      const first = mine[0].row;
+      const plottedIds = new Set(mine.map((point) => point.id));
+      const others = model.base.filter((row) => explorerStudentKey(row) === model.pinKey && !plottedIds.has(explorerStudentKey(row) + "|" + row.subject));
+      const meta = [first.className, first.studentGrade && first.studentGrade !== "Missing" ? "Grade " + first.studentGrade : "", first.studentID && first.studentID !== "Missing" ? "ID " + first.studentID : ""].filter(Boolean).join(" \u00b7 ");
+      const titleId = vizUid("explorer-pin");
+      const items = mine.slice().sort((a, b) => naturalCompare(a.row.subject, b.row.subject)).map((point) => {
+        const distance = model.fit && !model.thin ? point.y - model.fit.predict(point.x) : null;
+        const away = isFiniteNumber(distance)
+          ? (Number(explorerAway(model.yField, distance)) === 0 ? "on the trend line" : explorerAway(model.yField, Math.abs(distance)) + (distance > 0 ? " above" : " below") + " the trend line")
+          : "";
+        return '<li><span class="viz-swatch is-dot" style="--sw:' + escapeAttr(point.hollow ? "var(--viz-surface)" : point.group.color) + '" aria-hidden="true"></span>' +
+          '<span class="explorer-pin-subject">' + escapeHTML(point.row.subject) + "</span>" +
+          '<span class="explorer-pin-values">' + escapeHTML((model.xField.short || model.xLabel) + " " + explorerFormat(model.xField, point.x) + " \u00b7 " +
+            (model.yField.short || model.yLabel) + " " + explorerFormat(model.yField, point.y)) +
+          (away ? '<span class="explorer-pin-away">' + escapeHTML(away) + "</span>" : "") + "</span></li>";
+      }).join("");
+      const missingItems = others.map((row) => {
+        const why = explorerState.subject !== "all" && row.subject !== explorerState.subject
+          ? "not in this chart's subject"
+          : "no " + (explorerValue(row, model.xField) === null ? (model.xField.short || model.xLabel) : (model.yField.short || model.yLabel));
+        return '<li class="is-off"><span class="viz-swatch is-dot" style="--sw:var(--viz-empty)" aria-hidden="true"></span>' +
+          '<span class="explorer-pin-subject">' + escapeHTML(row.subject) + '</span><span class="explorer-pin-values">' + escapeHTML("Not plotted: " + why) + "</span></li>";
+      }).join("");
+      return '<div class="explorer-pin" role="group" aria-labelledby="' + titleId + '">' +
+        '<span class="viz-eyebrow">Pinned student</span>' +
+        '<strong class="explorer-pin-name" id="' + titleId + '">' + escapeHTML(first.studentName) + "</strong>" +
+        (meta ? '<span class="explorer-pin-meta">' + escapeHTML(meta) + "</span>" : "") +
+        '<ul class="explorer-pin-list">' + items + missingItems + "</ul>" +
+        '<div class="explorer-pin-actions">' +
+        '<button class="btn small" type="button" data-student="' + escapeAttr(first.studentName) + '">Open full profile</button>' +
+        '<button class="btn small ghost" type="button" data-explorer-clear>Clear pin</button>' +
+        "</div></div>";
+    }
+
+    function explorerTablesHTML(model) {
+      const xShort = model.xField.short || model.xLabel;
+      const yShort = model.yField.short || model.yLabel;
+      let html = "";
+      if (model.colorBy !== "none" && model.groups.length > 1) {
+        const rows = model.groups.map((group) => {
+          const gx = group.points.map((point) => point.x);
+          const gy = group.points.map((point) => point.y);
+          const cor = vizStats.pearson(gx, gy);
+          return { label: group.label, n: group.points.length, mx: vizStats.quantile(gx, 0.5), my: vizStats.quantile(gy, 0.5), r: cor.r, thin: vizIsThin(group.points.length) };
+        });
+        html += vizTable({
+          caption: "The relationship within each " + explorerLower(model.colorLabel || "group"),
+          columns: [
+            { key: "label", label: model.colorLabel || "Group" },
+            { key: "n", label: "Records", numeric: true, format: (value) => formatInteger(value) },
+            { key: "mx", label: "Median " + xShort, numeric: true, format: (value) => explorerFormat(model.xField, value) },
+            { key: "my", label: "Median " + yShort, numeric: true, format: (value) => explorerFormat(model.yField, value) },
+            { key: "r", label: "r", numeric: true, format: (value, row) => (row.thin ? "too few" : isFiniteNumber(value) ? explorerR(value) : "N/A"), thin: (row) => row.thin }
+          ],
+          rows
+        });
+      }
+      const shown = model.points.slice(0, EXPLORER_TABLE_MAX);
+      const columns = [
+        { key: "name", label: "Student" },
+        { key: "subject", label: "Subject" },
+        { key: "className", label: "Class" },
+        { key: "x", label: xShort, numeric: true, format: (value) => explorerFormat(model.xField, value) },
+        { key: "y", label: yShort, numeric: true, format: (value) => explorerFormat(model.yField, value) }
+      ];
+      if (model.colorBy === "band" || model.colorBy === "met") columns.push({ key: "group", label: model.colorLabel });
+      if (model.fit && !model.thin) columns.push({ key: "away", label: "From the line", numeric: true, format: (value) => explorerAway(model.yField, value, true) });
+      html += '<div class="explorer-points">' + vizTable({
+        caption: model.points.length > shown.length
+          ? "The first " + formatInteger(shown.length) + " of " + formatInteger(model.points.length) + " plotted records - Export CSV has them all"
+          : "Every plotted record",
+        columns,
+        rows: shown.map((point) => ({
+          name: point.row.studentName,
+          subject: point.row.subject,
+          className: point.row.className,
+          x: point.x,
+          y: point.y,
+          group: point.group.label + (point.hollow ? " (too close to call)" : ""),
+          away: model.fit ? point.y - model.fit.predict(point.x) : null
+        }))
+      }) + "</div>";
+      return vizTableToggle(html);
+    }
+
+    function explorerControlsHTML(model) {
+      const fieldOptions = model.fields.map((field) => ({ value: field.key, label: explorerLabel(field) }));
+      const toggleId = vizUid("explorer-show");
+      const jitterUsable = model.xInteger || model.yInteger;
+      const toggle = (name, label, on, disabled, title) => '<button type="button" data-explorer-toggle="' + name + '" aria-pressed="' + (on ? "true" : "false") + '"' +
+        (disabled ? " disabled" : "") + (title ? ' title="' + escapeAttr(title) + '"' : "") + ">" + escapeHTML(label) + "</button>";
+      const controls = [
+        '<div class="explorer-axes">' +
+          vizSelect({ name: "x", label: "Across (X)", options: fieldOptions, value: model.xField.key }) +
+          '<button class="btn small explorer-swap" type="button" data-explorer-swap aria-label="Swap the two measures" title="Swap X and Y"><span aria-hidden="true">\u21c4</span></button>' +
+          vizSelect({ name: "y", label: "Up (Y)", options: fieldOptions, value: model.yField.key }) +
+        "</div>",
+        vizSegmented({ name: "color", label: "Colour by", options: explorerColorOptions(), value: model.colorBy })
+      ];
+      if (model.subjects.length > 1) {
+        controls.push(vizSegmented({
+          name: "subject",
+          label: "Subject in this chart",
+          options: [{ value: "all", label: "All" }].concat(model.subjects.map((subject) => ({ value: subject, label: subject }))),
+          value: explorerState.subject
+        }));
+      }
+      controls.push('<div class="viz-control"><span class="viz-control-label" id="' + toggleId + '">Show</span>' +
+        '<div class="viz-seg explorer-toggles" role="group" aria-labelledby="' + toggleId + '">' +
+        toggle("trend", "Trend line", model.showTrend) +
+        toggle("medians", "Median guides", model.showMedians) +
+        toggle("jitter", "Jitter", model.jitter && jitterUsable, !jitterUsable,
+          jitterUsable ? "Spread out points that share a whole-number score" : "Only whole-number measures pile up on one another") +
+        "</div></div>");
+      if (model.points.length) {
+        const byName = new Map();
+        model.points.forEach((point) => {
+          if (!byName.has(point.key)) byName.set(point.key, point.row);
+        });
+        const names = countBy([...byName.values()], (row) => row.studentName);
+        const students = [...byName.entries()]
+          .map(([key, row]) => ({ value: key, label: row.studentName + (names[row.studentName] > 1 ? " (" + row.className + ")" : "") }))
+          .sort((a, b) => naturalCompare(a.label, b.label));
+        controls.push(vizSelect({ name: "pin", label: "Pin a student", options: [{ value: "", label: "Nobody pinned" }].concat(students), value: model.pinKey }));
+      }
+      return vizControls(controls);
+    }
+
+    function explorerCardHTML(model) {
+      const sub = "Each point is one student in one subject" +
+        (model.colorLabel ? ", coloured by " + explorerLower(model.colorLabel) + (model.colorBy === "band" ? " (" + currentWindowName() + ")" : "") : "") + "." +
+        (model.jitter && (model.xInteger || model.yInteger) ? " Jitter is on: points sharing a score are spread slightly apart." : "");
+      const caveats = explorerCaveats(model);
+      const equation = explorerEquation(model);
+      const side = explorerStatsHTML(model) +
+        (equation && !model.thin ? '<p class="explorer-equation"><span class="viz-eyebrow">Trend line</span>' + escapeHTML(equation) + "</p>" : "") +
+        '<p class="explorer-reading">' + escapeHTML(explorerReading(model)) + "</p>" +
+        '<div class="explorer-pin-slot">' + explorerPinHTML(model) + "</div>";
+      // How a pair is built sits under the chart it qualifies, not in the
+      // column, so the column stays about this group's figures; on a phone
+      // it follows the figures instead (see .explorer-layout).
+      const notes = caveats.length
+        ? '<div class="explorer-caveats">' + caveats.map((note) => '<p class="explorer-caveat">' + escapeHTML(note) + "</p>").join("") + "</div>"
+        : "";
+      return '<div class="viz-grid">' + vizCard({
+        eyebrow: "Scatter \u00b7 " + model.scope,
+        title: model.title,
+        sub,
+        wide: true,
+        className: "explorer-card",
+        body: '<div class="explorer-layout"><div class="explorer-main">' + explorerLegendHTML(model) +
+          vizChartSlot((width) => explorerChart(model, width), { minHeight: 300 }) + "</div>" +
+          '<div class="explorer-side">' + side + "</div>" + notes + "</div>",
+        table: explorerTablesHTML(model)
+      }) + "</div>";
+    }
+
+    // Re-rendering replaces the controls, so whatever had focus is found
+    // again afterwards: the same control, toggle or point.
+    function explorerFocusMemo(wrap) {
+      const active = document.activeElement;
+      if (!active || !wrap.contains(active)) return null;
+      const control = active.closest("[data-viz-control]");
+      if (control) return { control: control.getAttribute("data-viz-control") };
+      const toggle = active.closest("[data-explorer-toggle]");
+      if (toggle) return { toggle: toggle.getAttribute("data-explorer-toggle") };
+      if (active.closest("[data-explorer-swap]")) return { swap: true };
+      const point = active.closest("[data-explorer-point]");
+      if (point) return { point: point.getAttribute("data-explorer-point") };
+      return null;
+    }
+
+    function explorerRestoreFocus(wrap, memo) {
+      if (!memo) return;
+      let target = null;
+      if (memo.control) {
+        const control = wrap.querySelector('[data-viz-control="' + cssEscape(memo.control) + '"]');
+        target = control && (control.querySelector("select") || control.querySelector('[aria-checked="true"]'));
+      } else if (memo.toggle) {
+        target = wrap.querySelector('[data-explorer-toggle="' + cssEscape(memo.toggle) + '"]');
+      } else if (memo.swap) {
+        target = wrap.querySelector("[data-explorer-swap]");
+      } else if (memo.point) {
+        target = wrap.querySelector('[data-explorer-point="' + cssEscape(memo.point) + '"] [tabindex="0"]');
+      }
+      if (target && !target.disabled) target.focus({ preventScroll: true });
+    }
+
+    function renderExplorer() {
+      const wrap = document.getElementById("explorerWrap");
+      if (!wrap) return;
+      const memo = explorerFocusMemo(wrap);
+      const model = explorerModel();
+      explorerState.model = model.points.length ? model : null;
+      ["explorerSvgBtn", "explorerCsvBtn"].forEach((id) => {
+        const button = document.getElementById(id);
+        if (button) button.disabled = !explorerState.model;
+      });
+      if (model.empty) {
+        vizMount(wrap, vizEmpty(model.empty));
+        return;
+      }
+      if (!model.points.length) {
+        vizMount(wrap, explorerControlsHTML(model) + vizEmpty("No record in this view has both " + explorerLower(model.xLabel) + " and " +
+          explorerLower(model.yLabel) + ". Pick another pair" + (explorerState.subject !== "all" ? ", or set the subject back to All." : ".")));
+      } else {
+        vizMount(wrap, explorerControlsHTML(model) + explorerCardHTML(model));
+      }
+      explorerRestoreFocus(wrap, memo);
+    }
+
+    // A redraw from the section's own controls. The card is already on
+    // screen, so its new nodes must neither wait for the page's entry
+    // animation (they would sit invisible until scrolled past again) nor
+    // replay it on every click: they drop the reveal class.
+    function explorerRefresh() {
+      renderExplorer();
+      const wrap = document.getElementById("explorerWrap");
+      if (wrap) wrap.querySelectorAll(".reveal").forEach((node) => node.classList.remove("reveal"));
+    }
+
+    function explorerPin(key) {
+      explorerState.pinKey = key || "";
+      explorerRefresh();
+      const model = explorerState.model;
+      const mine = model && key ? model.points.filter((point) => point.key === key) : [];
+      if (mine.length) {
+        announce(mine[0].row.studentName + " pinned: " + formatInteger(mine.length) + (mine.length === 1 ? " record" : " records") + " highlighted in the Explorer.");
+      } else if (!key) {
+        announce("Explorer pin cleared.");
+      }
+    }
+
+    function explorerFileBase(model) {
+      return "explorer-" + model.yField.slug + "-vs-" + model.xField.slug;
+    }
+
+    function explorerExportCSV() {
+      const model = explorerState.model;
+      if (!model) {
+        toast("Nothing is plotted, so there is nothing to export.", "info");
+        return;
+      }
+      const round = (value) => (isFiniteNumber(value) ? Math.round(value * 100) / 100 : "");
+      const columns = [
+        ["Student ID", (point) => point.row.studentID],
+        ["Student", (point) => point.row.studentName],
+        ["Subject", (point) => point.row.subject],
+        ["Class", (point) => point.row.className],
+        ["Teacher", (point) => point.row.teacher],
+        ["Grade", (point) => point.row.studentGrade],
+        [model.xLabel, (point) => point.x],
+        [model.yLabel, (point) => point.y]
+      ];
+      // Subject and class already have their own columns.
+      if (model.colorBy === "band" || model.colorBy === "met") {
+        columns.push([model.colorLabel, (point) => point.group.label + (point.hollow ? " (too close to call)" : "")]);
+      }
+      if (model.fit && !model.thin) {
+        columns.push(["Trend-line " + model.yLabel, (point) => round(model.fit.predict(point.x))]);
+        columns.push(["Distance from trend line", (point) => round(point.y - model.fit.predict(point.x))]);
+      }
+      exportCSV(explorerFileBase(model), model.points, columns);
+    }
+
+    // The SVG download. An SVG opened on its own has no stylesheet and no
+    // CSS variables, so the chart is drawn again at 960px inside a hidden
+    // .viz-light holder (light tokens whatever the page theme, like print),
+    // and every colour and font the stylesheet supplied is written onto the
+    // elements before the markup is serialised. The file goes out through
+    // downloadText - a Blob and an object URL, the same route the CSV
+    // exports take, and one the page's CSP (connect-src 'none') leaves alone
+    // because nothing is fetched.
+    const EXPLORER_EXPORT_SHAPE = ["fill", "fill-opacity", "stroke", "stroke-width", "stroke-opacity", "stroke-dasharray", "stroke-linecap", "stroke-linejoin", "opacity"];
+    const EXPLORER_EXPORT_TEXT = ["fill", "stroke", "stroke-width", "stroke-linejoin", "paint-order", "font-family", "font-size", "font-weight", "opacity"];
+
+    function explorerSVGText(model) {
+      const holder = document.createElement("div");
+      holder.className = "viz-light explorer-export-holder";
+      holder.setAttribute("aria-hidden", "true");
+      holder.innerHTML = explorerChart(model, 960, { exporting: true });
+      document.body.appendChild(holder);
+      try {
+        const svg = holder.querySelector("svg");
+        svg.querySelectorAll(".viz-hit").forEach((node) => node.remove());
+        const nodes = [...svg.querySelectorAll("*")];
+        const captured = nodes.map((node) => {
+          const tag = node.tagName.toLowerCase();
+          const list = tag === "text" ? EXPLORER_EXPORT_TEXT : ["circle", "path", "line", "rect"].includes(tag) ? EXPLORER_EXPORT_SHAPE : tag === "g" ? ["opacity"] : [];
+          const computed = getComputedStyle(node);
+          return list.map((prop) => [prop, computed.getPropertyValue(prop)])
+            .filter(([prop, value]) => value && !(prop === "opacity" && value === "1") && !(prop === "fill-opacity" && value === "1") &&
+              !(prop === "stroke-opacity" && value === "1") && !(prop === "stroke-dasharray" && value === "none"));
+        });
+        const rootFont = getComputedStyle(svg).getPropertyValue("font-family");
+        nodes.forEach((node, i) => {
+          if (node.closest("clipPath") && node.tagName.toLowerCase() === "rect") return;
+          captured[i].forEach(([prop, value]) => node.style.setProperty(prop, value));
+          // A fill="var(--...)" attribute means nothing outside this page;
+          // the resolved colour is in the style now.
+          ["fill", "stroke"].forEach((name) => {
+            if (/var\(/.test(node.getAttribute(name) || "")) node.removeAttribute(name);
+          });
+          ["class", "data-tip", "tabindex", "aria-label", "data-explorer-key", "data-explorer-point"].forEach((name) => node.removeAttribute(name));
+          if (node.getAttribute("role") === "img" && node !== svg) node.removeAttribute("role");
+        });
+        svg.removeAttribute("class");
+        svg.removeAttribute("focusable");
+        svg.setAttribute("width", svg.viewBox.baseVal.width);
+        svg.setAttribute("height", svg.viewBox.baseVal.height);
+        svg.style.setProperty("font-family", rootFont || "sans-serif");
+        const background = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        background.setAttribute("width", "100%");
+        background.setAttribute("height", "100%");
+        background.setAttribute("fill", "#ffffff");
+        const firstMark = [...svg.children].find((child) => !["title", "desc"].includes(child.tagName.toLowerCase()));
+        svg.insertBefore(background, firstMark || null);
+        // DM Sans goes inside the file (the page's own embedded copy, about
+        // 75 KB), so the chart keeps the school's typeface on a slide or in
+        // a browser; anything that ignores it falls back to a plain sans.
+        if (BRAND_FONT_CSS) {
+          const fonts = document.createElementNS("http://www.w3.org/2000/svg", "style");
+          fonts.textContent = BRAND_FONT_CSS;
+          svg.insertBefore(fonts, background);
+        }
+        return '<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(svg);
+      } finally {
+        holder.remove();
+      }
+    }
+
+    function explorerDownloadSVG() {
+      const model = explorerState.model;
+      if (!model) {
+        toast("Nothing is plotted, so there is no chart to download.", "info");
+        return;
+      }
+      try {
+        const name = exportFileName(explorerFileBase(model)).replace(/\.csv$/, ".svg");
+        downloadText(name, explorerSVGText(model), "image/svg+xml");
+        toast("Chart saved as an SVG image.", "success");
+      } catch (error) {
+        console.error("Explorer chart could not be saved", error);
+        toast("The chart could not be saved as an image.", "error");
+      }
+    }
+
+    function explorerInstall() {
+      const section = document.getElementById("sec-explorer");
+      if (!section || section.dataset.explorerReady) return;
+      section.dataset.explorerReady = "true";
+      section.addEventListener("viz-change", (event) => {
+        const detail = event.detail || {};
+        const mode = explorerModeKey();
+        if (detail.name === "x" || detail.name === "y") {
+          // Picking the measure already on the other axis swaps the two,
+          // rather than plotting a measure against itself.
+          const other = detail.name === "x" ? "y" : "x";
+          if (detail.value === explorerState.axes[other] && explorerState.axes[detail.name]) {
+            explorerPrefSet("explorer." + mode + "." + other, explorerState.axes[detail.name]);
+          }
+          explorerPrefSet("explorer." + mode + "." + detail.name, detail.value);
+        } else if (detail.name === "color") {
+          explorerPrefSet("explorer.color", detail.value);
+        } else if (detail.name === "subject") {
+          explorerState.subject = detail.value || "all";
+        } else if (detail.name === "pin") {
+          explorerPin(detail.value);
+          return;
+        } else {
+          return;
+        }
+        explorerRefresh();
+      });
+      section.addEventListener("click", (event) => {
+        if (event.target.closest("#explorerSvgBtn")) {
+          explorerDownloadSVG();
+          return;
+        }
+        if (event.target.closest("#explorerCsvBtn")) {
+          explorerExportCSV();
+          return;
+        }
+        if (event.target.closest("[data-explorer-swap]")) {
+          const mode = explorerModeKey();
+          const axes = explorerState.axes;
+          if (axes.x && axes.y) {
+            explorerPrefSet("explorer." + mode + ".x", axes.y);
+            explorerPrefSet("explorer." + mode + ".y", axes.x);
+            explorerRefresh();
+          }
+          return;
+        }
+        const toggle = event.target.closest("[data-explorer-toggle]");
+        if (toggle) {
+          explorerPrefSet("explorer." + toggle.getAttribute("data-explorer-toggle"), toggle.getAttribute("aria-pressed") !== "true");
+          explorerRefresh();
+          return;
+        }
+        if (event.target.closest("[data-explorer-clear]")) {
+          explorerPin("");
+          const picker = section.querySelector('[data-viz-control="pin"] select');
+          if (picker) picker.focus({ preventScroll: true });
+          return;
+        }
+        const point = event.target.closest("[data-explorer-key]");
+        if (point) {
+          const key = point.getAttribute("data-explorer-key");
+          explorerPin(key === explorerState.pinKey ? "" : key);
+        }
+      });
+      // A focused point pins on Enter or Space, as a button would.
+      section.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        const point = event.target.closest && event.target.closest("[data-explorer-key]");
+        if (!point) return;
+        event.preventDefault();
+        const key = point.getAttribute("data-explorer-key");
+        explorerPin(key === explorerState.pinKey ? "" : key);
+      });
+      // Escape clears a pin, unless a dialog is open - then Escape is the
+      // dialog's. (The tooltip swallows the first Escape while it shows.)
+      document.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape" || !explorerState.pinKey || document.body.classList.contains("modal-open")) return;
+        explorerPin("");
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", explorerInstall);
+    // ---- end AISA: Explorer ----
+
     function renderSummaryReport() {
       if (state.summaryEdited) return;
       els.summaryReport.value = buildSummaryText(state.filteredRows);
@@ -20431,6 +21926,15 @@ Suggested next steps: prioritize Intensive Support and Targeted Support students
         what: "A copy-ready narrative of the current view, written from the same figures as the cards above it.",
         read: "It follows your filters until you edit it; after that it keeps your words until you press Regenerate. Where a figure would rest on too few records it says so rather than quoting a percentage.",
         act: "Paste it into PLC notes, a report to a leader, or the start of a data conversation, and edit it into your own voice."
+      },
+      "sec-explorer": {
+        what: "Any two measures in the view plotted against each other, one point per record: choose what runs across and what runs up, colour the points by band, subject, class or the growth call, and read the trend line and the figures beside it. It has its own subject switch, so the rest of the page keeps your filters.",
+        read: "r runs from -1 to 1 and says how closely the points follow a straight line; R\u00b2 is the share of the spread the line accounts for; n is how many records carry both measures, and a student tested in three subjects is three points. A relationship is a pattern in this group, not a cause: a start score that was lucky on the day is usually followed by a smaller gain whatever the teaching, and the notes under the figures say when a pair is linked by the way it is calculated. Under 10 records no trend line is drawn.",
+        act: "Look for the points far from the line - a student growing well beyond what their start predicts, or a class sitting apart from the rest - and click one to pin that student across their subjects. Export the points or the chart for a PLC slide.",
+        baseline: {
+          what: "Any two measures from this one test window plotted against each other, one point per record: choose what runs across and what runs up, colour the points by band, subject or class, and read the trend line and the figures beside it. Where the export carries NWEA's projection for the window ahead, that is one of the measures.",
+          read: "With one window nothing here measures growth: two scores from the same test day describe where students are, not how they are moving. r runs from -1 to 1 and says how closely the points follow a straight line, R\u00b2 is the share of the spread the line accounts for, and n counts records, so a student tested in two subjects is two points. Under 10 records no trend line is drawn."
+        }
       },
       "sec-quiz": {
         what: "A practice run for the data conversation: multiple-choice and true-or-false questions a principal, inspector, governor, data lead or head of department would ask about the records in view, marked against the figures on this page.",
