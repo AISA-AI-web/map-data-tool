@@ -17759,15 +17759,42 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       return season * 100 + (isFiniteNumber(month) ? month : 0);
     }
 
+    // The test form a Class Profile record was taken on, shortened for a
+    // label: "Growth: Math 6+ CCSS 2010 V2" -> "Math 6+".
+    function areaFormName(row) {
+      const name = cleanString(row.testName);
+      if (!name || name === "Missing") return "";
+      return name.replace(/^Growth:\s*/i, "").replace(/\s+(CCSS|for use with|NGSS|TEKS|V\d).*$/i, "").trim() || name;
+    }
+
+    // A subject sat on more than one test form - grade 5 on Math 2-5 and
+    // grade 6 on Math 6+ - is analysed form by form. The forms share area
+    // names (Geometry, Operations and Algebraic Thinking) but draw on
+    // different item pools, and pooled, a gap in one form hid under a
+    // strength in the other. Returns row -> bucket label.
+    function areaBucketNamer(rows) {
+      const forms = new Map();
+      rows.forEach((row) => {
+        if (!forms.has(row.subject)) forms.set(row.subject, new Set());
+        forms.get(row.subject).add(areaFormName(row));
+      });
+      return (row) => {
+        const form = areaFormName(row);
+        return forms.get(row.subject) && forms.get(row.subject).size > 1 && form ? row.subject + " \u00b7 " + form : row.subject;
+      };
+    }
+
     function strandAnalysis(rows) {
       const usable = rows.filter((row) => row.hasInstructionalAreas && isFiniteNumber(row.currentRIT));
       if (!usable.length) return null;
       const { floor, medianSEM } = areaNoiseFloor(usable);
 
       const subjects = new Map();
+      const bucketOf = areaBucketNamer(usable);
       usable.forEach((row) => {
-        if (!subjects.has(row.subject)) subjects.set(row.subject, { subject: row.subject, rows: [], areas: new Map() });
-        const bucket = subjects.get(row.subject);
+        const name = bucketOf(row);
+        if (!subjects.has(name)) subjects.set(name, { subject: name, base: row.subject, form: name === row.subject ? "" : areaFormName(row), rows: [], areas: new Map() });
+        const bucket = subjects.get(name);
         bucket.rows.push(row);
         row.instructionalAreas.forEach((area) => {
           if (!isFiniteNumber(area.delta)) return;
@@ -17822,6 +17849,8 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         const normDeltas = bucket.rows.map((row) => row.usNormDeltaRIT).filter(isFiniteNumber);
         return {
           subject: bucket.subject,
+          base: bucket.base,
+          form: bucket.form,
           recordCount: bucket.rows.length,
           studentCount: new Set(bucket.rows.map((row) => studentKey(row))).size,
           meanOverallRIT: avg(bucket.rows.map((row) => row.currentRIT)),
@@ -17854,6 +17883,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         groups,
         recordCount: usable.length,
         studentCount: new Set(usable.map((row) => studentKey(row))).size,
+        bucketOf,
         areaCount: analysed.reduce((sum, subject) => sum + subject.areas.length, 0),
         flaggedCount: analysed.reduce((sum, subject) =>
           sum + subject.areas.reduce((inner, area) => inner + area.below.length, 0), 0),
@@ -18076,8 +18106,10 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       const parts = [];
       if (gaps.length) {
         parts.push(gaps.map((area) => area.name).join(" and ") + " " + (gaps.length > 1 ? "sit" : "sits") + " below where this group's overall " +
-          subject.subject.toLowerCase() + " scores sit, by " + gaps.map((area) => formatNumber(Math.abs(area.meanDelta), 1)).join(" and ") +
-          " RIT. That is a whole-class gap, so it is worth reteaching to everyone rather than only to the " +
+          (subject.base || subject.subject).toLowerCase() + " scores sit, by " + gaps.map((area) => formatNumber(Math.abs(area.meanDelta), 1)).join(" and ") +
+          " RIT. That gap runs across the " + formatInteger(Math.max(...gaps.map((area) => area.count))) + " students with a score in " +
+          (gaps.length > 1 ? "these areas" : "it") + (subject.form ? " on the " + subject.form + " test" : "") +
+          ", so it is worth reteaching to all of them rather than only to the " +
           formatInteger(gaps.reduce((sum, area) => sum + area.below.length, 0)) + " students flagged individually.");
       }
       if (strengths.length) {
@@ -18168,7 +18200,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       state.filteredRows.filter((row) => row.hasInstructionalAreas).forEach((row) => {
         row.instructionalAreas.forEach((area) => {
           if (!isFiniteNumber(area.delta)) return;
-          const summary = verdictByKey.get(row.subject + "|" + area.name) || {};
+          const summary = verdictByKey.get(analysis.bucketOf(row) + "|" + area.name) || {};
           rows.push({
             row,
             area,
@@ -18850,14 +18882,23 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
     // ---------------------------------------------------------------------
     // The area grid
     // ---------------------------------------------------------------------
+    // One grid per subject - or per test form, when a subject in view was
+    // sat on two (see areaBucketNamer): their areas are different item
+    // pools and are never pooled in one column.
     function heatmapAreaSubjects(rows) {
-      return getOverviewBuckets(rows.filter((row) => row.hasInstructionalAreas && isFiniteNumber(row.currentRIT)), "subject");
+      const usable = rows.filter((row) => row.hasInstructionalAreas && isFiniteNumber(row.currentRIT));
+      const bucketOf = areaBucketNamer(usable);
+      const order = getOverviewBuckets(usable, "subject");
+      const baseOf = new Map(usable.map((row) => [bucketOf(row), row.subject]));
+      return [...baseOf.keys()].sort((a, b) => order.indexOf(baseOf.get(a)) - order.indexOf(baseOf.get(b)) || naturalCompare(a, b));
     }
 
     // One row per student: their latest sitting of this subject in view (the
     // one a teacher acts on), with how many sittings there were.
     function heatmapAreaModel(rows, subject) {
-      const usable = rows.filter((row) => row.subject === subject && row.hasInstructionalAreas && isFiniteNumber(row.currentRIT));
+      const withAreas = rows.filter((row) => row.hasInstructionalAreas && isFiniteNumber(row.currentRIT));
+      const bucketOf = areaBucketNamer(withAreas);
+      const usable = withAreas.filter((row) => bucketOf(row) === subject);
       if (!usable.length) return null;
       const floor = areaNoiseFloor(usable).floor;
       const byStudent = new Map();
@@ -18884,6 +18925,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       });
       return {
         subject,
+        base: usable[0].subject,
         floor,
         students,
         areaNames,
@@ -18969,7 +19011,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       const colX = (i) => left + i * cellW;
       const studentCells = students.length * areaNames.length;
       const focusStudents = studentCells <= HEATMAP_MAX_FOCUSABLE;
-      const subjectWord = model.subject.toLowerCase();
+      const subjectWord = (model.base || model.subject).toLowerCase();
 
       // Head: area names, then the class median row.
       let head = vizText(nameW - 10, headH - 10, "STUDENT", { className: "hm-corner", anchor: "end" }) +
