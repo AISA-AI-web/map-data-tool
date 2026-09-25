@@ -5631,6 +5631,394 @@
         print-color-adjust: exact;
       }
     }
+
+    /* ---- AISA: Insights ---- */
+    /* The section that opens the analysis: the KPI row, the one control the
+       group comparisons use, the ranked findings and the checks that found
+       nothing. Tiles, charts, tips and tables are the viz kit's; only the
+       finding card and the quiet list are new here. Purple carries the
+       structure (rank, numbers, evidence meter); gold appears only as the
+       kit's short rule on each tile and the bar down a caveat card. */
+    .insights { display: grid; gap: 22px; }
+    .insights-part,
+    .insights-findings { display: grid; gap: 12px; min-width: 0; }
+    .insights-findings { gap: 22px; }
+
+    .insights-heading {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .insights-heading b {
+      display: inline-grid;
+      place-items: center;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 6px;
+      border-radius: 999px;
+      background: var(--brand-soft);
+      color: var(--brand-ink);
+      font-size: 0.72rem;
+      letter-spacing: 0;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .insights-controls:empty { display: none; }
+    .insights-controls .viz-controls { margin: 0; }
+    .insights-control-hint {
+      margin: 0;
+      max-width: 52ch;
+      align-self: center;
+      color: var(--muted);
+      font-size: 0.78rem;
+      line-height: 1.45;
+    }
+
+    .insights-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr));
+      gap: 14px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .insights-item { display: grid; min-width: 0; }
+
+    .insights-card {
+      position: relative;
+      display: grid;
+      align-content: start;
+      gap: 10px;
+      min-width: 0;
+      padding: 16px 18px 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      transition: border-color var(--dur-fast) var(--ease-soft);
+    }
+
+    .insights-card:hover { border-color: var(--line-accent); }
+
+    /* A caveat about the tests themselves: the one card with a gold bar. */
+    .insights-card.is-caveat { border-left: 4px solid var(--accent); padding-left: 15px; }
+
+    .insights-card-head {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px 10px;
+      min-width: 0;
+    }
+
+    .insights-rank {
+      flex: none;
+      display: inline-grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--brand);
+      color: var(--on-brand);
+      font-size: 0.74rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* How sure, as words with a three-step meter beside them - never the
+       meter alone. */
+    .insights-evidence {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin-left: auto;
+      padding: 3px 10px 3px 8px;
+      border-radius: 999px;
+      background: var(--brand-soft);
+      color: var(--brand-ink);
+      font-size: 0.72rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .insights-evidence.is-weak,
+    .insights-evidence.is-thin,
+    .insights-evidence.is-count { background: var(--slate-soft); color: var(--slate-ink); }
+    .insights-evidence.is-count .insights-bars { display: none; }
+
+    .insights-bars { display: inline-flex; align-items: flex-end; gap: 2px; height: 11px; }
+    .insights-bars i { display: block; width: 3px; border-radius: 1px; background: var(--line-strong); }
+    .insights-bars i:nth-child(1) { height: 5px; }
+    .insights-bars i:nth-child(2) { height: 8px; }
+    .insights-bars i:nth-child(3) { height: 11px; }
+    .insights-evidence.is-strong .insights-bars i,
+    .insights-evidence.is-moderate .insights-bars i:nth-child(-n+2),
+    .insights-evidence.is-weak .insights-bars i:nth-child(1) { background: currentColor; }
+
+    .insights-headline {
+      margin: 0;
+      color: var(--heading);
+      font-size: 1.04rem;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+
+    .insights-figures { display: flex; flex-wrap: wrap; gap: 10px 28px; }
+    .insights-figure { display: grid; align-content: start; gap: 3px; min-width: 0; max-width: 26ch; }
+
+    .insights-figure b {
+      color: var(--brand);
+      font-size: 1.6rem;
+      font-weight: 800;
+      line-height: 1.08;
+      letter-spacing: -0.01em;
+    }
+
+    .insights-figure span { color: var(--muted); font-size: 0.78rem; line-height: 1.35; }
+    .insights-visual { min-width: 0; margin: 2px 0; }
+
+    .insights-sure {
+      margin: 0;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+      color: var(--text-soft);
+      font-size: 0.8rem;
+      line-height: 1.5;
+    }
+
+    .insights-sure strong {
+      margin-right: 8px;
+      color: var(--brand-ink);
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .insights-note { margin: 0; color: var(--muted); font-size: 0.8rem; line-height: 1.45; }
+    .insights-names { display: grid; gap: 6px; }
+
+    .insights-names-title {
+      color: var(--muted);
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .insights-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+    .insights-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    .insights-none {
+      padding: 18px 16px;
+      border: 1px dashed var(--line-strong);
+      border-radius: var(--radius);
+      background: var(--panel-2);
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.5;
+    }
+
+    .insights-quiet {
+      display: grid;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+    }
+
+    .insights-quiet li {
+      display: grid;
+      grid-template-columns: minmax(130px, 200px) minmax(0, 1fr);
+      gap: 4px 18px;
+      padding: 10px 16px;
+      border-top: 1px solid var(--line);
+      color: var(--text-soft);
+      font-size: 0.84rem;
+      line-height: 1.5;
+    }
+
+    .insights-quiet li:first-child { border-top: 0; }
+    .insights-quiet li:nth-child(even) { background: var(--panel-2); }
+
+    .insights-quiet-area {
+      padding-top: 2px;
+      color: var(--muted);
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .insights-method { margin: 0; }
+
+    /* Tile pictures: HTML so they size to the tile at their real type size. */
+    .insights-hist { display: grid; gap: 3px; }
+
+    .insights-hist-bars {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(10, minmax(0, 1fr));
+      align-items: end;
+      gap: 2px;
+      height: 30px;
+      border-bottom: 1px solid var(--viz-axis);
+    }
+
+    .insights-hist-bars > span {
+      display: block;
+      height: var(--h, 0%);
+      max-width: 24px;
+      width: 100%;
+      justify-self: center;
+      border-radius: 3px 3px 0 0;
+      background: var(--viz-cat-1);
+    }
+
+    .insights-hist.is-thin .insights-hist-bars > span,
+    .insights-bullet.is-thin .insights-bullet-fill {
+      background-image: repeating-linear-gradient(135deg, var(--viz-hatch-light) 0 1.2px, transparent 1.2px 5px);
+    }
+
+    .insights-hist-ref,
+    .insights-bullet-ref {
+      position: absolute;
+      left: var(--x);
+      top: -3px;
+      bottom: 0;
+      width: 0;
+      border-left: 1.5px dashed var(--viz-ref);
+    }
+
+    .insights-hist-axis {
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 0.68rem;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.2;
+    }
+
+    .insights-hist-mid { position: absolute; left: var(--x); transform: translateX(-50%); font-weight: 700; color: var(--text-soft); }
+
+    .insights-bullet { position: relative; display: grid; gap: 4px; padding-top: 3px; }
+
+    .insights-bullet-track {
+      position: relative;
+      display: block;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--brand-soft);
+    }
+
+    .insights-bullet-fill {
+      display: block;
+      width: var(--fill, 0%);
+      min-width: 10px;
+      height: 100%;
+      border-radius: 999px;
+      background-color: var(--viz-cat-1);
+    }
+
+    /* The national marker keeps a ring of the panel so it reads on the fill. */
+    .insights-bullet-ref {
+      top: -4px;
+      bottom: -4px;
+      border-left: 2px solid var(--viz-ref);
+      box-shadow: 0 0 0 1.5px var(--viz-surface);
+    }
+
+    .insights-bullet-label {
+      position: relative;
+      left: var(--x);
+      width: max-content;
+      transform: translateX(-50%);
+      color: var(--text-soft);
+      font-size: 0.68rem;
+      font-weight: 700;
+    }
+
+    .insights-bullet-label.is-start { transform: none; }
+    .insights-bullet-label.is-end { transform: translateX(-100%); }
+
+    .insights-pair {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 5px 8px;
+      font-size: 0.72rem;
+    }
+
+    .insights-pair-label { color: var(--text-soft); font-weight: 700; }
+    .insights-pair b { color: var(--text); font-weight: 800; font-variant-numeric: tabular-nums; }
+    .insights-pair-track { position: relative; display: block; height: 10px; }
+
+    .insights-pair-bar {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: var(--left, 0%);
+      width: var(--w, 0%);
+      border-radius: 3px;
+    }
+
+    .insights-pair-bar.is-actual { background: var(--viz-after); }
+    .insights-pair-bar.is-projected { background: var(--viz-before); }
+
+    /* Chart pieces the kit does not draw. */
+    .insights-dot { pointer-events: none; }
+    .insights-median { stroke-width: 3px; stroke-linecap: round; }
+    .insights-ci { fill: none; stroke-width: 2.5px; stroke-linecap: round; }
+    .insights-line-hit { fill: none; stroke: transparent; stroke-width: 16px; pointer-events: stroke; }
+    .insights-marker-halo { stroke: var(--viz-surface); stroke-width: 5px; stroke-linecap: round; }
+    .insights-marker { stroke: var(--viz-ref); stroke-width: 2px; stroke-linecap: round; }
+    .insights-fit:hover .viz-line,
+    .insights-fit:focus-visible .viz-line { stroke-width: 3.5px; }
+
+    @media (max-width: 620px) {
+      /* Two tiles a row on a phone, so the findings are not six screens
+         down. */
+      .insights-kpis .kpi-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+      .insights-kpis .kpi-tile { padding: 14px 12px 12px; }
+      .insights-card { padding: 14px 14px 12px; }
+      .insights-card.is-caveat { padding-left: 12px; }
+      .insights-evidence { margin-left: 0; }
+      .insights-figure b { font-size: 1.4rem; }
+      .insights-quiet li { grid-template-columns: minmax(0, 1fr); padding: 10px 12px; }
+    }
+
+    @media print {
+      .insights-controls,
+      .insights-actions { display: none !important; }
+      .insights-card {
+        break-inside: avoid;
+        border: 1px solid #ccc;
+        background: #fff;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .insights-card.is-caveat { border-left: 4px solid var(--aisa-gold); }
+      .insights-quiet { break-inside: avoid; }
+      .insights-hist,
+      .insights-bullet,
+      .insights-pair,
+      .insights-rank,
+      .insights-evidence {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
+    /* ---- end AISA: Insights ---- */
   </style>
 </head>
 <body>
@@ -5920,6 +6308,22 @@
             <summary>Read the transcript instead</summary>
             <div id="briefingTranscript"></div>
           </details>
+        </div>
+      </section>
+
+      <section class="section" id="sec-insights" aria-labelledby="insightsTitle">
+        <div class="section-header">
+          <div>
+            <h2 id="insightsTitle">Insights</h2>
+            <p id="insightsNote">The headline numbers for the records in view, then what stands out in them, strongest evidence first.</p>
+          </div>
+          <div class="btn-row">
+            <button class="btn small" id="insightsCopyBtn" type="button">Copy findings</button>
+            <button class="btn small ghost" id="insightsExportBtn" type="button">Export findings CSV</button>
+          </div>
+        </div>
+        <div class="insights" id="insightsWrap">
+          <div class="empty-state">Load a file to see what stands out in it.</div>
         </div>
       </section>
 
@@ -9583,6 +9987,7 @@ Spring 2026,Fall 2025,North Valley,Maple School,Rivera,Period 2,Science,Science,
       // narrating numbers that are no longer on screen.
       if (briefing.playing) pauseBriefing();
       renderBriefing();
+      renderInsights();
       renderQuiz();
       renderPosters();
       renderTables();
@@ -9598,6 +10003,7 @@ Spring 2026,Fall 2025,North Valley,Maple School,Rivera,Period 2,Science,Science,
     // the section headings and the filter bar can never disagree with the data.
     const SECTION_PLAN = [
       { id: "sec-briefing", label: "Briefing", modes: ["growth", "mixed", "baseline"] },
+      { id: "sec-insights", label: "Insights", modes: ["growth", "mixed", "baseline"] },
       { id: "sec-snapshot", label: "Snapshot", modes: ["growth", "mixed", "baseline"] },
       { id: "sec-baseline", label: "Tiers", modes: ["growth", "mixed", "baseline"] },
       { id: "sec-overview", label: "Overview", modes: ["growth", "mixed", "baseline"] },
@@ -14774,6 +15180,1730 @@ Spring 2026,Fall 2025,North Valley,Maple School,Rivera,Period 2,Science,Science,
       return true;
     }
 
+    // ---- AISA: Insights ----
+    // =====================================================================
+    // The section that opens the analysis. Before anyone scrolls it answers
+    // two questions: what are the headline numbers for the records in view,
+    // each set against a national reference, and what in them is worth a
+    // conversation - ranked by how strongly the data supports it, with every
+    // finding saying how sure it is.
+    //
+    // The rules it keeps:
+    //   - Every check runs on every render. A pattern that clears its bar
+    //     becomes a card; one that does not is listed under "Also checked",
+    //     so a missing card never reads as a question nobody asked.
+    //   - Tests count each student once. A student tested in four subjects is
+    //     four records but one child, and four records treated as four
+    //     independent children make any pattern look about four times as sure
+    //     as it is. So the group comparisons, the equity check and the tests
+    //     against the national middle work on one value per student (their
+    //     results in view, averaged), and a share is tested with its count
+    //     scaled to the students behind it. The KPI tiles stay in records,
+    //     like every other figure on the page.
+    //   - A gap between groups is called one only when both groups have at
+    //     least MIN_SHARE_N students and Cohen's d reaches INSIGHTS_MIN_D, and
+    //     its p-value is multiplied by the number of pairs that were looked
+    //     at: the widest of six gaps is always going to look wide.
+    //   - Nothing is worded as a cause. Groups differ in who is in them as
+    //     well as in how they were taught, and the cards say so.
+    //   - A share on fewer than MIN_SHARE_N records prints as a count, and a
+    //     finding resting on fewer than MIN_SHARE_N students is not tested.
+    //   - Nothing is written to storage. Which grouping the teacher compared
+    //     lives in memory for the session and follows the Overview Lens.
+    //
+    // Everything is drawn with the viz kit: tiles with vizKpiTile, charts in
+    // vizChartSlot, tips with vizTip, statistics from vizStats. The few
+    // statistics the kit does not carry (an exact binomial test, the median's
+    // interval, Wilson's interval and Cohen's h) sit here, beside their only
+    // users.
+
+    // Insights is one of the essentials the page opens on. It is added here
+    // rather than in the list itself so the whole section stays in one block.
+    ESSENTIAL_SECTIONS.add("sec-insights");
+
+    // The smallest gap between two groups, in pooled standard deviations,
+    // that is worth a card. Below it a difference is real arithmetic but not
+    // something to plan around.
+    const INSIGHTS_MIN_D = 0.3;
+    // A result this many of the view's own standard deviations from its
+    // average conditional growth index is "unusual".
+    const INSIGHTS_UNUSUAL_Z = 2;
+    // How often a result lands 2 SD or more from the middle of a bell-shaped
+    // spread with nothing unusual going on: about 1 in 22.
+    const INSIGHTS_TAIL_2SD = 0.0455;
+    // National references. Percentile ranks run 1 to 99, so about 40% of US
+    // students sit at or above the 61st and about 20% in each fifth (band).
+    // NWEA sets a growth projection at the typical growth of students who
+    // started at the same score, so about half of US students meet theirs.
+    const INSIGHTS_US_SECURE_SHARE = 0.4;
+    const INSIGHTS_US_MET_SHARE = 0.5;
+    const INSIGHTS_US_BAND_SHARE = 0.2;
+    // The standard deviation of a percentile rank spread evenly from 1 to 99.
+    // Used only to put a median's distance from 50 on the same footing as
+    // Cohen's d when the findings are ranked.
+    const INSIGHTS_PERCENTILE_SD = 28.6;
+    const INSIGHTS_NAME_LIMIT = 12;
+    // A chart with more data marks than this lets its table or its text carry
+    // the values instead of giving every mark a tab stop.
+    const INSIGHTS_FOCUSABLE_MARKS = 60;
+
+    // How sure a finding is, in words a teacher can repeat. weight orders the
+    // list, and the key names the CSS class that fills the little meter.
+    const INSIGHTS_EVIDENCE = {
+      strong: { label: "Strong evidence", weight: 60 },
+      moderate: { label: "Moderate evidence", weight: 40 },
+      count: { label: "A count, not a test", weight: 30 },
+      weak: { label: "Could be chance", weight: 15 },
+      thin: { label: "Too few to test", weight: 5 }
+    };
+
+    // The groupings a comparison can use. The page's Overview Lens picks
+    // between the first two; the section's own control adds teacher and grade.
+    const INSIGHTS_COMPARE_DIMS = [
+      { key: "subject", label: "Subjects", noun: "subject", nouns: "subjects", get: (row) => row.subject, format: (value) => value },
+      { key: "class", label: "Classes", noun: "class", nouns: "classes", get: (row) => row.className, format: (value) => value },
+      { key: "teacher", label: "Teachers", noun: "teacher", nouns: "teachers", get: (row) => row.teacher, format: (value) => value },
+      { key: "grade", label: "Grades", noun: "grade", nouns: "grades", get: (row) => row.studentGrade, format: (value) => "Grade " + value }
+    ];
+
+    const insightsState = { compare: null, lensSeen: null, wired: false, ctx: null, report: null, kpis: [] };
+
+    // --- Small statistics the kit does not carry -----------------------------
+    function insightsBinomPmf(k, n, p) {
+      if (p <= 0) return k === 0 ? 1 : 0;
+      if (p >= 1) return k === n ? 1 : 0;
+      return Math.exp(vizStats.lnGamma(n + 1) - vizStats.lnGamma(k + 1) - vizStats.lnGamma(n - k + 1) +
+        k * Math.log(p) + (n - k) * Math.log(1 - p));
+    }
+
+    // Exact two-sided binomial test: the chance of a count at least as
+    // unlikely as k out of n when the true rate is p0 (R's binom.test way).
+    function insightsBinomTest(k, n, p0) {
+      if (!Number.isInteger(n) || n < 1 || !Number.isInteger(k) || k < 0 || k > n) return null;
+      const observed = insightsBinomPmf(k, n, p0);
+      let total = 0;
+      for (let i = 0; i <= n; i += 1) {
+        const p = insightsBinomPmf(i, n, p0);
+        if (p <= observed * (1 + 1e-7)) total += p;
+      }
+      return Math.min(1, total);
+    }
+
+    // Sign test against a centre: how many sit above it, how many below (a
+    // tie says nothing either way and drops out), and whether that split is
+    // more lopsided than a fair coin would give. It asks nothing about the
+    // shape of the spread, which suits percentiles.
+    function insightsSignTest(values, centre) {
+      const clean = vizStats.numbers(values);
+      const above = clean.filter((value) => value > centre).length;
+      const below = clean.filter((value) => value < centre).length;
+      return { above, below, n: clean.length, p: above + below ? insightsBinomTest(above, above + below, 0.5) : null };
+    }
+
+    // A 95% interval for the median that assumes nothing about the shape of
+    // the spread: the j-th smallest and j-th largest values, with j the
+    // furthest in that still leaves no more than 2.5% in each tail of a
+    // fair-coin count. Needs at least six values to exist.
+    function insightsMedianCI(values) {
+      const sorted = vizStats.sortedNumbers(values);
+      const n = sorted.length;
+      let cumulative = 0;
+      let j = 0;
+      for (let i = 0; i < n; i += 1) {
+        cumulative += insightsBinomPmf(i, n, 0.5);
+        if (cumulative > 0.025) break;
+        j = i + 1;
+      }
+      return j ? [sorted[j - 1], sorted[n - j]] : null;
+    }
+
+    // Wilson's 95% interval for a proportion: unlike the textbook p +/- 1.96
+    // SE it never runs below 0 or above 100%, and it stays honest at the
+    // small counts a single class produces.
+    function insightsWilson(k, n) {
+      if (!n) return null;
+      const z = 1.959964;
+      const p = k / n;
+      const denominator = 1 + z * z / n;
+      const centre = (p + z * z / (2 * n)) / denominator;
+      const half = z * Math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / denominator;
+      return [Math.max(0, centre - half), Math.min(1, centre + half)];
+    }
+
+    // Cohen's h: the effect size for a share against a reference share, on
+    // the same rough scale as d (0.2 small, 0.5 medium, 0.8 large).
+    function insightsCohenH(p1, p0) {
+      return 2 * Math.asin(Math.sqrt(p1)) - 2 * Math.asin(Math.sqrt(p0));
+    }
+
+    // A share tested against a national one with each student counted once:
+    // the count is scaled to the students behind the records, so a student
+    // tested in four subjects cannot count four times.
+    function insightsShareTest(k, n, students, p0) {
+      if (!n) return { p: null, nEff: 0, kEff: 0, h: null, ci: null };
+      const nEff = Math.max(1, Math.min(n, students || n));
+      const kEff = Math.round(k / n * nEff);
+      return { p: insightsBinomTest(kEff, nEff, p0), nEff, kEff, h: insightsCohenH(k / n, p0), ci: insightsWilson(kEff, nEff) };
+    }
+
+    function insightsEvidence(p, n) {
+      if (!isFiniteNumber(n) || n < MIN_SHARE_N || !isFiniteNumber(p)) return "thin";
+      if (p < 0.01 && n >= 30) return "strong";
+      if (p < 0.05) return "moderate";
+      return "weak";
+    }
+
+    function insightsIsClear(evidence) {
+      return evidence === "strong" || evidence === "moderate";
+    }
+
+    // --- Words and numbers ---------------------------------------------------
+    function insightsCap(text) {
+      const value = String(text || "");
+      return value.charAt(0).toUpperCase() + value.slice(1);
+    }
+
+    // "+12.4", "-3.0" with a true minus sign, and "0.0" rather than "-0.0".
+    function insightsSigned(value, digits) {
+      if (!isFiniteNumber(value)) return "N/A";
+      const places = Number.isInteger(digits) ? digits : 1;
+      const size = Number(Math.abs(value).toFixed(places));
+      if (!size) return (0).toFixed(places);
+      return (value > 0 ? "+" : "−") + size.toFixed(places);
+    }
+
+    // A fixed number of decimals ("1.00", not "1"), with a true minus sign.
+    function insightsFixed(value, digits) {
+      if (!isFiniteNumber(value)) return "N/A";
+      const text = Math.abs(value).toFixed(digits);
+      return (value < 0 && Number(text) !== 0 ? "−" : "") + text;
+    }
+
+    function insightsWhole(value) {
+      return isFiniteNumber(value) ? formatNumber(value, 0) : "N/A";
+    }
+
+    function insightsPct(fraction) {
+      return isFiniteNumber(fraction) ? formatPercentWhole(fraction * 100) : "N/A";
+    }
+
+    function insightsCount(n, noun, plural) {
+      return formatInteger(n) + " " + (n === 1 ? noun : (plural || noun + "s"));
+    }
+
+    function insightsRange(pair, format) {
+      if (!pair || !isFiniteNumber(pair[0]) || !isFiniteNumber(pair[1])) return "";
+      return "95% CI " + format(pair[0]) + " to " + format(pair[1]);
+    }
+
+    function insightsR(r) {
+      return isFiniteNumber(r) ? (r < 0 ? "−" : "") + Math.abs(r).toFixed(2) : "N/A";
+    }
+
+    function insightsDText(d) {
+      if (!isFiniteNumber(d)) return "effect size unavailable";
+      return "d = " + Math.abs(d).toFixed(2) + ", " + vizStats.effectLabel(d);
+    }
+
+    function insightsPresent(value) {
+      return value !== null && value !== undefined && cleanString(value) !== "" && value !== "Missing";
+    }
+
+    // One value per student: the mean of their results in view on getter.
+    // A Map from studentKey to { value, count, name, rows }.
+    function insightsPerStudent(rows, getter) {
+      const sums = new Map();
+      rows.forEach((row) => {
+        const value = getter(row);
+        if (!isFiniteNumber(value)) return;
+        const key = studentKey(row);
+        const entry = sums.get(key) || { sum: 0, count: 0, name: row.studentName, rows: [] };
+        entry.sum += value;
+        entry.count += 1;
+        entry.rows.push(row);
+        sums.set(key, entry);
+      });
+      const out = new Map();
+      sums.forEach((entry, key) => out.set(key, { value: entry.sum / entry.count, count: entry.count, name: entry.name, rows: entry.rows }));
+      return out;
+    }
+
+    function insightsStudentValues(rows, getter) {
+      return [...insightsPerStudent(rows, getter).values()].map((entry) => entry.value);
+    }
+
+    function insightsStudentCount(rows) {
+      return new Set(rows.map(studentKey)).size;
+    }
+
+    // Said once in a "how sure" line whenever some student has more than one
+    // result in the set being tested.
+    function insightsPooledNote(rows, getter) {
+      const scored = rows.filter((row) => isFiniteNumber(getter(row)));
+      return insightsStudentCount(scored) < scored.length ? " (each student's results averaged)" : "";
+    }
+
+    function insightsContext(rows) {
+      const growth = hasGrowthContext();
+      const scored = rows.filter((row) => isFiniteNumber(row.currentPercentile));
+      const growthRows = growth ? rows.filter((row) => row.hasGrowthPair) : [];
+      return {
+        rows,
+        scored,
+        growthRows,
+        growth: growth && growthRows.length > 0,
+        mode: state.dataWindow.mode,
+        students: insightsStudentCount(rows)
+      };
+    }
+
+    // --- KPI tiles -----------------------------------------------------------
+    // Each tile is a number with its label, a line that says what it should be
+    // read against, and a small picture. A delta chip is coloured only when a
+    // test says the gap from the national reference is more than chance.
+    function insightsDelta(rounded, text, p, n, higherIsBetter) {
+      if (!isFiniteNumber(rounded)) return null;
+      const direction = rounded > 0 ? "up" : rounded < 0 ? "down" : "flat";
+      const clear = isFiniteNumber(p) && p < 0.05 && n >= MIN_SHARE_N && direction !== "flat";
+      return { text, direction, good: clear ? (rounded > 0) === higherIsBetter : null };
+    }
+
+    function insightsKpiData(ctx) {
+      const tiles = [insightsRecordsKpi(ctx), insightsPercentileKpi(ctx), insightsShareKpi(ctx, {
+        label: "At or above the " + ordinal(SECURE_BENCHMARK),
+        rows: ctx.scored,
+        test: (row) => row.currentPercentile >= SECURE_BENCHMARK,
+        reference: INSIGHTS_US_SECURE_SHARE,
+        referenceText: "about 40% of US students are",
+        refLabel: "US 40%",
+        higherIsBetter: true,
+        noun: "record",
+        note: "The " + ordinal(SECURE_BENCHMARK) + " percentile is a locally chosen secure line, not an NWEA definition."
+      })];
+      if (ctx.growth) {
+        tiles.push(insightsShareKpi(ctx, {
+          label: "Met growth projection",
+          rows: ctx.growthRows.filter((row) => row.metGrowth === true || row.metGrowth === false),
+          test: (row) => row.metGrowth === true,
+          reference: INSIGHTS_US_MET_SHARE,
+          referenceText: "about half of US students meet theirs",
+          refLabel: "US 50%",
+          higherIsBetter: true,
+          noun: "growth result",
+          note: "NWEA's projection is the typical growth of US students who started at the same score, so about half meet it."
+        }), insightsCgpKpi(ctx), insightsChangeKpi(ctx));
+      } else {
+        tiles.push(insightsNormKpi(ctx), insightsShareKpi(ctx, {
+          label: "In the lowest band",
+          rows: ctx.scored,
+          test: (row) => row.currentPercentile < BANDS[1].min,
+          reference: INSIGHTS_US_BAND_SHARE,
+          referenceText: "1st to 20th percentile, about 20% of US students",
+          refLabel: "US 20%",
+          higherIsBetter: false,
+          noun: "record",
+          note: "NWEA's bands are fifths of the national spread, so a typical US group has about one in five in each."
+        }));
+      }
+      return tiles;
+    }
+
+    function insightsRecordsKpi(ctx) {
+      const rows = ctx.rows;
+      const complete = ctx.growth ? ctx.growthRows.length : ctx.scored.length;
+      const phrase = ctx.growth ? "with both test windows" : "with a percentile";
+      return {
+        label: "Records in view",
+        value: formatInteger(rows.length),
+        context: insightsCount(ctx.students, "student") + " · " + formatInteger(complete) + " " + phrase,
+        visual: vizMeter(rows.length ? complete / rows.length : 0, {
+          ariaLabel: formatInteger(complete) + " of " + formatInteger(rows.length) + " records " + phrase
+        }),
+        tip: vizTip("Records in view", [
+          ["Records", formatInteger(rows.length)],
+          ["Students", formatInteger(ctx.students)],
+          [insightsCap(phrase), formatInteger(complete)]
+        ], "A record is one student in one subject, so a student tested in three subjects is three records.")
+      };
+    }
+
+    function insightsPercentileKpi(ctx) {
+      const values = ctx.scored.map((row) => row.currentPercentile);
+      if (!values.length) return { label: "Median percentile", value: "N/A", context: "No percentile in view" };
+      const med = Math.round(vizStats.quantile(values, 0.5));
+      const q1 = vizStats.quantile(values, 0.25);
+      const q3 = vizStats.quantile(values, 0.75);
+      const perStudent = insightsStudentValues(ctx.scored, (row) => row.currentPercentile);
+      const test = insightsSignTest(perStudent, 50);
+      const thin = vizIsThin(values.length);
+      const diff = med - 50;
+      return {
+        label: "Median percentile",
+        value: String(med),
+        unit: ordinal(med).slice(String(med).length),
+        context: (thin ? vizThinNote(values.length) + " " : "Middle half " + ordinal(q1) + " to " + ordinal(q3) + " · ") + "US median 50th",
+        delta: insightsDelta(diff, diff ? insightsSigned(diff, 0) + " vs US 50th" : "Level with the US 50th", test.p, perStudent.length, true),
+        thin,
+        visual: insightsMiniHist(values, {
+          domain: [0, 100], ref: 50, thin,
+          ariaLabel: "How the " + formatInteger(values.length) + " percentiles spread from 0 to 100, with the US median, the 50th, marked"
+        }),
+        tip: vizTip("Median percentile", [
+          ["Median", ordinal(med)],
+          ["Middle half", ordinal(q1) + " to " + ordinal(q3)],
+          ["Records", formatInteger(values.length)],
+          ["Students above / below the 50th", test.above + " / " + test.below],
+          ["Sign test, per student", vizStats.formatP(test.p)]
+        ], "Percentiles place each score among US students in the same grade and season; the US median is the 50th.")
+      };
+    }
+
+    function insightsShareKpi(ctx, spec) {
+      const entry = share(spec.rows, spec.test);
+      if (!entry.of) return { label: spec.label, value: "N/A", context: "No " + spec.noun + " in view has this measure" };
+      const fraction = entry.n / entry.of;
+      const thin = shareIsThin(entry);
+      const test = insightsShareTest(entry.n, entry.of, insightsStudentCount(spec.rows), spec.reference);
+      const diff = Math.round(fraction * 100) - Math.round(spec.reference * 100);
+      return {
+        label: spec.label,
+        value: formatShare(entry),
+        context: insightsCap(spec.referenceText) + (thin ? "" : " · " + formatInteger(entry.n) + " of " + insightsCount(entry.of, spec.noun)),
+        delta: thin ? null : insightsDelta(diff, (diff ? insightsSigned(diff, 0) + " pts" : "Level") + " vs US " + insightsPct(spec.reference), test.p, test.nEff, spec.higherIsBetter),
+        thin,
+        visual: insightsBullet(fraction, {
+          reference: spec.reference, refLabel: spec.refLabel, thin,
+          ariaLabel: formatShare(entry) + " " + spec.label.toLowerCase() + ", against about " + insightsPct(spec.reference) + " nationally"
+        }),
+        tip: vizTip(spec.label, [
+          ["Share", formatShare(entry)],
+          [insightsCap(spec.noun + "s"), formatInteger(entry.n) + " of " + formatInteger(entry.of)],
+          ["US reference", "about " + insightsPct(spec.reference)],
+          ["Test, each student once", vizStats.formatP(test.p)]
+        ], spec.note + (thin ? " " + vizThinNote(entry.of) : ""))
+      };
+    }
+
+    function insightsCgpKpi(ctx) {
+      const rows = ctx.growthRows.filter((row) => isFiniteNumber(row.conditionalGrowthPercentile));
+      const values = rows.map((row) => row.conditionalGrowthPercentile);
+      if (!values.length) return { label: "Median growth (CGP)", value: "N/A", context: "No growth percentile in view" };
+      const med = Math.round(vizStats.quantile(values, 0.5));
+      const q1 = vizStats.quantile(values, 0.25);
+      const q3 = vizStats.quantile(values, 0.75);
+      const perStudent = insightsStudentValues(rows, (row) => row.conditionalGrowthPercentile);
+      const test = insightsSignTest(perStudent, 50);
+      const thin = vizIsThin(values.length);
+      const diff = med - 50;
+      return {
+        label: "Median growth (CGP)",
+        value: String(med),
+        context: (thin ? vizThinNote(values.length) + " " : "Middle half " + insightsWhole(q1) + " to " + insightsWhole(q3) + " · ") + "typical growth is 50",
+        delta: insightsDelta(diff, diff ? insightsSigned(diff, 0) + " vs typical 50" : "Level with typical 50", test.p, perStudent.length, true),
+        thin,
+        visual: insightsMiniHist(values, {
+          domain: [0, 100], ref: 50, thin,
+          ariaLabel: "How the " + formatInteger(values.length) + " growth percentiles spread from 0 to 100, with typical growth, 50, marked"
+        }),
+        tip: vizTip("Median growth percentile (CGP)", [
+          ["Median", insightsWhole(med)],
+          ["Middle half", insightsWhole(q1) + " to " + insightsWhole(q3)],
+          ["Growth results", formatInteger(values.length)],
+          ["Students above / below 50", test.above + " / " + test.below],
+          ["Sign test, per student", vizStats.formatP(test.p)]
+        ], "How each student's growth compares with US students who started at the same score in the same grade. 50 is typical.")
+      };
+    }
+
+    function insightsChangeKpi(ctx) {
+      const rows = ctx.growthRows.filter((row) => isFiniteNumber(row.ritChange));
+      if (!rows.length) return { label: "Mean RIT change", value: "N/A", context: "No RIT change in view" };
+      const mean = vizStats.mean(rows.map((row) => row.ritChange));
+      const withProjection = rows.filter((row) => isFiniteNumber(row.projectedGrowth));
+      const observed = vizStats.mean(withProjection.map((row) => row.ritChange));
+      const projected = vizStats.mean(withProjection.map((row) => row.projectedGrowth));
+      const diffs = insightsStudentValues(withProjection, (row) => row.ritChange - row.projectedGrowth);
+      const ci = vizStats.ci95Mean(diffs);
+      const p = ci && ci.se ? vizStats.tTwoSidedP(ci.mean / ci.se, ci.df) : null;
+      const thin = vizIsThin(rows.length);
+      const gap = isFiniteNumber(observed) && isFiniteNumber(projected) ? observed - projected : null;
+      const sameSet = withProjection.length === rows.length;
+      const gapRounded = isFiniteNumber(gap) ? Number(gap.toFixed(1)) : null;
+      return {
+        label: "Mean RIT change",
+        value: insightsSigned(mean, 1),
+        unit: "RIT",
+        context: isFiniteNumber(projected)
+          ? "Projected " + insightsSigned(projected, 1) + (sameSet ? " for the same " + insightsCount(rows.length, "result") : " for the " + formatInteger(withProjection.length) + " with a projection")
+          : "No projection in view to compare with",
+        delta: isFiniteNumber(gapRounded) && !thin ? insightsDelta(gapRounded, (gapRounded ? insightsSigned(gapRounded, 1) : "Level") + " vs projected", p, diffs.length, true) : null,
+        thin,
+        visual: isFiniteNumber(projected) ? insightsObsProj(observed, projected) : "",
+        tip: vizTip("Mean RIT change", [
+          ["Mean change", insightsSigned(mean, 1) + " RIT"],
+          ["Growth results", formatInteger(rows.length)],
+          ["Actual, with a projection", insightsSigned(observed, 1)],
+          ["Projected", insightsSigned(projected, 1)],
+          ["Gap, per student", ci ? insightsSigned(ci.mean, 1) + (ci.lo !== null ? " (" + insightsRange([ci.lo, ci.hi], (v) => insightsSigned(v, 1)) + ")" : "") : "N/A"],
+          ["Paired test", vizStats.formatP(p)]
+        ], "RIT points gained between the two windows, beside the gain NWEA projected for the same students.")
+      };
+    }
+
+    function insightsNormKpi(ctx) {
+      const rows = ctx.scored.filter((row) => isFiniteNumber(row.usNormDeltaRIT));
+      if (!rows.length) return { label: "Distance from US grade mean", value: "N/A", context: "No US norm match in view" };
+      const values = rows.map((row) => row.usNormDeltaRIT);
+      const mean = vizStats.mean(values);
+      const ci = vizStats.ci95Mean(insightsStudentValues(rows, (row) => row.usNormDeltaRIT));
+      const p = ci && ci.se ? vizStats.tTwoSidedP(ci.mean / ci.se, ci.df) : null;
+      const thin = vizIsThin(rows.length);
+      const rounded = Number(mean.toFixed(1));
+      const reach = Math.max(20, Math.ceil(Math.max(...values.map(Math.abs)) / 10) * 10);
+      return {
+        label: "Distance from US grade mean",
+        value: insightsSigned(mean, 1),
+        unit: "RIT",
+        context: "Mean distance from the US mean RIT for each student's grade and season · " + insightsCount(rows.length, "record"),
+        delta: thin ? null : insightsDelta(rounded, rounded > 0 ? "Above the US mean" : rounded < 0 ? "Below the US mean" : "Level with the US mean", p, ci ? ci.n : 0, true),
+        thin,
+        visual: insightsMiniHist(values, {
+          domain: [-reach, reach], ref: 0, thin, format: (v) => (v ? insightsSigned(v, 0) : "0"),
+          ariaLabel: "How the " + formatInteger(values.length) + " distances from the US grade mean spread, with zero marked"
+        }),
+        tip: vizTip("Distance from US grade mean", [
+          ["Mean", insightsSigned(mean, 1) + " RIT"],
+          ["Records", formatInteger(rows.length)],
+          ["Per student", ci && ci.lo !== null ? insightsRange([ci.lo, ci.hi], (v) => insightsSigned(v, 1)) : "N/A"],
+          ["t-test against 0", vizStats.formatP(p)]
+        ], METHOD_NOTES.normSource.split(". ")[0] + ".")
+      };
+    }
+
+    function insightsKpiRowHTML(kpis) {
+      return vizKpiRow(kpis.map((kpi) => vizKpiTile(kpi)));
+    }
+
+    // --- Tile pictures --------------------------------------------------------
+    // Plain HTML, like the kit's meter: a tile is often narrower than the
+    // 240px a chart slot draws at, and an SVG scaled down to fit would print
+    // its 11px labels at 8px. These size to the tile, their colours are
+    // tokens (so a theme flip needs nothing), and each is one labelled image
+    // for a screen reader - the tile's text and tip carry the numbers.
+
+    function insightsPosition(value, lo, hi) {
+      return Math.max(0, Math.min(100, (value - lo) / (hi - lo) * 100));
+    }
+
+    // A ten-bin histogram with one reference line: the shape of a spread at
+    // a glance.
+    function insightsMiniHist(values, options) {
+      const opts = options || {};
+      const lo = opts.domain[0];
+      const hi = opts.domain[1];
+      const bins = opts.bins || 10;
+      const counts = new Array(bins).fill(0);
+      vizStats.numbers(values).forEach((value) => {
+        const t = (Math.min(hi, Math.max(lo, value)) - lo) / (hi - lo);
+        counts[Math.min(bins - 1, Math.floor(t * bins))] += 1;
+      });
+      const max = Math.max(1, ...counts);
+      const format = opts.format || ((value) => formatNumber(value, 0));
+      const ref = isFiniteNumber(opts.ref) ? insightsPosition(opts.ref, lo, hi).toFixed(1) + "%" : null;
+      const label = (opts.ariaLabel || "Distribution") + ". Counts in " + bins + " equal bins from " + format(lo) + " to " + format(hi) + ": " + counts.join(", ") + ".";
+      return '<div class="insights-hist' + (opts.thin ? " is-thin" : "") + '" role="img" aria-label="' + escapeAttr(label) + '">' +
+        '<div class="insights-hist-bars">' + counts.map((count) =>
+          '<span style="--h:' + (count / max * 100).toFixed(1) + '%"></span>').join("") +
+        (ref ? '<i class="insights-hist-ref" style="--x:' + ref + '"></i>' : "") + "</div>" +
+        '<div class="insights-hist-axis" aria-hidden="true"><span>' + escapeHTML(format(lo)) + "</span>" +
+        (ref ? '<span class="insights-hist-mid" style="--x:' + ref + '">' + escapeHTML(format(opts.ref)) + "</span>" : "") +
+        "<span>" + escapeHTML(format(hi)) + "</span></div></div>";
+    }
+
+    // A share on a 0-100% track with the national share marked: a bullet
+    // chart in its smallest form.
+    function insightsBullet(fraction, options) {
+      const opts = options || {};
+      const fill = (Math.max(0, Math.min(1, fraction || 0)) * 100).toFixed(1) + "%";
+      const at = isFiniteNumber(opts.reference) ? (opts.reference * 100).toFixed(1) + "%" : null;
+      const edge = isFiniteNumber(opts.reference) ? (opts.reference < 0.15 ? " is-start" : opts.reference > 0.85 ? " is-end" : "") : "";
+      return '<div class="insights-bullet' + (opts.thin ? " is-thin" : "") + '" role="img" aria-label="' + escapeAttr(opts.ariaLabel || "Share") + '">' +
+        '<span class="insights-bullet-track"><span class="insights-bullet-fill" style="--fill:' + fill + '"></span>' +
+        (at ? '<i class="insights-bullet-ref" style="--x:' + at + '"></i>' : "") + "</span>" +
+        (at ? '<span class="insights-bullet-label' + edge + '" style="--x:' + at + '" aria-hidden="true">' + escapeHTML(opts.refLabel || "") + "</span>" : "") +
+        "</div>";
+    }
+
+    // Actual against projected gain: one hue, two shades, from a shared zero.
+    function insightsObsProj(observed, projected) {
+      const lo = Math.min(0, observed, projected);
+      const hi = Math.max(0, observed, projected);
+      const top = hi > lo ? hi : lo + 1;
+      const zero = insightsPosition(0, lo, top);
+      const row = (label, value, className) => {
+        const end = insightsPosition(value, lo, top);
+        const left = Math.min(zero, end);
+        return '<span class="insights-pair-label">' + escapeHTML(label) + "</span>" +
+          '<span class="insights-pair-track"><span class="insights-pair-bar ' + className + '" style="--left:' + left.toFixed(1) + "%;--w:" + Math.max(1.5, Math.abs(end - zero)).toFixed(1) + '%"></span></span>' +
+          "<b>" + escapeHTML(insightsSigned(value, 1)) + "</b>";
+      };
+      return '<div class="insights-pair" role="img" aria-label="' + escapeAttr("Actual mean gain " + insightsSigned(observed, 1) + " RIT against a projected " + insightsSigned(projected, 1)) + '">' +
+        row("Actual", observed, "is-actual") + row("Projected", projected, "is-projected") + "</div>";
+    }
+
+    // --- Finding pictures -------------------------------------------------------
+    function insightsDotRadius(n) {
+      return n > 300 ? 1.8 : n > 120 ? 2.4 : 3.2;
+    }
+
+    // Two labels on one line above a plot - the reference and the marker -
+    // sent in opposite directions from their lines so they never collide,
+    // and turned back inside the plot at either edge.
+    function insightsTopLabels(plot, y, ref, marker) {
+      let out = "";
+      const place = (item, side) => {
+        const room = item.text.length * VIZ_CHAR_PX + 6;
+        let anchor = side > 0 ? "start" : "end";
+        if (anchor === "start" && item.x + room > plot.width - 2) anchor = "end";
+        if (anchor === "end" && item.x - room < 2) anchor = "start";
+        const x = anchor === "start" ? item.x + 5 : item.x - 5;
+        return '<text class="' + item.className + '" x="' + vizNum(x) + '" y="' + vizNum(y) + '" text-anchor="' + anchor + '">' + escapeHTML(item.text) + "</text>";
+      };
+      if (ref && marker) {
+        const markerRight = marker.x >= ref.x;
+        out += place(ref, markerRight ? -1 : 1) + place(marker, markerRight ? 1 : -1);
+      } else if (ref) {
+        out += place(ref, ref.x > plot.width * 0.75 ? -1 : 1);
+      } else if (marker) {
+        out += place(marker, marker.x > plot.width * 0.75 ? -1 : 1);
+      }
+      return out;
+    }
+
+    // Every student as a grey dot along one axis, a reference line, and the
+    // median as a purple rule inside the wash of its 95% interval.
+    function insightsStripSVG(width, spec) {
+      const height = 104;
+      const plot = vizLayout(width, height, { top: 28, right: 14, bottom: 26, left: 14 });
+      const x = vizScaleLinear(spec.domain, [plot.left, plot.right], { clamp: true });
+      const values = vizStats.numbers(spec.values);
+      const r = insightsDotRadius(values.length);
+      const mid = (plot.top + plot.bottom) / 2;
+      const marker = spec.marker;
+      let inner = vizAxisBottom(x, plot, { ticks: spec.ticks, format: spec.format });
+      if (marker && marker.ci) {
+        const x0 = x(marker.ci[0]);
+        const x1 = x(marker.ci[1]);
+        inner += '<rect class="viz-band" x="' + vizNum(Math.min(x0, x1) - 1) + '" y="' + vizNum(plot.top - 6) + '" width="' + vizNum(Math.abs(x1 - x0) + 2) +
+          '" height="' + vizNum(plot.innerH + 8) + '" rx="3"/>';
+      }
+      const rx = x(spec.ref.value);
+      inner += '<line class="viz-ref-line" x1="' + vizNum(rx) + '" x2="' + vizNum(rx) + '" y1="' + vizNum(plot.top - 8) + '" y2="' + vizNum(plot.bottom) + '"/>';
+      vizBeeswarm(values, { scale: x, radius: r, padding: 0.8, maxOffset: plot.innerH / 2 - r }).forEach((point) => {
+        inner += '<circle class="insights-dot" cx="' + vizNum(point.x) + '" cy="' + vizNum(mid + point.offset) + '" r="' + r + '" fill="' + VIZ_OTHER + '"/>';
+      });
+      let markerItem = null;
+      if (marker && isFiniteNumber(marker.value)) {
+        const mx = x(marker.value);
+        inner += '<g class="insights-marker-wrap"' + vizTipAttrs(marker.tip) + '>' +
+          '<rect class="viz-hit" x="' + vizNum(mx - 12) + '" y="' + vizNum(plot.top - 8) + '" width="24" height="' + vizNum(plot.innerH + 12) + '"/>' +
+          '<line class="viz-mark insights-median" x1="' + vizNum(mx) + '" x2="' + vizNum(mx) + '" y1="' + vizNum(plot.top - 8) + '" y2="' + vizNum(plot.bottom + 3) + '" stroke="var(--viz-cat-1)"/></g>';
+        markerItem = { x: mx, text: marker.label, className: "viz-label" };
+      }
+      inner += insightsTopLabels(plot, plot.top - 13, { x: rx, text: spec.ref.label, className: "viz-ref-label" }, markerItem);
+      return vizFrame(inner, { width, height, ariaLabel: spec.ariaLabel, desc: spec.desc });
+    }
+
+    // Two groups on one axis: each student a grey dot, each group's mean a
+    // dot in the group's colour on its 95% interval, the value beside it.
+    function insightsGroupsSVG(width, spec) {
+      const groups = spec.groups;
+      const longest = groups.reduce((max, group) => Math.max(max, String(group.label).length), 0);
+      // Room for the longest name, up to about a third of the chart; a name
+      // longer than that is shortened here and given in full in its tip.
+      const needed = longest * VIZ_CHAR_PX + 18;
+      const labelW = Math.ceil(Math.min(needed, Math.max(84, width * 0.3)));
+      const maxChars = Math.max(4, Math.floor((labelW - 18) / VIZ_CHAR_PX));
+      const fit = (label) => (needed > labelW && label.length > maxChars ? label.slice(0, maxChars - 1) + "…" : label);
+      const rowH = 42;
+      const height = 30 + groups.length * rowH + 26;
+      const plot = vizLayout(width, height, { top: 30, right: 16, bottom: 26, left: labelW });
+      const band = vizScaleBand(groups.map((group) => group.key), [plot.top, plot.bottom], { padding: 0.18 });
+      const x = vizScaleLinear(spec.domain, [plot.left, plot.right], { clamp: true });
+      const total = groups.reduce((sum, group) => sum + group.values.length, 0);
+      const r = insightsDotRadius(total);
+      let inner = vizAxisBottom(x, plot, { ticks: spec.ticks });
+      const rx = x(spec.ref.value);
+      inner += '<line class="viz-ref-line" x1="' + vizNum(rx) + '" x2="' + vizNum(rx) + '" y1="' + vizNum(plot.top - 10) + '" y2="' + vizNum(plot.bottom) + '"/>';
+      inner += insightsTopLabels(plot, plot.top - 15, { x: rx, text: spec.ref.label, className: "viz-ref-label" }, null);
+      groups.forEach((group) => {
+        const cy = band.center(group.key);
+        const half = band.bandwidth / 2;
+        vizBeeswarm(group.values, { scale: x, radius: r, padding: 0.8, maxOffset: Math.max(0, half - r - 1) }).forEach((point) => {
+          inner += '<circle class="insights-dot" cx="' + vizNum(point.x) + '" cy="' + vizNum(cy + point.offset) + '" r="' + r + '" fill="' + VIZ_OTHER + '"/>';
+        });
+        if (group.ci && isFiniteNumber(group.ci.lo)) {
+          const x0 = x(group.ci.lo);
+          const x1 = x(group.ci.hi);
+          inner += '<line class="insights-ci" x1="' + vizNum(x0) + '" x2="' + vizNum(x1) + '" y1="' + vizNum(cy) + '" y2="' + vizNum(cy) + '" stroke="' + escapeAttr(group.color) + '"/>' +
+            '<line class="insights-ci" x1="' + vizNum(x0) + '" x2="' + vizNum(x0) + '" y1="' + vizNum(cy - 5) + '" y2="' + vizNum(cy + 5) + '" stroke="' + escapeAttr(group.color) + '"/>' +
+            '<line class="insights-ci" x1="' + vizNum(x1) + '" x2="' + vizNum(x1) + '" y1="' + vizNum(cy - 5) + '" y2="' + vizNum(cy + 5) + '" stroke="' + escapeAttr(group.color) + '"/>';
+        }
+        const mx = x(group.mean);
+        inner += vizDot(mx, cy, { r: 6, fill: group.color, tip: group.tip });
+        const hiEdge = group.ci && isFiniteNumber(group.ci.hi) ? x(group.ci.hi) : mx + 6;
+        const loEdge = group.ci && isFiniteNumber(group.ci.lo) ? x(group.ci.lo) : mx - 6;
+        const text = formatNumber(group.mean, 1);
+        const room = text.length * VIZ_CHAR_PX + 8;
+        inner += hiEdge + room < plot.right + 12
+          ? vizText(hiEdge + 7, cy, text, { baseline: "central" })
+          : vizText(loEdge - 7, cy, text, { anchor: "end", baseline: "central" });
+        inner += '<text class="viz-tick is-band" x="' + vizNum(plot.left - 10) + '" y="' + vizNum(cy) + '" text-anchor="end" dominant-baseline="central">' + escapeHTML(fit(String(group.label))) + "</text>";
+      });
+      return vizFrame(inner, { width, height, ariaLabel: spec.ariaLabel, desc: spec.desc });
+    }
+
+    // Start score against growth, one dot per student, with the straight
+    // line that fits them best and its 95% band.
+    function insightsScatterSVG(width, spec) {
+      const height = 222;
+      const plot = vizLayout(width, height, { top: 30, right: 16, bottom: 44, left: 58 });
+      const x = vizScaleLinear([0, 100], [plot.left, plot.right], { clamp: true });
+      const y = vizScaleLinear([0, 100], [plot.bottom, plot.top], { clamp: true });
+      const ticks = [0, 25, 50, 75, 100];
+      let inner = vizAxisLeft(y, plot, { ticks, title: "Growth percentile" }) +
+        vizAxisBottom(x, plot, { ticks, title: "Start percentile" });
+      const fit = spec.fit;
+      const xs = spec.points.map((point) => point.x);
+      const [x0, x1] = vizStats.extent(xs) || [0, 100];
+      if (fit && x1 > x0) {
+        const upper = [];
+        const lower = [];
+        for (let i = 0; i <= 24; i += 1) {
+          const value = x0 + (x1 - x0) * i / 24;
+          const band = fit.ci95At(value);
+          if (!band) continue;
+          upper.push(vizNum(x(value)) + "," + vizNum(y(band[1])));
+          lower.unshift(vizNum(x(value)) + "," + vizNum(y(band[0])));
+        }
+        if (upper.length) inner += '<polygon class="viz-band" points="' + upper.concat(lower).join(" ") + '"/>';
+      }
+      inner += vizRefLine(plot, { y: y(50) });
+      // The key sits above the plot, clear of the dots and the line: a
+      // label on the dashed line itself would sit on top of both.
+      const keys = [
+        { text: "Best fit, 95% band", mark: '<line class="viz-line" stroke="var(--viz-cat-1)"' },
+        { text: "Typical growth, 50", mark: '<line class="viz-ref-line"' }
+      ];
+      const keyWidth = (key) => 26 + key.text.length * VIZ_CHAR_PX;
+      const shown = keys.reduce((sum, key) => sum + keyWidth(key) + 14, 0) <= plot.innerW ? keys : keys.slice(1);
+      let keyX = plot.right - shown.reduce((sum, key) => sum + keyWidth(key) + 14, -14);
+      shown.forEach((key) => {
+        inner += key.mark + ' x1="' + vizNum(keyX) + '" x2="' + vizNum(keyX + 18) + '" y1="12" y2="12"/>' +
+          '<text class="viz-label is-muted" x="' + vizNum(keyX + 24) + '" y="12" dominant-baseline="central">' + escapeHTML(key.text) + "</text>";
+        keyX += keyWidth(key) + 14;
+      });
+      const r = spec.points.length > 150 ? 2.4 : 3.4;
+      const focusable = spec.points.length <= INSIGHTS_FOCUSABLE_MARKS;
+      spec.points.forEach((point) => {
+        inner += focusable
+          ? vizDot(x(point.x), y(point.y), { r, fill: VIZ_OTHER, tip: point.tip })
+          : '<circle class="insights-dot" cx="' + vizNum(x(point.x)) + '" cy="' + vizNum(y(point.y)) + '" r="' + r + '" fill="' + VIZ_OTHER + '"/>';
+      });
+      if (fit && x1 > x0) {
+        const d = "M" + vizNum(x(x0)) + " " + vizNum(y(fit.predict(x0))) + "L" + vizNum(x(x1)) + " " + vizNum(y(fit.predict(x1)));
+        inner += '<g class="insights-fit"' + vizTipAttrs(spec.fitTip) + '><path class="insights-line-hit" d="' + d + '"/>' +
+          '<path class="viz-line viz-mark" d="' + d + '" stroke="var(--viz-cat-1)"/></g>';
+      }
+      return vizFrame(inner, { width, height, ariaLabel: spec.ariaLabel, desc: spec.desc });
+    }
+
+    // Every result's distance from the view's average growth, in its own
+    // standard deviations; the two tails past 2 SD are washed and the results
+    // in them coloured (gold below, purple above) and named in their tips.
+    function insightsZStripSVG(width, spec) {
+      const height = 104;
+      const plot = vizLayout(width, height, { top: 28, right: 14, bottom: 26, left: 14 });
+      const x = vizScaleLinear([-4, 4], [plot.left, plot.right], { clamp: true });
+      const z2 = INSIGHTS_UNUSUAL_Z;
+      let inner = vizAxisBottom(x, plot, { ticks: [-4, -2, 0, 2, 4], format: (v) => (v ? insightsSigned(v, 0) + " SD" : "Average") });
+      inner += '<rect class="viz-band" x="' + vizNum(plot.left) + '" y="' + vizNum(plot.top - 6) + '" width="' + vizNum(x(-z2) - plot.left) + '" height="' + vizNum(plot.innerH + 6) + '" rx="3"/>' +
+        '<rect class="viz-band" x="' + vizNum(x(z2)) + '" y="' + vizNum(plot.top - 6) + '" width="' + vizNum(plot.right - x(z2)) + '" height="' + vizNum(plot.innerH + 6) + '" rx="3"/>';
+      [-z2, z2].forEach((value) => {
+        inner += '<line class="viz-ref-line" x1="' + vizNum(x(value)) + '" x2="' + vizNum(x(value)) + '" y1="' + vizNum(plot.top - 6) + '" y2="' + vizNum(plot.bottom) + '"/>';
+      });
+      inner += '<text class="viz-label is-muted" x="' + vizNum(plot.left + 2) + '" y="' + vizNum(plot.top - 13) + '">Unusually low</text>' +
+        '<text class="viz-label is-muted" x="' + vizNum(plot.right - 2) + '" y="' + vizNum(plot.top - 13) + '" text-anchor="end">Unusually high</text>';
+      const r = insightsDotRadius(spec.entries.length);
+      const mid = (plot.top + plot.bottom) / 2;
+      const clampZ = (value) => Math.max(-4, Math.min(4, value));
+      const placed = vizBeeswarm(spec.entries, { value: (entry) => clampZ(entry.z), scale: x, radius: r, padding: 0.8, maxOffset: plot.innerH / 2 - r - 1 });
+      let focusBudget = INSIGHTS_FOCUSABLE_MARKS;
+      const flagged = [];
+      placed.forEach((point) => {
+        if (point.item.flag) flagged.push(point);
+        else inner += '<circle class="insights-dot" cx="' + vizNum(point.x) + '" cy="' + vizNum(mid + point.offset) + '" r="' + r + '" fill="' + VIZ_OTHER + '"/>';
+      });
+      // The flagged results go on top, largest distance first for focus order.
+      flagged.sort((a, b) => Math.abs(b.item.z) - Math.abs(a.item.z)).forEach((point) => {
+        const focusable = focusBudget > 0;
+        focusBudget -= 1;
+        inner += vizDot(point.x, mid + point.offset, {
+          r: r + 1.3,
+          fill: vizColor.diverging(point.item.flag < 0 ? -1 : 1),
+          tip: point.item.tip,
+          focusable
+        });
+      });
+      return vizFrame(inner, { width, height, ariaLabel: spec.ariaLabel, desc: spec.desc });
+    }
+
+    // Down, same, up as one bar: gold for down and purple for up (the two
+    // ends of the diverging ramp), neutral grey for no change.
+    function insightsMoveBarSVG(width, counts) {
+      const height = 58;
+      const left = 2;
+      const right = width - 2;
+      const total = counts.down + counts.same + counts.up;
+      const segments = [
+        { key: "down", n: counts.down, fill: vizColor.diverging(-1), label: "Moved down a band" },
+        { key: "same", n: counts.same, fill: VIZ_OTHER, label: "Stayed in the same band" },
+        { key: "up", n: counts.up, fill: vizColor.diverging(1), label: "Moved up a band" }
+      ].filter((segment) => segment.n > 0);
+      const gap = 2;
+      const available = right - left - gap * Math.max(0, segments.length - 1);
+      let cursor = left;
+      let inner = "";
+      segments.forEach((segment) => {
+        const w = Math.max(2, segment.n / total * available);
+        const tip = vizTip(segment.label, [
+          ["Results", formatInteger(segment.n) + " of " + formatInteger(total)],
+          ["Share", formatShare({ n: segment.n, of: total })]
+        ]);
+        inner += '<g class="insights-seg"' + vizTipAttrs(tip) + '><rect class="viz-mark" x="' + vizNum(cursor) + '" y="6" width="' + vizNum(w) + '" height="18" rx="4" fill="' + escapeAttr(segment.fill) + '"/></g>';
+        cursor += w + gap;
+      });
+      inner += vizText(left, 44, "▼ " + formatInteger(counts.down) + " down", { baseline: "central" }) +
+        vizText((left + right) / 2, 44, formatInteger(counts.same) + " same", { anchor: "middle", baseline: "central" }) +
+        vizText(right, 44, formatInteger(counts.up) + " up ▲", { anchor: "end", baseline: "central" });
+      return vizFrame(inner, {
+        width, height,
+        ariaLabel: formatInteger(counts.up) + " results moved up a band, " + formatInteger(counts.down) + " moved down and " + formatInteger(counts.same) + " stayed in the same band"
+      });
+    }
+
+    // The five bands in view against the national fifths, in the NWEA band
+    // colours (so nothing purple or gold shares this chart).
+    function insightsBandSpreadSVG(width, counts) {
+      const total = counts.reduce((sum, n) => sum + n, 0);
+      const labelW = 74;
+      const height = 84;
+      const left = labelW;
+      const right = width - 4;
+      const rows = [
+        { label: "In view", shares: counts.map((n) => (total ? n / total : 0)), tips: true },
+        { label: "US norms", shares: BANDS.map(() => INSIGHTS_US_BAND_SHARE), tips: false }
+      ];
+      let inner = "";
+      rows.forEach((row, r) => {
+        const y = 8 + r * 38;
+        const segments = row.shares.map((value, i) => ({ value, band: BANDS[i], n: counts[i] })).filter((segment) => segment.value > 0);
+        const available = right - left - 2 * Math.max(0, segments.length - 1);
+        let cursor = left;
+        segments.forEach((segment) => {
+          const w = Math.max(2, segment.value * available);
+          const text = insightsPct(segment.value);
+          const rect = '<rect class="viz-mark" x="' + vizNum(cursor) + '" y="' + y + '" width="' + vizNum(w) + '" height="24" rx="3" fill="' + escapeAttr(segment.band.color) + '"/>';
+          const label = text.length * VIZ_CHAR_PX + 8 <= w
+            ? '<text class="viz-cell-label" x="' + vizNum(cursor + w / 2) + '" y="' + (y + 12) + '" text-anchor="middle" dominant-baseline="central" fill="' + escapeAttr(segment.band.ink) + '">' + escapeHTML(text) + "</text>"
+            : "";
+          if (row.tips) {
+            const tip = vizTip(segment.band.name + " band (" + ordinal(segment.band.min || 1) + " to " + ordinal(segment.band.max === 100 ? 99 : segment.band.max) + ")", [
+              ["Records", formatInteger(segment.n) + " of " + formatInteger(total)],
+              ["Share", formatShare({ n: segment.n, of: total })],
+              ["US norms", "about 20%"]
+            ]);
+            inner += '<g class="insights-seg"' + vizTipAttrs(tip) + ">" + rect + label + "</g>";
+          } else {
+            inner += rect + label;
+          }
+          cursor += w + 2;
+        });
+        inner += '<text class="viz-tick is-band" x="' + (labelW - 10) + '" y="' + (y + 12) + '" text-anchor="end" dominant-baseline="central">' + escapeHTML(row.label) + "</text>";
+      });
+      return vizFrame(inner, {
+        width, height,
+        ariaLabel: "Share of records in each band against about 20% each nationally: " + BANDS.map((band, i) => band.name + " " + insightsPct(total ? counts[i] / total : 0)).join(", ")
+      });
+    }
+
+    // How much rapid guessing the tests show: grey below NWEA's 10% flag,
+    // gold from it (no band colours share this chart), counts on the bars.
+    function insightsRapidHistSVG(width, counts) {
+      const labels = ["0–4%", "5–9%", "10–19%", "20–29%", "30%+"];
+      const height = 136;
+      const plot = vizLayout(width, height, { top: 28, right: 12, bottom: 30, left: 12 });
+      const xb = vizScaleBand(labels, [plot.left, plot.right], { padding: 0.35 });
+      const y = vizScaleLinear([0, Math.max(1, ...counts)], [plot.bottom, plot.top + 12]);
+      const total = counts.reduce((sum, n) => sum + n, 0);
+      let inner = vizAxisBottom(xb, plot, {});
+      const barW = Math.min(24, xb.bandwidth);
+      labels.forEach((label, i) => {
+        const cx = xb.center(label);
+        const n = counts[i];
+        if (n) {
+          const top = Math.min(y(n), plot.bottom - 3);
+          inner += vizBar(cx - barW / 2, top, barW, plot.bottom - top, {
+            fill: i >= 2 ? "var(--accent)" : VIZ_OTHER,
+            tip: vizTip(label + " of items rapid-guessed", [["Tests", formatInteger(n) + " of " + formatInteger(total)]], i >= 2 ? "At or above NWEA's 10% flag." : "")
+          });
+        }
+        inner += vizText(cx, (n ? y(n) : plot.bottom) - 6, formatInteger(n), { anchor: "middle" });
+      });
+      const split = (xb(labels[1]) + xb.bandwidth + xb(labels[2])) / 2;
+      inner += '<line class="viz-ref-line" x1="' + vizNum(split) + '" x2="' + vizNum(split) + '" y1="' + vizNum(plot.top - 10) + '" y2="' + vizNum(plot.bottom) + '"/>';
+      inner += insightsTopLabels(plot, plot.top - 15, { x: split, text: "Flagged from 10%", className: "viz-ref-label" }, null);
+      return vizFrame(inner, {
+        width, height,
+        ariaLabel: "Tests by share of items rapid-guessed: " + labels.map((label, i) => label + " " + counts[i]).join(", ")
+      });
+    }
+
+    // --- Findings ----------------------------------------------------------------
+    // Each builder pushes a card onto out.cards or a one-line note onto
+    // out.quiet. A card: { key, area, headline, figures [{value, label}],
+    // evidence, effect (on the scale of d), sure, note, visual {draw,
+    // minHeight}, names [{title, entries}], actions [{jump, label}], table,
+    // tone, pinned }.
+
+    function insightsGrowthTypical(ctx, out) {
+      if (!ctx.growth) return;
+      const getter = (row) => row.conditionalGrowthPercentile;
+      const rows = ctx.growthRows.filter((row) => isFiniteNumber(getter(row)));
+      const perStudent = insightsStudentValues(rows, getter);
+      const n = perStudent.length;
+      if (n < MIN_SHARE_N) {
+        if (n) out.quiet.push({ area: "Growth", text: "Growth against typical was not tested: only " + insightsCount(n, "student") + " in view " + (n === 1 ? "has" : "have") + " a growth percentile, and a test needs at least " + MIN_SHARE_N + "." });
+        return;
+      }
+      const med = vizStats.quantile(perStudent, 0.5);
+      const ci = insightsMedianCI(perStudent);
+      const test = insightsSignTest(perStudent, 50);
+      const evidence = insightsEvidence(test.p, n);
+      const clear = insightsIsClear(evidence);
+      const above = med > 50;
+      const pooled = insightsPooledNote(rows, getter);
+      out.cards.push({
+        key: "growth-typical",
+        area: "Growth",
+        headline: !clear ? "Growth is close to typical" : above ? "Growth is running above typical" : "Growth is running below typical",
+        figures: [
+          { value: insightsWhole(med), label: "median growth percentile per student (typical is 50)" },
+          { value: formatShare({ n: test.above, of: n }), label: "of students grew more than the typical US student who started at the same score" }
+        ],
+        evidence,
+        effect: (med - 50) / INSIGHTS_PERCENTILE_SD,
+        sure: insightsCount(n, "student") + pooled + " · " + formatInteger(test.above) + " above 50, " + formatInteger(test.below) + " below · sign test " +
+          vizStats.formatP(test.p) + (ci ? " · median " + insightsWhole(med) + ", " + insightsRange(ci, insightsWhole) : ""),
+        note: clear
+          ? (above
+            ? "On the whole, students grew more than US students who started at the same score in the same grade."
+            : "On the whole, students grew less than US students who started at the same score in the same grade.")
+          : "The middle student grew about as much as US students who started at the same score. A median this close to 50 could easily come from typical growth.",
+        visual: {
+          minHeight: 104,
+          draw: (width) => insightsStripSVG(width, {
+            values: perStudent,
+            domain: [0, 100],
+            ticks: [0, 25, 50, 75, 100],
+            ref: { value: 50, label: "Typical 50" },
+            marker: {
+              value: med,
+              ci,
+              label: "Median " + insightsWhole(med),
+              tip: vizTip("Median growth percentile", [
+                ["Median", insightsWhole(med)],
+                ["95% interval", ci ? insightsWhole(ci[0]) + " to " + insightsWhole(ci[1]) : "N/A"],
+                ["Students", formatInteger(n)],
+                ["Sign test", vizStats.formatP(test.p)]
+              ], "Each grey dot is one student.")
+            },
+            ariaLabel: "Growth percentile per student, median " + insightsWhole(med) + " against a typical 50",
+            desc: "Each dot is one student's growth percentile" + pooled + ". The purple rule is the median and the shaded band its 95% interval; the dashed line is typical growth, 50."
+          })
+        }
+      });
+    }
+
+    function insightsAchievement(ctx, out) {
+      const getter = (row) => row.currentPercentile;
+      const rows = ctx.scored;
+      const perStudent = insightsStudentValues(rows, getter);
+      const n = perStudent.length;
+      const baseline = !ctx.growth;
+      const area = baseline ? "Starting point" : "Achievement";
+      if (n < MIN_SHARE_N) {
+        if (n) out.quiet.push({ area, text: "Achievement against the national middle was not tested: only " + insightsCount(n, "student") + " in view " + (n === 1 ? "has" : "have") + " a percentile, and a test needs at least " + MIN_SHARE_N + "." });
+        return;
+      }
+      const med = vizStats.quantile(perStudent, 0.5);
+      const ci = insightsMedianCI(perStudent);
+      const test = insightsSignTest(perStudent, 50);
+      const secure = share(rows, (row) => row.currentPercentile >= SECURE_BENCHMARK);
+      const secureTest = insightsShareTest(secure.n, secure.of, insightsStudentCount(rows), INSIGHTS_US_SECURE_SHARE);
+      const evidence = insightsEvidence(test.p, n);
+      const clear = insightsIsClear(evidence);
+      const above = med > 50;
+      const pooled = insightsPooledNote(rows, getter);
+      const headline = baseline
+        ? (!clear ? "Students are starting close to the national middle" : above ? "Students are starting above the national middle" : "Students are starting below the national middle")
+        : (!clear ? "Achievement is close to the national middle" : above ? "Achievement sits above the national middle" : "Achievement sits below the national middle");
+      out.cards.push({
+        key: "achievement",
+        area,
+        headline,
+        figures: [
+          { value: ordinal(med), label: "median percentile per student (the US median is the 50th)" },
+          { value: formatShare(secure), label: "of records at or above the " + ordinal(SECURE_BENCHMARK) + " (about 40% nationally)" }
+        ],
+        evidence,
+        effect: (med - 50) / INSIGHTS_PERCENTILE_SD,
+        sure: insightsCount(n, "student") + pooled + " · " + formatInteger(test.above) + " above the 50th, " + formatInteger(test.below) + " below · sign test " +
+          vizStats.formatP(test.p) + (ci ? " · median " + ordinal(med) + ", " + insightsRange(ci, ordinal) : "") +
+          " · at or above the " + ordinal(SECURE_BENCHMARK) + " against about 40%: " + vizStats.formatP(secureTest.p),
+        note: "Percentiles place each score among US students in the same grade and season. " +
+          (clear ? "" : "A median this close to the 50th could easily come from a typical US group."),
+        visual: {
+          minHeight: 104,
+          draw: (width) => insightsStripSVG(width, {
+            values: perStudent,
+            domain: [0, 100],
+            ticks: [0, 25, 50, 75, 100],
+            ref: { value: 50, label: "US 50th" },
+            marker: {
+              value: med,
+              ci,
+              label: "Median " + ordinal(med),
+              tip: vizTip("Median percentile", [
+                ["Median", ordinal(med)],
+                ["95% interval", ci ? ordinal(ci[0]) + " to " + ordinal(ci[1]) : "N/A"],
+                ["Students", formatInteger(n)],
+                ["Sign test", vizStats.formatP(test.p)]
+              ], "Each grey dot is one student.")
+            },
+            ariaLabel: "Percentile per student, median " + ordinal(med) + " against the US 50th",
+            desc: "Each dot is one student's percentile" + pooled + ". The purple rule is the median and the shaded band its 95% interval; the dashed line is the US median."
+          })
+        }
+      });
+    }
+
+    // Which grouping the comparisons use: the teacher's pick in this section,
+    // else the page's Overview Lens, else whatever has two groups in view.
+    // Changing the Overview Lens hands the choice back to the lens.
+    function insightsCompareChoice(rows) {
+      const available = INSIGHTS_COMPARE_DIMS.filter((dim) => unique(rows.map(dim.get).filter(insightsPresent)).length >= 2);
+      const lens = currentOverviewLens();
+      if (insightsState.lensSeen !== lens) {
+        insightsState.lensSeen = lens;
+        insightsState.compare = null;
+      }
+      const wanted = insightsState.compare || lens;
+      const dim = available.find((item) => item.key === wanted) || available[0] || null;
+      const wantedDim = INSIGHTS_COMPARE_DIMS.find((item) => item.key === wanted);
+      return { available, dim, fellBack: Boolean(dim) && dim.key !== wanted, wantedDim };
+    }
+
+    function insightsGroups(rows, dim, getter) {
+      const keys = dim.key === "subject"
+        ? getOverviewBuckets(rows, "subject").filter(insightsPresent)
+        : unique(rows.map(dim.get)).filter(insightsPresent);
+      return keys.map((key) => {
+        const groupRows = rows.filter((row) => dim.get(row) === key && isFiniteNumber(getter(row)));
+        const perStudent = insightsPerStudent(groupRows, getter);
+        const values = [...perStudent.values()].map((entry) => entry.value);
+        return {
+          key,
+          label: dim.format(key),
+          records: groupRows.length,
+          perStudent,
+          values,
+          n: values.length,
+          mean: vizStats.mean(values),
+          median: vizStats.quantile(values, 0.5),
+          ci: vizStats.ci95Mean(values),
+          color: dim.key === "subject" ? vizColor.subject(key) : "var(--viz-cat-1)"
+        };
+      }).filter((group) => group.n > 0);
+    }
+
+    function insightsGroupTable(groups, spec, dim) {
+      return vizTableToggle(vizTable({
+        caption: insightsCap(spec.metricName) + " by " + dim.noun + ", one value per student",
+        columns: [
+          { key: "label", label: insightsCap(dim.noun) },
+          { key: "n", label: "Students", numeric: true, format: (v) => formatInteger(v), thin: (row) => vizIsThin(row.n) },
+          { key: "records", label: "Records", numeric: true, format: (v) => formatInteger(v) },
+          { key: "median", label: "Median", numeric: true, format: (v) => formatNumber(v, 1) },
+          { key: "mean", label: "Mean", numeric: true, format: (v) => formatNumber(v, 1) },
+          { key: "ci", label: "95% CI of mean", numeric: true, format: (v) => (v && isFiniteNumber(v.lo) ? formatNumber(v.lo, 1) + " to " + formatNumber(v.hi, 1) : "N/A") }
+        ],
+        rows: groups
+      }), "Show every " + dim.noun);
+    }
+
+    // The widest gap between two groups on one measure. Every eligible pair
+    // is looked at, the widest by Cohen's d is tested, and its p-value is
+    // multiplied by the number of pairs (Bonferroni) because the widest of
+    // several gaps is always going to look wide. When most of the students
+    // in the two groups are the same children (two subjects), the test is
+    // paired on them; otherwise it is Welch's.
+    function insightsCompare(ctx, spec, out) {
+      const choice = ctx.compare;
+      if (!choice || !choice.dim) return;
+      const dim = choice.dim;
+      const groups = insightsGroups(spec.rows, dim, spec.metric);
+      if (groups.length < 2) return;
+      const area = spec.area + " by " + dim.noun;
+      const eligible = groups.filter((group) => group.n >= MIN_SHARE_N);
+      if (eligible.length < 2) {
+        const largest = Math.max(...groups.map((group) => group.n));
+        out.quiet.push({
+          area,
+          text: eligible.length === 1
+            ? "Only one " + dim.noun + " has the " + MIN_SHARE_N + " students a comparison of " + spec.metricName + " needs, so " + dim.nouns + " were not compared."
+            : insightsCap(dim.nouns) + " were not compared on " + spec.metricName + ": the largest has " + insightsCount(largest, "student") + ", and a comparison needs at least " + MIN_SHARE_N + " in each."
+        });
+        return;
+      }
+      let best = null;
+      let pairs = 0;
+      for (let i = 0; i < eligible.length; i += 1) {
+        for (let j = i + 1; j < eligible.length; j += 1) {
+          pairs += 1;
+          const d = vizStats.cohensD(eligible[i].values, eligible[j].values);
+          if (isFiniteNumber(d) && (!best || Math.abs(d) > Math.abs(best.d))) best = { a: eligible[i], b: eligible[j], d };
+        }
+      }
+      if (!best) {
+        out.quiet.push({ area, text: "No " + dim.noun + " stands out on " + spec.metricName + ": the scores do not vary enough to compare." });
+        return;
+      }
+      if (best.d < 0) best = { a: best.b, b: best.a, d: -best.d };
+      const { a, b, d } = best;
+      const overlap = [...a.perStudent.keys()].filter((key) => b.perStudent.has(key));
+      const paired = overlap.length >= MIN_SHARE_N && overlap.length >= 0.5 * Math.min(a.n, b.n);
+      let result;
+      let testName;
+      if (paired) {
+        const test = vizStats.pairedTest(overlap.map((key) => b.perStudent.get(key).value), overlap.map((key) => a.perStudent.get(key).value));
+        result = { diff: test.meanDiff, ci: test.ci95, p: test.p };
+        testName = "paired t-test on the " + formatInteger(overlap.length) + " students in both";
+      } else {
+        const test = vizStats.welchTest(a.values, b.values);
+        result = { diff: test.diff, ci: test.ci95, p: test.p };
+        testName = "Welch t-test";
+      }
+      const pAdjusted = isFiniteNumber(result.p) ? Math.min(1, result.p * pairs) : null;
+      const table = insightsGroupTable(groups, spec, dim);
+      if (Math.abs(d) < INSIGHTS_MIN_D) {
+        out.quiet.push({
+          area,
+          text: "No " + dim.noun + " stands out on " + spec.metricName + ". The widest gap, " + a.label + " over " + b.label + ", is " +
+            formatNumber(Math.abs(result.diff), 1) + " " + spec.unit + " (" + insightsDText(d) + "), under the " + INSIGHTS_MIN_D + " a card needs."
+        });
+        return;
+      }
+      const evidence = insightsEvidence(pAdjusted, Math.min(a.n, b.n));
+      const clear = insightsIsClear(evidence);
+      const fellBack = choice.fellBack && choice.wantedDim
+        ? " Only one " + choice.wantedDim.noun + " is in view, so " + dim.nouns + " are compared instead."
+        : "";
+      const tipFor = (group) => vizTip(group.label, [
+        ["Mean " + spec.metricShort, formatNumber(group.mean, 1)],
+        ["95% interval", group.ci && isFiniteNumber(group.ci.lo) ? formatNumber(group.ci.lo, 1) + " to " + formatNumber(group.ci.hi, 1) : "N/A"],
+        ["Median", formatNumber(group.median, 1)],
+        ["Students", formatInteger(group.n)]
+      ], "Each grey dot is one student" + (group.records > group.n ? ", their results averaged." : "."));
+      out.cards.push({
+        key: spec.key,
+        area,
+        headline: spec.higher(a.label, b.label) + (clear ? "" : ", but it could be chance"),
+        figures: [
+          { value: insightsSigned(result.diff, 1), label: spec.unit + " higher on average, " + a.label + " over " + b.label },
+          { value: insightsWhole(a.median) + " vs " + insightsWhole(b.median), label: "median " + spec.metricShort + " per student" }
+        ],
+        evidence,
+        effect: Math.abs(d),
+        sure: formatInteger(a.n) + " vs " + insightsCount(b.n, "student") + " · difference " + insightsSigned(result.diff, 1) + " " + spec.unit +
+          (result.ci ? ", " + insightsRange(result.ci, (v) => insightsSigned(v, 1)) : "") + " · " + testName + " " + vizStats.formatP(result.p) +
+          (pairs > 1 ? "; the widest of " + formatInteger(pairs) + " pairs, so adjusted " + vizStats.formatP(pAdjusted) : "") + " · " + insightsDText(d),
+        note: "This describes these two groups in this file, not why they differ: groups differ in who is in them as well as in how they were taught." + fellBack,
+        visual: {
+          minHeight: 140,
+          draw: (width) => insightsGroupsSVG(width, {
+            groups: [a, b].map((group) => Object.assign({}, group, { tip: tipFor(group) })),
+            domain: [0, 100],
+            ticks: [0, 25, 50, 75, 100],
+            ref: spec.ref,
+            ariaLabel: spec.metricName + ": " + a.label + " mean " + formatNumber(a.mean, 1) + ", " + b.label + " mean " + formatNumber(b.mean, 1),
+            desc: "Each grey dot is one student. The coloured dot is the group mean and the line through it the 95% interval of that mean."
+          })
+        },
+        table
+      });
+    }
+
+    function insightsCompareGrowth(ctx, out) {
+      if (!ctx.growth) return;
+      insightsCompare(ctx, {
+        key: "compare-growth",
+        area: "Growth",
+        rows: ctx.growthRows,
+        metric: (row) => row.conditionalGrowthPercentile,
+        metricName: "growth percentile",
+        metricShort: "growth percentile",
+        unit: "growth percentile points",
+        ref: { value: 50, label: "Typical 50" },
+        higher: (a, b) => "Growth was higher in " + a + " than in " + b
+      }, out);
+    }
+
+    function insightsCompareAchievement(ctx, out) {
+      const baseline = !ctx.growth;
+      insightsCompare(ctx, {
+        key: "compare-achievement",
+        area: baseline ? "Starting point" : "Achievement",
+        rows: ctx.scored,
+        metric: (row) => row.currentPercentile,
+        metricName: "percentile",
+        metricShort: "percentile",
+        unit: "percentile points",
+        ref: { value: 50, label: "US 50th" },
+        higher: (a, b) => (baseline ? a + " starts higher than " + b : "Achievement is higher in " + a + " than in " + b)
+      }, out);
+    }
+
+    // Are lower starters growing as much as higher starters? Growth
+    // percentiles already allow for where a student started, so in a group
+    // growing evenly the correlation between start and growth percentile is
+    // about zero; a clear positive one means the lower starters are falling
+    // further behind similar students nationally.
+    function insightsEquity(ctx, out) {
+      if (!ctx.growth) return;
+      const rows = ctx.growthRows.filter((row) => isFiniteNumber(row.startPercentile) && isFiniteNumber(row.conditionalGrowthPercentile));
+      const starts = insightsPerStudent(rows, (row) => row.startPercentile);
+      const growth = insightsPerStudent(rows, (row) => row.conditionalGrowthPercentile);
+      const keys = [...starts.keys()].filter((key) => growth.has(key));
+      const n = keys.length;
+      if (n < MIN_SHARE_N) {
+        if (n) out.quiet.push({ area: "Equity check", text: "Whether lower starters grow as much as higher starters was not tested: it needs at least " + MIN_SHARE_N + " students with a start score and a growth percentile, and " + (n === 1 ? "there is 1" : "there are " + formatInteger(n)) + "." });
+        return;
+      }
+      const xs = keys.map((key) => starts.get(key).value);
+      const ys = keys.map((key) => growth.get(key).value);
+      const cor = vizStats.pearson(xs, ys);
+      const fit = vizStats.olsFit(xs, ys);
+      if (cor.r === null || !fit) {
+        out.quiet.push({ area: "Equity check", text: "Whether lower starters grow as much as higher starters could not be tested: the start scores or growth percentiles do not vary." });
+        return;
+      }
+      // Halves by start score, for the figure a teacher can repeat.
+      const order = keys.map((key, i) => i).sort((i, j) => xs[i] - xs[j]);
+      const half = Math.floor(n / 2);
+      const lowerMedian = vizStats.quantile(order.slice(0, half).map((i) => ys[i]), 0.5);
+      const upperMedian = vizStats.quantile(order.slice(n - half).map((i) => ys[i]), 0.5);
+      const evidence = insightsEvidence(cor.p, n);
+      const clear = insightsIsClear(evidence);
+      const pooled = insightsPooledNote(rows, (row) => row.conditionalGrowthPercentile);
+      const slope10 = fit.slope * 10;
+      const headline = !clear ? "Lower and higher starters grew at similar rates"
+        : cor.r > 0 ? "Higher starters grew more than lower starters" : "Lower starters grew more than higher starters";
+      const note = !clear
+        ? "No clear sign in this file that growth depends on where students started. Growth percentiles already allow for the starting score, so similar rates mean both ends are keeping pace with similar students nationally."
+        : cor.r > 0
+          ? "Growth percentiles already allow for the starting score, so this is not the usual pull toward the middle: lower starters are growing less than similar students nationally. Worth checking that their support is reaching them."
+          : "Catch-up growth: lower starters are growing more than similar students nationally. Worth checking that higher starters are still being stretched.";
+      const points = keys.map((key, i) => ({
+        x: xs[i],
+        y: ys[i],
+        tip: vizTip(starts.get(key).name, [
+          ["Start percentile", formatNumber(xs[i], 0)],
+          ["Growth percentile", formatNumber(ys[i], 0)]
+        ], starts.get(key).count > 1 ? "Averaged over " + starts.get(key).count + " results." : "")
+      }));
+      out.cards.push({
+        key: "equity",
+        area: "Equity check",
+        headline,
+        figures: [
+          { value: insightsWhole(lowerMedian) + " vs " + insightsWhole(upperMedian), label: "median growth percentile, lower-half vs upper-half starters" },
+          { value: "r = " + insightsR(cor.r), label: "start percentile against growth percentile" }
+        ],
+        evidence,
+        effect: Math.abs(cor.r) * 2,
+        sure: insightsCount(n, "student") + pooled + " · r = " + insightsR(cor.r) + ", " + vizStats.formatP(cor.p) +
+          " · each 10 start-percentile points goes with " + insightsSigned(slope10, 1) + " growth percentile points" +
+          (fit.slopeCI95 ? " (" + insightsRange(fit.slopeCI95.map((v) => v * 10), (v) => insightsSigned(v, 1)) + ")" : ""),
+        note,
+        visual: {
+          minHeight: 222,
+          draw: (width) => insightsScatterSVG(width, {
+            points,
+            fit,
+            fitTip: vizTip("Line of best fit", [
+              ["r", insightsR(cor.r)],
+              ["Per 10 start points", insightsSigned(slope10, 1) + " growth points"],
+              ["Students", formatInteger(n)],
+              ["Test", vizStats.formatP(cor.p)]
+            ], "The shaded band is the line's 95% interval."),
+            ariaLabel: "Start percentile against growth percentile for " + insightsCount(n, "student") + ", r = " + insightsR(cor.r),
+            desc: "Each dot is one student" + pooled + ". The purple line fits them best and the shaded band is its 95% interval; the dashed line is typical growth, 50."
+          })
+        }
+      });
+    }
+
+    function insightsUnusual(ctx, out) {
+      if (!ctx.growth) return;
+      const rows = ctx.growthRows.filter((row) => isFiniteNumber(row.conditionalGrowthIndex));
+      if (rows.length < MIN_SHARE_N) {
+        if (rows.length) out.quiet.push({ area: "Unusual growth", text: "Unusual growth was not looked for: only " + insightsCount(rows.length, "result") + " in view " + (rows.length === 1 ? "carries" : "carry") + " a conditional growth index, and a spread needs at least " + MIN_SHARE_N + "." });
+        return;
+      }
+      const values = rows.map((row) => row.conditionalGrowthIndex);
+      const zs = vizStats.zScores(values);
+      const mean = vizStats.mean(values);
+      const sd = vizStats.sd(values);
+      if (!sd) {
+        out.quiet.push({ area: "Unusual growth", text: "Unusual growth was not looked for: every result has the same conditional growth index." });
+        return;
+      }
+      const entries = rows.map((row, i) => {
+        const z = zs[i];
+        const flag = z >= INSIGHTS_UNUSUAL_Z ? 1 : z <= -INSIGHTS_UNUSUAL_Z ? -1 : 0;
+        return {
+          row,
+          z,
+          flag,
+          tip: flag ? vizTip(row.studentName, [
+            ["Subject", row.subject],
+            ["Growth percentile", formatNumber(row.conditionalGrowthPercentile, 0)],
+            ["Growth index", formatNumber(row.conditionalGrowthIndex, 2)],
+            ["From this view's average", insightsSigned(z, 1) + " SD"]
+          ]) : ""
+        };
+      });
+      const low = entries.filter((entry) => entry.flag < 0).sort((a, b) => a.z - b.z);
+      const high = entries.filter((entry) => entry.flag > 0).sort((a, b) => b.z - a.z);
+      const expected = rows.length * INSIGHTS_TAIL_2SD;
+      if (!low.length && !high.length) {
+        out.quiet.push({ area: "Unusual growth", text: "No growth result sits far from the rest: none of the " + formatInteger(rows.length) + " is " + INSIGHTS_UNUSUAL_Z + " or more standard deviations from this view's average growth index." });
+        return;
+      }
+      const total = low.length + high.length;
+      const headline = low.length && high.length
+        ? insightsCount(total, "result") + " sit far from the rest: " + formatInteger(low.length) + " unusually low, " + formatInteger(high.length) + " unusually high"
+        : low.length
+          ? (low.length === 1 ? "One result grew far less than the rest" : formatInteger(low.length) + " results grew far less than the rest")
+          : (high.length === 1 ? "One result grew far more than the rest" : formatInteger(high.length) + " results grew far more than the rest");
+      const chipDetail = (entry) => entry.row.subject + " · CGP " + formatNumber(entry.row.conditionalGrowthPercentile, 0);
+      const actions = [];
+      if (low.length) actions.push({ jump: "sec-priority", label: "Open Priority Students" });
+      if (high.length) actions.push({ jump: "sec-celebration", label: "Open Celebration" });
+      out.cards.push({
+        key: "unusual",
+        area: "Unusual growth",
+        headline,
+        figures: [
+          { value: formatInteger(low.length), label: "grew unusually little (2+ SD below this view's average)" },
+          { value: formatInteger(high.length), label: "grew unusually much (2+ SD above)" }
+        ],
+        evidence: "count",
+        effect: 0,
+        sure: "Measured against this view's own spread of conditional growth index (mean " + insightsFixed(mean, 2) + ", SD " + insightsFixed(sd, 2) + ", " +
+          insightsCount(rows.length, "result") + "). Even with nothing unusual going on, about 1 result in 22 lands this far out, so " +
+          (expected < 1 ? "fewer than one would be expected in a group this size." : "around " + formatInteger(Math.round(expected)) + " would be expected here."),
+        note: "A list of students to look at first, not a diagnosis: check how each test went before acting on one score.",
+        names: [
+          { title: "Grew unusually little", entries: low.map((entry) => ({ name: entry.row.studentName, detail: chipDetail(entry) })) },
+          { title: "Grew unusually much", entries: high.map((entry) => ({ name: entry.row.studentName, detail: chipDetail(entry) })) }
+        ].filter((group) => group.entries.length),
+        actions,
+        visual: {
+          minHeight: 104,
+          draw: (width) => insightsZStripSVG(width, {
+            entries,
+            ariaLabel: formatInteger(low.length) + " unusually low and " + formatInteger(high.length) + " unusually high growth results among " + formatInteger(rows.length),
+            desc: "Each dot is one result, placed by how far its conditional growth index sits from this view's average, in standard deviations. Results past 2 SD are coloured: gold below, purple above."
+          })
+        }
+      });
+    }
+
+    function insightsBandMovement(ctx, out) {
+      if (!ctx.growth) return;
+      const rows = ctx.growthRows.filter((row) => row.startBand && row.startBand.rank && row.endBand && row.endBand.rank);
+      if (!rows.length) return;
+      const up = rows.filter((row) => row.bandMovement === "Moved Up").length;
+      const down = rows.filter((row) => row.bandMovement === "Moved Down").length;
+      const same = rows.length - up - down;
+      if (rows.length < MIN_SHARE_N) {
+        out.quiet.push({ area: "Band movement", text: formatInteger(up) + " up, " + formatInteger(down) + " down and " + formatInteger(same) + " in the same band, from only " + insightsCount(rows.length, "result") + ": too few to read as a pattern." });
+        return;
+      }
+      // The test is per student: each student's net band moves across their
+      // subjects, and whether more students gained than lost.
+      const net = insightsPerStudent(rows, (row) => (row.bandMovement === "Moved Up" ? 1 : row.bandMovement === "Moved Down" ? -1 : 0));
+      const test = insightsSignTest([...net.values()].map((entry) => entry.value), 0);
+      const evidence = up === down ? (up ? "weak" : "count") : insightsEvidence(test.p, net.size);
+      const clear = insightsIsClear(evidence);
+      const headline = !up && !down ? "Every result stayed in its band"
+        : up === down ? "As many results moved up a band as down"
+          : up > down ? (clear ? "More results moved up a band than down" : "Slightly more results moved up a band than down")
+            : (clear ? "More results moved down a band than up" : "Slightly more results moved down a band than up");
+      out.cards.push({
+        key: "bands",
+        area: "Band movement",
+        headline,
+        figures: [
+          { value: insightsSigned(up - down, 0), label: "net band moves (" + formatInteger(up) + " up, " + formatInteger(down) + " down)" },
+          { value: formatShare({ n: same, of: rows.length }), label: "stayed in the same band" }
+        ],
+        evidence,
+        effect: (up - down) / rows.length * 2,
+        sure: insightsCount(net.size, "student") + ": " + formatInteger(test.above) + " moved up more than down, " + formatInteger(test.below) + " the reverse · " +
+          (net.size < MIN_SHARE_N ? "too few students for a test (it needs " + MIN_SHARE_N + ")" : "sign test " + vizStats.formatP(test.p)),
+        note: "Bands are fifths of the national spread, so moving up a band means gaining ground on US peers, not just growing.",
+        visual: { minHeight: 58, draw: (width) => insightsMoveBarSVG(width, { up, down, same }) }
+      });
+    }
+
+    function insightsBandSpread(ctx, out) {
+      if (ctx.growth) return;
+      const rows = ctx.scored;
+      if (rows.length < MIN_SHARE_N) return;
+      const students = insightsStudentCount(rows);
+      const counts = BANDS.map((band) => rows.filter((row) => row.currentBand && row.currentBand.name === band.name).length);
+      const lowShare = counts[0] / rows.length;
+      const topShare = counts[4] / rows.length;
+      const low = insightsShareTest(counts[0], rows.length, students, INSIGHTS_US_BAND_SHARE);
+      const top = insightsShareTest(counts[4], rows.length, students, INSIGHTS_US_BAND_SHARE);
+      const lowClear = isFiniteNumber(low.p) && low.p < 0.05;
+      const topClear = isFiniteNumber(top.p) && top.p < 0.05;
+      if (!lowClear && !topClear) {
+        out.quiet.push({ area: "Starting point", text: "The band spread is in line with the national one: " + insightsPct(lowShare) + " in the lowest band and " + insightsPct(topShare) + " in the highest, against about 20% each nationally (counting each student once, " + vizStats.formatP(low.p) + " and " + vizStats.formatP(top.p) + ")." });
+        return;
+      }
+      const leadLow = lowClear && (!topClear || Math.abs(low.h) >= Math.abs(top.h));
+      const lead = leadLow ? low : top;
+      const more = (leadLow ? lowShare : topShare) > INSIGHTS_US_BAND_SHARE;
+      const headline = leadLow
+        ? (more ? "More students start in the lowest band than nationally" : "Fewer students start in the lowest band than nationally")
+        : (more ? "More students start in the highest band than nationally" : "Fewer students start in the highest band than nationally");
+      out.cards.push({
+        key: "band-spread",
+        area: "Starting point",
+        headline,
+        figures: [
+          { value: insightsPct(lowShare), label: "in the lowest band, 1st to 20th percentile (about 20% nationally)" },
+          { value: insightsPct(topShare), label: "in the highest band, 81st and above (about 20% nationally)" }
+        ],
+        evidence: insightsEvidence(lead.p, lead.nEff),
+        effect: Math.abs(lead.h),
+        sure: "Counting each of the " + insightsCount(students, "student") + " once · " + (leadLow ? "lowest" : "highest") + " band " +
+          (lead.ci ? insightsRange(lead.ci, insightsPct) + ", " : "") + vizStats.formatP(lead.p) + " against one in five · " + (leadLow ? "highest" : "lowest") + " band " +
+          vizStats.formatP(leadLow ? top.p : low.p),
+        note: "NWEA's bands are fifths of the national spread, so a typical US group has about one in five students in each.",
+        visual: { minHeight: 84, draw: (width) => insightsBandSpreadSVG(width, counts) }
+      });
+    }
+
+    function insightsReliability(ctx, out) {
+      const rows = ctx.rows;
+      const reported = rows.filter((row) => isFiniteNumber(row.rapidGuessedPct));
+      const rapid = reported.filter((row) => row.rapidGuessed).sort((a, b) => b.rapidGuessedPct - a.rapidGuessedPct);
+      const short = rows.filter((row) => row.shortTest && !row.rapidGuessed);
+      if (!rapid.length && !short.length) {
+        if (reported.length) {
+          out.quiet.push({ area: "Test reliability", text: "No rapid guessing flagged: none of the " + insightsCount(reported.length, "test") + " that report it had " + RAPID_GUESS_FLAG_PCT + "% or more of items answered too fast to read, and none finished unusually fast." });
+        } else if (rows.some((row) => isFiniteNumber(row.currentDuration))) {
+          out.quiet.push({ area: "Test reliability", text: "No test finished unusually fast. This export does not report rapid guessing, so that could not be checked." });
+        }
+        return;
+      }
+      const flaggedShare = reported.length ? rapid.length / reported.length : null;
+      const shortShare = short.length / rows.length;
+      const headline = rapid.length
+        ? (rapid.length === 1 ? "One test shows rapid guessing: read that score with care" : formatInteger(rapid.length) + " tests show rapid guessing: read those scores with care")
+        : (short.length === 1 ? "One test finished unusually fast: confirm it before planning from it" : formatInteger(short.length) + " tests finished unusually fast: confirm them before planning from them");
+      const figures = [];
+      if (reported.length) {
+        figures.push({ value: formatInteger(rapid.length), label: "tests with " + RAPID_GUESS_FLAG_PCT + "% or more of items rapid-guessed" });
+        figures.push({ value: formatShare({ n: rapid.length, of: reported.length }), label: "of the " + insightsCount(reported.length, "test") + " that report it" });
+      }
+      if (short.length) figures.push({ value: formatInteger(short.length), label: (reported.length ? "other " : "") + "tests under " + SHORT_TEST_ABSOLUTE_MINUTES + " minutes and half this file's median time" });
+      const flagged = rapid.map((row) => ({ name: row.studentName, detail: row.subject + " · " + formatNumber(row.rapidGuessedPct, 0) + "% rapid" }))
+        .concat(short.map((row) => ({ name: row.studentName, detail: row.subject + " · " + formatNumber(row.currentDuration, 0) + " min" })));
+      const bins = [0, 0, 0, 0, 0];
+      reported.forEach((row) => {
+        const value = row.rapidGuessedPct;
+        bins[value < 5 ? 0 : value < 10 ? 1 : value < 20 ? 2 : value < 30 ? 3 : 4] += 1;
+      });
+      out.cards.push({
+        key: "reliability",
+        area: "Test reliability",
+        tone: "caveat",
+        // A tenth of the tests or more is enough to move the averages above
+        // it, so the card goes to the top of the list.
+        pinned: (isFiniteNumber(flaggedShare) && flaggedShare >= 0.1) || shortShare >= 0.1,
+        headline,
+        figures,
+        evidence: "count",
+        effect: 0,
+        sure: (reported.length
+          ? "NWEA's own rapid-guessing measure, reported for " + insightsCount(reported.length, "test") + "; the median test had " + formatNumber(median(reported.map((row) => row.rapidGuessedPct)), 0) + "% of items rapid-guessed."
+          : "This export does not report rapid guessing; the flag here is test time alone.") +
+          (short.length ? " A short test finished in under " + SHORT_TEST_ABSOLUTE_MINUTES + " minutes and in less than half this file's median time." : ""),
+        note: "Rapid guessing pulls a score down, so a flagged test understates what the student can do, and any average that includes it runs a little low. It is a reason to confirm the score, not to lower expectations.",
+        names: [{ title: "Tests to confirm", entries: flagged }],
+        actions: [{ jump: "sec-quality", label: "Open Data Check" }],
+        visual: reported.length ? { minHeight: 136, draw: (width) => insightsRapidHistSVG(width, bins) } : null
+      });
+    }
+
+    function insightsBuild(ctx) {
+      const out = { cards: [], quiet: [] };
+      [insightsReliability, insightsGrowthTypical, insightsAchievement, insightsCompareGrowth, insightsCompareAchievement,
+        insightsEquity, insightsUnusual, insightsBandMovement, insightsBandSpread].forEach((build) => build(ctx, out));
+      if (ctx.compare && !ctx.compare.dim) {
+        out.quiet.push({ area: "Group comparisons", text: "Only one subject, class, teacher and grade is in view, so there are no groups to compare." });
+      }
+      // Strongest evidence first, bigger effects first within a level. A
+      // reliability caveat on a tenth of the tests or more goes to the top;
+      // a smaller one sits after the findings a test backs and the named
+      // students, and ahead of the patterns that could be chance.
+      out.cards.forEach((card, index) => {
+        const weight = card.tone === "caveat" && !card.pinned ? 22 : (INSIGHTS_EVIDENCE[card.evidence] || INSIGHTS_EVIDENCE.thin).weight;
+        card.score = (card.pinned ? 100 : 0) + weight + Math.min(1.5, Math.abs(card.effect || 0)) * 10 - index * 0.001;
+      });
+      out.cards.sort((a, b) => b.score - a.score);
+      return out;
+    }
+
+    // --- Rendering ------------------------------------------------------------------
+    function insightsEvidenceHTML(key) {
+      const evidence = INSIGHTS_EVIDENCE[key] || INSIGHTS_EVIDENCE.thin;
+      return '<span class="insights-evidence is-' + escapeAttr(key) + '"><span class="insights-bars" aria-hidden="true"><i></i><i></i><i></i></span>' +
+        "<span>" + escapeHTML(evidence.label) + "</span></span>";
+    }
+
+    function insightsNamesHTML(groups) {
+      return (groups || []).map((group) => {
+        const shown = group.entries.slice(0, INSIGHTS_NAME_LIMIT);
+        const more = group.entries.length - shown.length;
+        return '<div class="insights-names"><span class="insights-names-title">' + escapeHTML(group.title) + "</span>" +
+          '<div class="insights-chips">' + shown.map((entry) =>
+            '<button class="name-chip" type="button" data-student="' + escapeAttr(entry.name) + '">' + escapeHTML(entry.name) +
+            '<span class="name-chip-subject">' + escapeHTML(entry.detail) + "</span></button>").join("") +
+          (more > 0 ? '<span class="name-more">and ' + formatInteger(more) + " more</span>" : "") + "</div></div>";
+      }).join("");
+    }
+
+    function insightsCardHTML(card, index) {
+      const id = "insights-finding-" + slugify(card.key);
+      return '<li class="insights-item"><article class="insights-card reveal' + (card.tone === "caveat" ? " is-caveat" : "") + '" aria-labelledby="' + escapeAttr(id) + '">' +
+        '<div class="insights-card-head"><span class="insights-rank" aria-hidden="true">' + (index + 1) + "</span>" +
+        '<span class="viz-eyebrow">' + escapeHTML(card.area) + "</span>" + insightsEvidenceHTML(card.evidence) + "</div>" +
+        '<h4 class="insights-headline" id="' + escapeAttr(id) + '">' + escapeHTML(card.headline) + "</h4>" +
+        (card.figures && card.figures.length
+          ? '<div class="insights-figures">' + card.figures.map((figure) =>
+              '<div class="insights-figure"><b>' + escapeHTML(figure.value) + "</b><span>" + escapeHTML(figure.label) + "</span></div>").join("") + "</div>"
+          : "") +
+        (card.visual ? '<div class="insights-visual">' + vizChartSlot(card.visual.draw, { minHeight: card.visual.minHeight }) + "</div>" : "") +
+        '<p class="insights-sure"><strong>How sure</strong> ' + escapeHTML(card.sure) + "</p>" +
+        (card.note ? '<p class="insights-note">' + escapeHTML(card.note) + "</p>" : "") +
+        insightsNamesHTML(card.names) +
+        (card.actions && card.actions.length
+          ? '<div class="insights-actions">' + card.actions.map((action) =>
+              '<button class="btn small ghost" type="button" data-jump="' + escapeAttr(action.jump) + '">' + escapeHTML(action.label) + "</button>").join("") + "</div>"
+          : "") +
+        (card.table || "") + "</article></li>";
+    }
+
+    function insightsFindingsHTML(report) {
+      const cards = report.cards;
+      const list = cards.length
+        ? '<ol class="insights-list" role="list">' + cards.map(insightsCardHTML).join("") + "</ol>"
+        : '<div class="insights-none">Nothing in this view clears the bar for a finding. Every check found either no clear pattern or too few students to test; the list below says which.</div>';
+      const quiet = report.quiet.length
+        ? '<div class="insights-part"><h3 class="insights-heading">Also checked <b>' + formatInteger(report.quiet.length) + "</b></h3>" +
+          '<ul class="insights-quiet">' + report.quiet.map((item) =>
+            '<li><span class="insights-quiet-area">' + escapeHTML(item.area) + "</span><span>" + escapeHTML(item.text) + "</span></li>").join("") + "</ul></div>"
+        : "";
+      return '<div class="insights-part"><h3 class="insights-heading">What stands out <b>' + formatInteger(cards.length) + "</b></h3>" + list + "</div>" + quiet +
+        '<p class="method-note insights-method">Every check runs on every view; a pattern becomes a card only when it clears its bar. Tests count each student once, so a student tested in four subjects cannot make a pattern look four times as sure. A gap between groups needs at least ' +
+        MIN_SHARE_N + " students in each and a Cohen's d of at least " + INSIGHTS_MIN_D + ", and its p-value is adjusted for the number of pairs compared. Differences between groups describe this file; they never say why.</p>";
+    }
+
+    function insightsControlsHTML(choice) {
+      if (!choice || choice.available.length < 2) return "";
+      return vizControls([
+        vizSegmented({
+          name: "insightsCompare",
+          label: "Compare groups by",
+          options: choice.available.map((dim) => ({ value: dim.key, label: dim.label })),
+          value: choice.dim ? choice.dim.key : ""
+        }),
+        '<p class="insights-control-hint">Used by the group comparisons below. It starts on the Overview Lens and goes back to it when the lens changes.</p>'
+      ]);
+    }
+
+    function insightsNoteText(ctx) {
+      const records = insightsCount(ctx.rows.length, "record");
+      const students = insightsCount(ctx.students, "student");
+      if (!ctx.growth) {
+        return "Where the " + records + " in view (" + students + ") are starting, strongest evidence first. This file has one test window, so nothing here measures growth.";
+      }
+      return "What the " + records + " in view (" + students + ") say, strongest evidence first. Everything here follows your filters." +
+        (ctx.mode === "mixed" ? " Growth findings use the " + insightsCount(ctx.growthRows.length, "record") + " with both test windows." : "");
+    }
+
+    function insightsSetButtons(enabled) {
+      ["insightsCopyBtn", "insightsExportBtn"].forEach((id) => {
+        const button = document.getElementById(id);
+        if (button) button.disabled = !enabled;
+      });
+    }
+
+    function renderInsights() {
+      const wrap = document.getElementById("insightsWrap");
+      if (!wrap) return;
+      insightsWire();
+      const rows = state.filteredRows || [];
+      if (!state.allRows.length || !rows.length) {
+        insightsState.ctx = null;
+        insightsState.report = null;
+        insightsState.kpis = [];
+        vizMount(wrap, state.allRows.length
+          ? vizEmpty("No records match the current filters. Clear a filter to see what stands out.")
+          : '<div class="empty-state">Load a file to see what stands out in it.</div>');
+        setText("insightsNote", "The headline numbers for the records in view, then what stands out in them, strongest evidence first.");
+        insightsSetButtons(false);
+        return;
+      }
+      const ctx = insightsContext(rows);
+      ctx.compare = insightsCompareChoice(rows);
+      const kpis = insightsKpiData(ctx);
+      const report = insightsBuild(ctx);
+      insightsState.ctx = ctx;
+      insightsState.kpis = kpis;
+      insightsState.report = report;
+      setText("insightsNote", insightsNoteText(ctx));
+      insightsSetButtons(true);
+      vizMount(wrap,
+        '<div class="insights-part insights-kpis" aria-label="Headline numbers" role="group">' + insightsKpiRowHTML(kpis) + "</div>" +
+        '<div class="insights-controls" data-insights-part="controls">' + insightsControlsHTML(ctx.compare) + "</div>" +
+        '<div class="insights-findings" data-insights-part="findings">' + insightsFindingsHTML(report) + "</div>");
+    }
+
+    // A new grouping only changes the findings, so only they are redrawn:
+    // the tiles stay put and the control keeps its focus.
+    function insightsRecompare(value) {
+      const wrap = document.getElementById("insightsWrap");
+      const ctx = insightsState.ctx;
+      if (!wrap || !ctx) return;
+      insightsState.compare = INSIGHTS_COMPARE_DIMS.some((dim) => dim.key === value) ? value : null;
+      ctx.compare = insightsCompareChoice(ctx.rows);
+      insightsState.report = insightsBuild(ctx);
+      const findings = wrap.querySelector('[data-insights-part="findings"]');
+      if (findings) vizMount(findings, insightsFindingsHTML(insightsState.report));
+      if (typeof observeReveals === "function") observeReveals();
+    }
+
+    // The findings as plain text, in the order and words on screen, for PLC
+    // notes or an email.
+    function insightsReportText() {
+      const ctx = insightsState.ctx;
+      const report = insightsState.report;
+      if (!ctx || !report) return "";
+      const lines = ["Insights: " + insightsCount(ctx.rows.length, "record") + " in view (" + insightsCount(ctx.students, "student") + ")", ""];
+      lines.push("Headline numbers");
+      insightsState.kpis.forEach((kpi) => {
+        lines.push("- " + kpi.label + ": " + kpi.value + (kpi.unit ? (kpi.unit === "RIT" ? " RIT" : kpi.unit) : "") +
+          (kpi.delta && kpi.delta.text ? " (" + kpi.delta.text + ")" : "") + (kpi.context ? ". " + kpi.context : ""));
+      });
+      lines.push("", "What stands out");
+      if (!report.cards.length) lines.push("Nothing in this view clears the bar for a finding.");
+      report.cards.forEach((card, index) => {
+        lines.push((index + 1) + ". " + card.headline + " [" + (INSIGHTS_EVIDENCE[card.evidence] || INSIGHTS_EVIDENCE.thin).label + "]");
+        if (card.figures && card.figures.length) lines.push("   " + card.figures.map((figure) => figure.value + " " + figure.label).join("; "));
+        lines.push("   How sure: " + card.sure);
+        if (card.note) lines.push("   " + card.note);
+      });
+      if (report.quiet.length) {
+        lines.push("", "Also checked");
+        report.quiet.forEach((item) => lines.push("- " + item.area + ": " + item.text));
+      }
+      return lines.join("\n");
+    }
+
+    async function insightsCopy() {
+      const text = insightsReportText();
+      if (!text) {
+        toast("Load a file first - there are no findings to copy yet.", "info");
+        return;
+      }
+      const ok = await copyText(text);
+      toast(ok ? "Findings copied." : "Copy was blocked by the browser.", ok ? "success" : "error");
+    }
+
+    function insightsExport() {
+      const report = insightsState.report;
+      if (!report) {
+        toast("Load a file first - there are no findings to export yet.", "info");
+        return;
+      }
+      const rows = report.cards.map((card, index) => ({
+        rank: String(index + 1),
+        area: card.area,
+        finding: card.headline,
+        // Label first: a cell that opens with "+12.4" would be read as a
+        // formula, and the export guard would print it with a quote mark.
+        figures: (card.figures || []).map((figure) => insightsCap(figure.label) + ": " + figure.value).join("; "),
+        evidence: (INSIGHTS_EVIDENCE[card.evidence] || INSIGHTS_EVIDENCE.thin).label,
+        sure: card.sure,
+        note: card.note || ""
+      })).concat(report.quiet.map((item) => ({
+        rank: "Also checked", area: item.area, finding: item.text, figures: "", evidence: "", sure: "", note: ""
+      })));
+      exportCSV("insights.csv", rows, [
+        ["Rank", (row) => row.rank],
+        ["Area", (row) => row.area],
+        ["Finding", (row) => row.finding],
+        ["Key figures", (row) => row.figures],
+        ["Evidence", (row) => row.evidence],
+        ["How sure", (row) => row.sure],
+        ["Note", (row) => row.note]
+      ]);
+    }
+
+    function insightsWire() {
+      if (insightsState.wired) return;
+      const wrap = document.getElementById("insightsWrap");
+      if (!wrap) return;
+      insightsState.wired = true;
+      wrap.addEventListener("viz-change", (event) => {
+        if (!event.detail || event.detail.name !== "insightsCompare") return;
+        insightsRecompare(event.detail.value);
+      });
+      const copy = document.getElementById("insightsCopyBtn");
+      const exportButton = document.getElementById("insightsExportBtn");
+      if (copy) copy.addEventListener("click", insightsCopy);
+      if (exportButton) exportButton.addEventListener("click", insightsExport);
+    }
+    // ---- end AISA: Insights ----
+
     function renderBriefing() {
       if (!els.briefingStage) return;
       briefing.scenes = briefingScenes();
@@ -15020,6 +17150,15 @@ Suggested next steps: prioritize Intensive Support and Targeted Support students
     const GUIDE_URL = "teacher-dashboard-guide.pdf";
 
     const SECTION_HELP = {
+      "sec-insights": {
+        what: "The headline numbers for the records in view, each set against a national reference, then a ranked list of what stands out: whether growth is running above or below typical, the widest gap between the groups you compare, whether lower and higher starters are growing alike, results far from the rest, band movement, and any warning about test reliability. Checks that found nothing clear are listed underneath, so a missing card never means a question nobody asked.",
+        read: "Findings are ranked by the strength of the evidence, and each one says how sure it is: how many students it rests on, a 95% range or a p-value, and an effect size. Strong evidence means a p-value under 0.01 from at least 30 students; could be chance means the pattern is in this file but a different group of students could easily have shown otherwise. Every test counts each student once, so a child tested in four subjects cannot make a pattern look four times as sure. A gap between groups is only called one when both have at least 10 students and it is at least 0.3 standard deviations wide, and it never says why the groups differ.",
+        act: "Open a data meeting here. Take the top two findings into the conversation, click through to the students named on the unusual-growth card, and use Compare groups by (it starts on your Overview Lens) to see whether a gap sits between subjects, classes, teachers or grades. Copy the findings into your notes when you are done.",
+        baseline: {
+          what: "The headline numbers for a single-window file, each set against a national reference, then what stands out about where students are starting: achievement against the national middle, the share in the lowest and highest bands against the one in five you would expect nationally, the widest gap between the groups you compare, and any warning about test reliability.",
+          read: "Nothing here measures growth: with one test window there is no earlier score to compare against. Findings are ranked by the strength of the evidence and each says how sure it is. Every test counts each student once, and a gap between groups is only called one when both have at least 10 students and it is at least 0.3 standard deviations wide."
+        }
+      },
       "sec-snapshot": {
         what: "The headline figures for the records in view: how many records and students, the share that met and beat their growth projection, the average start and end percentile for records with both windows, pooled gap closure, and how many records are on the priority and celebration lists. The banner above it says which test windows the file covers.",
         read: "A record is one student in one subject, so a student tested in three subjects is three records. Any share resting on fewer than 10 records prints as a count rather than a percentage. Met growth means growing at least as much as NWEA projected for that student from their own starting point.",
