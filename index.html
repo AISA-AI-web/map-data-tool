@@ -2654,9 +2654,32 @@
 
     .section-more p { max-width: 72ch; }
 
-    /* Offset scroll targets so the sticky bars don't cover section headings */
+    /* Whatever the page scrolls to - a section from the jump nav, or a
+       control that takes keyboard focus - stops below the sticky bars rather
+       than under them (WCAG 2.4.11). --scroll-pad is the height of the bars
+       that really stick, set by updateStickyOffsets. */
+    html { scroll-padding-top: var(--scroll-pad, 0px); }
+
     main > .section {
-      scroll-margin-top: var(--scroll-offset, 160px);
+      scroll-margin-top: 16px;
+    }
+
+    /* A phone, a tablet, or a laptop at 200% zoom has no room for two sticky
+       bars: the filter bar (over 300px once its fields wrap) and a jump nav
+       of two dozen chips covered most of the screen, or all of it. When the
+       filter bar alone would take more than a quarter of the screen's height
+       (updateStickyOffsets sets body.bars-compact), the filters scroll away
+       with the page and the jump nav stays as one row that scrolls sideways. */
+    body.bars-compact .filter-bar { position: static; }
+    body.bars-compact .section-nav { align-items: center; padding: 6px 8px; }
+    body.bars-compact .section-nav-label { display: none; }
+
+    body.bars-compact .section-nav-links {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      padding: 3px;
+      scroll-padding-inline: 12px;
+      scrollbar-width: thin;
     }
 
     .back-to-top {
@@ -4034,7 +4057,8 @@
     /* The floating dock and the back-to-top button belong to the page behind
        the planner, and sit on top of the room if they are left visible. */
     body.planner-open .support-dock,
-    body.planner-open .back-to-top { display: none; }
+    body.planner-open .back-to-top,
+    body.modal-open .back-to-top { display: none; }
 
     /* The room takes the whole stage; the inspector, the tray and the legend
        sit under it. Small screens get a room wide enough to read and scroll. */
@@ -9064,6 +9088,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       manualArrangement: false,
       groupSignature: "",
       spotlightKey: "",
+      spotlightStudent: "",
       quiz: null,
       prefs: { theme: "auto", reducedMotion: false, supportPromptOff: false, view: "essentials" },
       supportPromptTimer: null,
@@ -9183,7 +9208,10 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       [
         els.subjectFilter, els.dashboardLensSelect, els.teacherFilter, els.classFilter, els.gradeFilter,
         els.bandFilter, els.metFilter, els.groupFilter, els.gapFilter, els.tierFilter
-      ].filter(Boolean).forEach((control) => control.addEventListener("input", renderAll));
+      // A keyboard user arrowing through a list of forty classes fires one
+      // input per step; the page redraws once they pause, not at every step
+      // on the way (each redraw of a school-sized file takes seconds).
+      ].filter(Boolean).forEach((control) => control.addEventListener("input", debounce(renderAll, 120)));
       // Typing in a large file should not re-render on every keystroke.
       els.searchInput.addEventListener("input", debounce(renderAll, 180));
       [els.groupSizeInput, els.groupStrategySelect, els.groupScoreSelect].forEach((control) => control.addEventListener("input", () => {
@@ -9425,7 +9453,16 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         }
         const student = event.target.closest("[data-student]");
         if (student) {
-          openSpotlight(student.dataset.student);
+          openSpotlight(student.dataset.student, student.dataset.studentKey);
+          return;
+        }
+        const planClass = event.target.closest("[data-plan-class]");
+        if (planClass && els.classFilter) {
+          els.classFilter.value = planClass.dataset.planClass;
+          renderAll();
+          announce("Filtered to class " + planClass.dataset.planClass + ".");
+          const again = document.querySelector(state.plannerOpen ? "#plannerClose" : "#plannerLaunch");
+          if (again) again.focus({ preventScroll: true });
           return;
         }
         const actionExpand = event.target.closest("[data-action-expand]");
@@ -9522,6 +9559,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         els.moreFiltersBtn.setAttribute("aria-expanded", open ? "true" : "false");
         els.moreFiltersBtn.textContent = open ? "Fewer filters" : "More filters";
         renderActiveFilterNote();
+        updateStickyOffsets();
       });
       if (els.changeFileBtn) els.changeFileBtn.addEventListener("click", () => {
         const open = document.body.classList.toggle("upload-open");
@@ -9622,15 +9660,22 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       });
     }
 
+    // Only a bar that really sticks takes room at the top. When the filter
+    // bar alone would cover more than a quarter of the screen - a phone, a
+    // tablet, a laptop at 200% zoom - it scrolls away with the page and the
+    // jump nav, now one sideways-scrolling row, sticks to the very top (see
+    // body.bars-compact). Its height does not depend on sticking, so the
+    // choice cannot flip back and forth.
     function updateStickyOffsets() {
+      const sticks = (el) => Boolean(el) && !el.hidden && getComputedStyle(el).position === "sticky";
       const filterBar = document.querySelector(".filter-bar");
-      const filterH = filterBar ? Math.round(filterBar.getBoundingClientRect().height) : 88;
-      const navH = els.sectionNav && !els.sectionNav.hidden
-        ? Math.round(els.sectionNav.getBoundingClientRect().height)
-        : 0;
+      const barH = filterBar ? filterBar.getBoundingClientRect().height : 0;
+      document.body.classList.toggle("bars-compact", window.innerWidth <= 760 || barH > window.innerHeight * 0.25);
+      const filterH = sticks(filterBar) ? Math.round(filterBar.getBoundingClientRect().height) : 0;
+      const navH = sticks(els.sectionNav) ? Math.round(els.sectionNav.getBoundingClientRect().height) : 0;
       const root = document.documentElement.style;
-      root.setProperty("--stick-top", (filterH + 6) + "px");
-      root.setProperty("--scroll-offset", (filterH + navH + 28) + "px");
+      root.setProperty("--stick-top", (filterH ? filterH + 6 : 4) + "px");
+      root.setProperty("--scroll-pad", (filterH || navH ? filterH + navH + 16 : 0) + "px");
     }
 
     function jumpToSection(id) {
@@ -9866,6 +9911,8 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       state.diagnostics.setAside = setAside;
       state.diagnostics.setAsideCount = setAside.length;
       state.spotlightKey = "";
+      state.spotlightStudent = "";
+      resetSectionViewState();
       state.quiz = emptyQuizState();
       resetQuizPool();
       populateFilters();
@@ -9900,11 +9947,29 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       state.dataWindow = { ...DEFAULT_DATA_WINDOW };
       state.diagnostics = null;
       state.spotlightKey = "";
+      state.spotlightStudent = "";
+      resetSectionViewState();
       state.quiz = emptyQuizState();
       resetQuizPool();
       populateFilters();
       applyModeToChrome();
       safeRenderAll();
+    }
+
+    // What a section was showing for the last file - a Movement subject and
+    // cell, the grouping Insights compared, the Explorer's subject and pinned
+    // student - belongs to that file. A new file opens every section on its
+    // defaults, as the page filters do. Chart preferences (axes, measure,
+    // colour) are the teacher's, not the file's, and are kept.
+    function resetSectionViewState() {
+      movementView.group = "all";
+      movementView.lens = "";
+      movementView.selection = null;
+      movementView.showAll = false;
+      insightsState.compare = null;
+      insightsState.lensSeen = null;
+      explorerState.subject = "all";
+      explorerState.pinKey = "";
     }
 
     // A rendering failure must not be reported as a bad file, and must not
@@ -9977,6 +10042,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         noScoreStudents: unique(noScorePairs),
         noGradeCount: noGrade.length,
         noNormCount: noNorm.length,
+        outOfRangeCount: rows.reduce((sum, row) => sum + (row.outOfRangeCount || 0), 0),
         duplicateCount: duplicates.length,
         multiWindowCount: multiWindow,
         shortTestCount: testQuality.flagged,
@@ -10248,17 +10314,32 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       return areas;
     }
 
+    // What NWEA can report. A RIT outside this range or a percentile outside
+    // 0-100 is a typing slip or a column read in the wrong place, not a score.
+    const RIT_PLAUSIBLE = [100, 350];
+
     function normalizeRecord(raw) {
-      const startRIT = cleanNumber(raw.startRITRaw);
-      const endRIT = cleanNumber(raw.endRITRaw);
-      const startPercentile = cleanNumber(raw.startPercentileRaw);
-      const endPercentile = cleanNumber(raw.endPercentileRaw);
+      // An impossible score is left blank - the record keeps its other
+      // numbers - and counted, so the Data Check can say so instead of one
+      // RIT of 9999 stretching every chart's axis to 10,000.
+      let outOfRange = 0;
+      const plausible = (value, lo, hi) => {
+        if (!isFiniteNumber(value) || (value >= lo && value <= hi)) return value;
+        outOfRange += 1;
+        return null;
+      };
+      const rit = (value) => plausible(cleanNumber(value), RIT_PLAUSIBLE[0], RIT_PLAUSIBLE[1]);
+      const pct = (value) => plausible(cleanNumber(value), 0, 100);
+      const startRIT = rit(raw.startRITRaw);
+      const endRIT = rit(raw.endRITRaw);
+      const startPercentile = pct(raw.startPercentileRaw);
+      const endPercentile = pct(raw.endPercentileRaw);
       const projectedGrowth = cleanNumber(raw.projectedGrowthRaw);
       const observedGrowth = cleanNumber(raw.observedGrowthRaw);
-      const projectedRIT = cleanNumber(raw.projectedRITRaw);
+      const projectedRIT = rit(raw.projectedRITRaw);
       const growthIndex = cleanNumber(raw.growthIndexRaw);
       const conditionalGrowthIndex = cleanNumber(raw.conditionalGrowthIndexRaw);
-      const conditionalGrowthPercentile = cleanNumber(raw.conditionalGrowthPercentileRaw);
+      const conditionalGrowthPercentile = pct(raw.conditionalGrowthPercentileRaw);
       const conditionalGrowthPercentileAxis = cleanNumber(raw.conditionalGrowthPercentileAxisRaw);
       const achievementPercentileAxis = cleanNumber(raw.achievementPercentileAxisRaw);
       const classPctMet = cleanNumber(raw.pctStudentsMetOrExceededRaw);
@@ -10401,6 +10482,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         gapStatus: gap.status,
         secureStatus: gap.secureStatus,
         hasMissingEndScore: !isFiniteNumber(endRIT) || !isFiniteNumber(endPercentile),
+        outOfRangeCount: outOfRange,
         hasStartScore,
         hasEndScore,
         hasGrowthSignal,
@@ -10662,6 +10744,31 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
 
     function currentWindowName() {
       return state.dataWindow.currentWindowLabel || "Current window";
+    }
+
+    // Records whose latest score comes from an earlier window than the
+    // file's current one: a fall-only record in a growth file (a student
+    // absent in the spring), or an earlier Class Profile term loaded beside
+    // a later one. A section that plots each record's latest score under the
+    // current window's name says so when there are any.
+    // Returns { count, labels } - the earlier windows' names.
+    function earlierWindowRecords(rows) {
+      const scored = (rows || []).filter((row) => row.hasCurrentScore);
+      let latest = null;
+      scored.forEach((row) => {
+        const order = windowOrder(row);
+        if (order !== null && (latest === null || order > latest)) latest = order;
+      });
+      const growth = hasGrowthContext();
+      const earlier = scored.filter((row) => {
+        if (growth && !row.usesEndWindow) return true;
+        const order = windowOrder(row);
+        return latest !== null && order !== null && order < latest;
+      });
+      return {
+        count: earlier.length,
+        labels: unique(earlier.map((row) => row.currentWindowLabel).filter((label) => label && label !== "Current window" && label !== currentWindowName()))
+      };
     }
 
     // Marks records whose test finished implausibly quickly relative to the rest
@@ -11595,7 +11702,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       renderBaselineSection();
       renderSubjectOverview();
       renderCharts();
-      renderDistributions();
+      renderDeferred("sec-distributions");
       if (hasGrowthContext()) {
         renderQuadrants();
         renderGapCards();
@@ -11603,13 +11710,13 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       renderGoals();
       renderActionBoard();
       renderGrowthEquity();
-      renderMovement();
+      renderDeferred("sec-movement");
       renderTargets();
       renderCrossSubject();
-      renderHeatmap();
+      renderDeferred("sec-heatmap");
       renderStrands();
       renderSummaryReport();
-      renderExplorer();
+      renderDeferred("sec-explorer");
       // A filter change rewrites the briefing, so anything mid-sentence is now
       // narrating numbers that are no longer on screen.
       if (briefing.playing) pauseBriefing();
@@ -11621,6 +11728,43 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       renderDataCheck();
       refreshSpotlight();
       observeReveals();
+    }
+
+    // The analytical sections the essentials view keeps back. While a
+    // section is hidden, renderAll skips its renderer and marks it stale: on
+    // a school-sized file these four were most of the cost of every filter
+    // change, spent on charts nobody could see. A stale section draws the
+    // moment the full view shows it (setView, which a jump from a finding
+    // into a kept-back section also goes through); a new file or a mode
+    // change runs renderAll, which draws whatever is visible then.
+    const DEFERRED_RENDERERS = {
+      "sec-distributions": () => renderDistributions(),
+      "sec-movement": () => renderMovement(),
+      "sec-heatmap": () => renderHeatmap(),
+      "sec-explorer": () => renderExplorer()
+    };
+    const staleSections = new Set();
+
+    function renderDeferred(id) {
+      const node = document.getElementById(id);
+      if (node && node.hidden) {
+        staleSections.add(id);
+        return;
+      }
+      staleSections.delete(id);
+      DEFERRED_RENDERERS[id]();
+    }
+
+    function renderStaleSections() {
+      let drew = false;
+      [...staleSections].forEach((id) => {
+        const node = document.getElementById(id);
+        if (!node || node.hidden) return;
+        staleSections.delete(id);
+        DEFERRED_RENDERERS[id]();
+        drew = true;
+      });
+      if (drew && typeof observeReveals === "function") observeReveals();
     }
 
     // ---------------------------------------------------------------------
@@ -11698,6 +11842,9 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       state.prefs.view = next;
       writePreferences();
       applyModeToChrome();
+      // The sections the full view just revealed draw now, with the current
+      // filters (renderAll skipped them while they were hidden).
+      renderStaleSections();
       if (opts.scroll === false) return;
       // Opening the full view from the foot of the page changes nothing in
       // sight, so the page goes to the first section that appeared; closing
@@ -19261,6 +19408,11 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       if (diagnostics.noScoreStudents.length) notes.push(["Students missing a score, by subject", diagnostics.noScoreStudents.slice(0, 25).join(", ") + (diagnostics.noScoreStudents.length > 25 ? " and " + (diagnostics.noScoreStudents.length - 25) + " more" : "") + ". These are the tests to chase before the next planning meeting."]);
       if (diagnostics.gradesRecovered) notes.push(["Suppressed grades recovered",
         formatInteger(diagnostics.gradesRecovered) + " record(s) had the student grade suppressed by NWEA but carried it on another subject row for the same student. The grade was taken from there, so the norm comparison works for those rows instead of reading as no match."]);
+      if (diagnostics.outOfRangeCount) {
+        notes.push(["Scores outside the possible range", formatInteger(diagnostics.outOfRangeCount) +
+          " score(s) could not be real - a RIT outside " + RIT_PLAUSIBLE[0] + " to " + RIT_PLAUSIBLE[1] + ", or a percentile outside 0 to 100 - and were left blank. " +
+          "That is usually a typing slip or a shifted column in the file; the rest of each record is used as normal."]);
+      }
       if (diagnostics.noNormCount) notes.push(["No US norm available", formatInteger(diagnostics.noNormCount) + " scored records could not be matched to a norm. NWEA publishes norms for Reading and Mathematics from kindergarten, and for Language and Science from grade 2."]);
       if (isFiniteNumber(diagnostics.medianDuration)) notes.push(["Median test duration", formatNumber(diagnostics.medianDuration, 0) + " minutes. " + METHOD_NOTES.shortTest]);
       if (diagnostics.normsMismatch && diagnostics.normsMismatch.length) {
@@ -19318,16 +19470,32 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
     // ---------------------------------------------------------------------
     // Student spotlight
     // ---------------------------------------------------------------------
+    // A link that knows the row carries the student's key as well as their
+    // name, so two students who share a name open their own profiles.
     function studentLink(row) {
-      return studentLinkByName(row.studentName);
+      return studentLinkByName(row.studentName, studentKey(row));
     }
 
-    function studentLinkByName(name) {
-      return '<button class="student-name student-link" type="button" data-student="' + escapeAttr(name) + '">' + escapeHTML(name) + "</button>";
+    function studentLinkByName(name, key) {
+      return '<button class="student-name student-link" type="button" data-student="' + escapeAttr(name) + '"' +
+        (key ? ' data-student-key="' + escapeAttr(key) + '"' : "") + ">" + escapeHTML(name) + "</button>";
     }
 
-    function openSpotlight(studentName) {
+    // The profile is keyed by the student (studentKey: the ID, or name, grade
+    // and class when the export has no ID), so two children with the same
+    // full name are never merged into one profile. A caller that has only a
+    // name still works: the name is matched when no key is given.
+    let spotlightOpener = null;
+
+    function openSpotlight(studentName, key) {
+      // Where focus was, so closing the profile can hand it back: a keyboard
+      // user returns to the dot, chip or name they opened it from.
+      const active = document.activeElement;
+      if (active && active !== document.body && !els.spotlightBackdrop.contains(active)) {
+        spotlightOpener = { el: active, scope: active.closest("section.section, .planner-backdrop"), key: key || "", name: studentName || "" };
+      }
       state.spotlightKey = studentName;
+      state.spotlightStudent = key || "";
       renderSpotlight();
       els.spotlightBackdrop.hidden = false;
       document.body.classList.add("modal-open");
@@ -19337,11 +19505,35 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
 
     function closeSpotlight() {
       state.spotlightKey = "";
+      state.spotlightStudent = "";
       els.spotlightBackdrop.classList.remove("is-open");
-      document.body.classList.remove("modal-open");
+      // The planner may still be open underneath, and it keeps the page still.
+      if (!document.body.classList.contains("planner-open")) document.body.classList.remove("modal-open");
       const hide = () => { els.spotlightBackdrop.hidden = true; };
       if (prefersReducedMotion()) hide();
       else setTimeout(hide, 180);
+      spotlightReturnFocus();
+    }
+
+    // The opener if it is still on the page; if its section was redrawn
+    // meanwhile, the same student's mark or name in that section; failing
+    // that, the section's heading - never the top of the page.
+    function spotlightReturnFocus() {
+      const memo = spotlightOpener;
+      spotlightOpener = null;
+      if (!memo) return;
+      let target = memo.el && memo.el.isConnected && memo.el.getClientRects().length ? memo.el : null;
+      if (!target && memo.scope && memo.scope.isConnected) {
+        const selector = memo.key
+          ? '[data-student-key="' + cssEscape(memo.key) + '"], [data-dist-key="' + cssEscape(memo.key) + '"]'
+          : '[data-student="' + cssEscape(memo.name) + '"], [data-dist-student="' + cssEscape(memo.name) + '"]';
+        target = memo.scope.querySelector(selector);
+        if (!target) {
+          target = memo.scope.querySelector("h2");
+          if (target && !target.hasAttribute("tabindex")) target.setAttribute("tabindex", "-1");
+        }
+      }
+      if (target) target.focus({ preventScroll: true });
     }
 
     function refreshSpotlight() {
@@ -19349,6 +19541,10 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
     }
 
     function spotlightRows() {
+      if (state.spotlightStudent) {
+        const mine = state.allRows.filter((row) => studentKey(row) === state.spotlightStudent);
+        if (mine.length) return mine;
+      }
       return state.allRows.filter((row) => row.studentName === state.spotlightKey);
     }
 
@@ -30184,8 +30380,14 @@ Suggested next steps: prioritize Intensive Support and Targeted Support students
         ", under the " + MIN_SHARE_N + " a percentage needs to mean anything.";
     }
 
+    // One collator for every sort. localeCompare with an options object
+    // builds a new collator on each call, which was most of the time the
+    // Explorer, Distributions and the tables spent sorting a large file; the
+    // order is the same.
+    const NATURAL_COLLATOR = new Intl.Collator(undefined, { numeric: true, sensitivity: "base" });
+
     function naturalCompare(a, b) {
-      return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: "base" });
+      return NATURAL_COLLATOR.compare(String(a), String(b));
     }
 
     function naturalCompareValues(a, b) {
@@ -30195,7 +30397,7 @@ Suggested next steps: prioritize Intensive Support and Targeted Support students
       if (aMissing) return 1;
       if (bMissing) return -1;
       if (isFiniteNumber(a) && isFiniteNumber(b)) return a - b;
-      return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: "base" });
+      return NATURAL_COLLATOR.compare(String(a), String(b));
     }
 
     function slugify(value) {
