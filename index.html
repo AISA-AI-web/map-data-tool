@@ -913,24 +913,10 @@
       min-width: 0;
     }
 
+    /* Every subject card takes the brand purple. Subjects are never drawn in
+       NWEA band colours: blue, green and orange mean bands on this page. */
     .subject-card {
       border-top: 5px solid var(--brand);
-    }
-
-    .subject-card.Language {
-      border-top-color: var(--purple);
-    }
-
-    .subject-card.Reading {
-      border-top-color: var(--blue);
-    }
-
-    .subject-card.Mathematics {
-      border-top-color: var(--green);
-    }
-
-    .subject-card.Science {
-      border-top-color: var(--orange);
     }
 
     .card-title {
@@ -976,27 +962,51 @@
       margin-bottom: 12px;
     }
 
+    /* The Areas section's summary tiles: as many to a row as fit, like the
+       Snapshot's, rather than one full-width tile per row. */
+    .strand-summary {
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
+      margin-bottom: 12px;
+    }
+
+    /* A stat tile in the same language as the viz kit's KPI tiles: a purple
+       number over its muted label, with the short gold rule on top. Good and
+       warning figures keep their meaning as a slim coloured edge, not as a
+       green or orange number. */
     .summary-card {
-      background: var(--panel-2);
+      background: var(--panel);
       border: 1px solid var(--line);
       border-radius: var(--radius-sm);
-      padding: 12px;
+      padding: 13px 12px 12px;
       min-width: 0;
+    }
+
+    .summary-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 12px;
+      width: 24px;
+      height: 3px;
+      border-radius: 0 0 2px 2px;
+      background: var(--accent);
     }
 
     .summary-card .label {
       color: var(--muted);
       display: block;
-      font-size: 0.73rem;
-      font-weight: 900;
-      letter-spacing: 0.05em;
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
     }
 
     .summary-card .value {
       display: block;
-      font-size: clamp(1.15rem, 1.4vw, 1.25rem);
-      font-weight: 900;
+      color: var(--brand);
+      font-size: clamp(1.25rem, 1.6vw, 1.5rem);
+      font-weight: 800;
+      line-height: 1.15;
       margin-top: 4px;
     }
 
@@ -1274,10 +1284,10 @@
       height: 300px;
       border: 1px solid var(--line-strong);
       border-radius: var(--radius-sm);
-      background:
-        linear-gradient(90deg, rgba(37, 99, 235, 0.1) 0 50%, rgba(22, 163, 74, 0.1) 50% 100%),
-        linear-gradient(0deg, rgba(220, 38, 38, 0.1) 0 50%, rgba(22, 163, 74, 0.1) 50% 100%),
-        var(--panel-2);
+      /* One flat surface: the old blue, red and green washes layered into a
+         blue-grey, a taupe and a lavender that meant nothing. The quadrants
+         are named by their labels and split by the two centre lines. */
+      background: var(--panel-2);
       overflow: hidden;
     }
 
@@ -1303,9 +1313,13 @@
       height: 1px;
     }
 
+    /* The axis pills and quadrant names sit above the points (a point lifts
+       above them while hovered or focused) and let the pointer through to
+       any point underneath. */
     .scatter-axis {
       position: absolute;
-      z-index: 2;
+      z-index: 5;
+      pointer-events: none;
       color: var(--text-soft);
       background: var(--veil);
       border: 1px solid var(--line);
@@ -1337,8 +1351,11 @@
 
     .scatter-quadrant-label {
       position: absolute;
-      z-index: 2;
+      z-index: 5;
       color: var(--muted-strong);
+      background: var(--veil);
+      border-radius: 4px;
+      padding: 1px 4px;
       font-size: 0.68rem;
       font-weight: 950;
       pointer-events: none;
@@ -1945,7 +1962,7 @@
     .how-strategies { display: grid; gap: 5px; margin-top: 8px; }
     .how-strategy { display: grid; gap: 1px; padding: 6px 8px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--panel); }
     .how-strategy b { font-size: 0.76rem; color: var(--text); }
-    .how-strategy i { font-style: normal; font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: 0.74rem; letter-spacing: 0.04em; color: var(--brand-ink); }
+    .how-strategy i { font-style: normal; font-family: var(--font); font-variant-numeric: tabular-nums; font-weight: 700; font-size: 0.74rem; letter-spacing: 0.08em; color: var(--brand-ink); }
     .how-strategy span { font-size: 0.74rem; }
     .how-strategy.is-active { border-color: var(--brand); background: var(--brand-soft); box-shadow: inset 3px 0 0 var(--brand); }
 
@@ -2294,7 +2311,6 @@
 
       .filters,
       .overview-grid,
-      .summary-grid,
       .chart-grid,
       .analysis-grid,
       .gap-grid,
@@ -2305,6 +2321,9 @@
       .group-controls {
         grid-template-columns: 1fr;
       }
+
+      /* Stat tiles stay two to a row on a phone, like the KPI tiles. */
+      .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
       .seat.is-tray { width: 100%; }
       .inspector-field input { width: 120px; }
@@ -2543,7 +2562,9 @@
       padding: 0 0 18px;
     }
 
-    .help-body strong {
+    /* The column headings only: a <strong> inside a sentence ("the ? in
+       the corner") stays inline. */
+    .help-body > div > strong {
       display: block;
       margin-bottom: 6px;
     }
@@ -3028,13 +3049,14 @@
     .chart-gridline { stroke: var(--line); stroke-width: 1; opacity: 0.55; }
     .chart-axis { stroke: var(--line-strong); stroke-width: 1.4; }
     .chart-benchmark { stroke: var(--brand); stroke-width: 1.5; stroke-dasharray: 4 3; opacity: 0.8; }
-    .chart-benchmark-text { fill: var(--brand); font-size: 8px; font-weight: 800; }
-    .chart-tick { fill: var(--muted); font-size: 8.5px; }
-    .chart-axis-label { fill: var(--text-soft); font-size: 9.5px; font-weight: 800; }
-    .chart-axis-label.small { font-size: 8px; }
-    .chart-value { fill: var(--text); font-size: 9px; font-weight: 900; }
-    .chart-empty { fill: var(--muted); font-size: 8.5px; font-style: italic; }
-    .chart-legend-text { fill: var(--muted); font-size: 8.5px; font-weight: 700; }
+    /* Real pixels: the charts are drawn at their card's width. */
+    .chart-benchmark-text { fill: var(--brand-ink); font-size: 10.5px; font-weight: 800; }
+    .chart-tick { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+    .chart-axis-label { fill: var(--text-soft); font-size: 11px; font-weight: 800; }
+    .chart-axis-label.small { font-size: 10px; }
+    .chart-value { fill: var(--text); font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .chart-empty { fill: var(--muted); font-size: 11px; font-style: italic; }
+    .chart-legend-text { fill: var(--muted); font-size: 11px; font-weight: 700; }
     .chart-bar { transition: opacity var(--dur-fast) var(--ease-soft); }
     .chart-svg:hover .chart-bar { opacity: 0.82; }
     .chart-svg .chart-bar:hover { opacity: 1; }
@@ -3158,8 +3180,10 @@
     .summary-card { position: relative; overflow: hidden; }
     .summary-card .card-hint { display: block; margin-top: 3px; font-size: 11px; color: var(--muted); line-height: 1.3; }
     .summary-card .value { font-variant-numeric: tabular-nums; }
-    .summary-card.tone-good .value { color: var(--up-text); }
-    .summary-card.tone-warn .value { color: var(--down-text); }
+    .summary-card.tone-good { box-shadow: inset 3px 0 0 var(--up-text); }
+    .summary-card.tone-warn { box-shadow: inset 3px 0 0 var(--down-text); }
+    .summary-card.tone-good:hover { box-shadow: inset 3px 0 0 var(--up-text), var(--shadow-lift); }
+    .summary-card.tone-warn:hover { box-shadow: inset 3px 0 0 var(--down-text), var(--shadow-lift); }
 
     .method-note {
       font-size: 11.5px;
@@ -3171,6 +3195,29 @@
     }
 
     .method-note.wide { grid-column: 1 / -1; }
+
+    /* A method folded under its lead, the page's "Show the numbers" pattern
+       for prose. */
+    .method-details { margin: 0 0 12px; }
+
+    .method-details > summary {
+      width: max-content;
+      max-width: 100%;
+      padding: 2px 4px;
+      border-radius: var(--radius-sm);
+      color: var(--brand-ink);
+      font-size: 0.8rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .method-details > summary:focus-visible {
+      outline: 2px solid var(--brand);
+      outline-offset: 2px;
+      box-shadow: var(--focus);
+    }
+
+    .method-details[open] > summary { margin-bottom: 6px; }
     .muted-cell { color: var(--muted); font-style: italic; }
     .card-story { font-size: 12px; color: var(--muted); margin: 8px 0 0; }
 
@@ -3261,8 +3308,10 @@
       background: var(--line-strong); flex: none;
     }
     .briefing-step.is-done i { background: var(--green); }
+    /* The scene playing: the purple tint (the one off-white the brand
+       allows) with the gold dot as its accent. */
     .briefing-step[aria-selected="true"] {
-      border-color: var(--accent); color: var(--text); background: var(--accent-soft);
+      border-color: var(--accent); color: var(--text); background: var(--brand-soft);
     }
     .briefing-step[aria-selected="true"] i { background: var(--accent); }
     .briefing-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -3513,7 +3562,7 @@
     /* =====================================================================
        Check My Understanding (quiz)
        ===================================================================== */
-    #sec-quiz .section-header h2::before { background: var(--purple); }
+    #sec-quiz .section-header h2::before { background: var(--accent); }
     .quiz { display: grid; gap: 14px; }
 
     .quiz-intro {
@@ -4686,7 +4735,9 @@
       padding: 2px 0;
       border-bottom: 1px dotted var(--line);
     }
-    .strand-group li b { font-variant-numeric: tabular-nums; color: var(--red); }
+    /* Band red is a fill; as text it takes its ink (4.04:1 on the dark panel
+       as --red, 9.1:1 as --red-ink). */
+    .strand-group li b { font-variant-numeric: tabular-nums; color: var(--red-ink); }
     /* An area the class is strong in overall reads as an exception, not a gap. */
     .strand-group.is-exception { border-left-color: var(--yellow); }
     .strand-group.is-exception li b { color: var(--muted); }
@@ -7380,7 +7431,11 @@
           </div>
         </div>
         <div class="goal-summary grid" id="goalCards"></div>
-        <p class="method-note" id="goalMethodNote"></p>
+        <p class="method-note" id="goalMethodLead"></p>
+        <details class="method-details">
+          <summary>How these targets are worked out</summary>
+          <p class="method-note" id="goalMethodNote"></p>
+        </details>
         <div class="table-shell">
           <div class="table-tools">
             <strong id="goalCount">0 records</strong>
@@ -12422,32 +12477,38 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
     // page is also the only honest way to keep the "nothing leaves this
     // browser" promise on the upload panel. Every chart animates via CSS
     // transforms, which the reduced-motion block neutralises in one place.
+    //
+    // Each chart is drawn at the width of its card (chartCard puts it in a
+    // viz kit slot), so one SVG unit is one pixel and the labels print at
+    // the sizes the stylesheet gives them - 10.5-11px, as the analytical
+    // sections print theirs - instead of a 320-unit drawing scaled down to
+    // 7-8px. CHART_W is only the fallback before the card has a width.
     const CHART_W = 320;
-    const CHART_H = 190;
-    const CHART_PAD = { top: 16, right: 12, bottom: 30, left: 34 };
+    const CHART_H = 196;
+    const CHART_PAD = { top: 18, right: 12, bottom: 34, left: 36 };
 
-    function niceCeiling(value) {
-      if (!isFiniteNumber(value) || value <= 0) return 1;
-      const magnitude = Math.pow(10, Math.floor(Math.log10(value)));
-      const scaled = value / magnitude;
-      const step = scaled <= 1 ? 1 : scaled <= 2 ? 2 : scaled <= 5 ? 5 : 10;
-      return step * magnitude;
-    }
-
-    function chartFrame(inner, ariaLabel, extraClass) {
-      return '<svg class="chart-svg ' + (extraClass || "") + '" viewBox="0 0 ' + CHART_W + " " + CHART_H +
+    function chartFrame(inner, ariaLabel, extraClass, width) {
+      return '<svg class="chart-svg ' + (extraClass || "") + '" viewBox="0 0 ' + Math.round(width || CHART_W) + " " + CHART_H +
         '" role="img" aria-label="' + escapeAttr(ariaLabel) + '" preserveAspectRatio="xMidYMid meet">' + inner + "</svg>";
     }
 
-    function gridLines(max, plotTop, plotHeight, plotLeft, plotRight, format) {
-      const ticks = 4;
+    // The top of a count or share axis and its gridlines, on steps of 1, 2
+    // or 5 times a power of ten (0, 5, 10, 15 - never 0, 13, 25, 38). The
+    // chart's maximum is the last tick, so the gridlines meet the top.
+    function chartScale(dataMax, fixedMax) {
+      const fixed = isFiniteNumber(fixedMax);
+      const nice = vizNiceTicks(0, fixed ? fixedMax : Math.max(dataMax, 1), 5);
+      const max = fixed ? fixedMax : nice.max;
+      return { max, ticks: nice.ticks.filter((tick) => tick <= max + 1e-9) };
+    }
+
+    function gridLines(scale, plotTop, plotHeight, plotLeft, plotRight, format) {
       let out = "";
-      for (let i = 0; i <= ticks; i += 1) {
-        const value = max * (i / ticks);
-        const y = plotTop + plotHeight - plotHeight * (i / ticks);
-        out += '<line class="chart-gridline" x1="' + plotLeft + '" x2="' + plotRight + '" y1="' + y.toFixed(1) + '" y2="' + y.toFixed(1) + '" />';
-        out += '<text class="chart-tick" x="' + (plotLeft - 5) + '" y="' + (y + 3).toFixed(1) + '" text-anchor="end">' + escapeHTML(format(value)) + "</text>";
-      }
+      scale.ticks.forEach((value) => {
+        const y = plotTop + plotHeight - plotHeight * (value / (scale.max || 1));
+        out += '<line class="chart-gridline" x1="' + plotLeft + '" x2="' + plotRight.toFixed(1) + '" y1="' + y.toFixed(1) + '" y2="' + y.toFixed(1) + '" />';
+        out += '<text class="chart-tick" x="' + (plotLeft - 5) + '" y="' + (y + 4).toFixed(1) + '" text-anchor="end">' + escapeHTML(format(value)) + "</text>";
+      });
       return out;
     }
 
@@ -12457,15 +12518,17 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       const datasets = (config.datasets || []).filter((set) => set && set.values);
       const format = config.format || ((value) => formatNumber(value));
       const tickFormat = config.tickFormat || ((value) => formatNumber(value, 0));
+      const width = config.width || CHART_W;
       const plotLeft = CHART_PAD.left;
-      const plotRight = CHART_W - CHART_PAD.right;
+      const plotRight = width - CHART_PAD.right;
       const plotTop = CHART_PAD.top;
       const plotHeight = CHART_H - CHART_PAD.top - CHART_PAD.bottom;
       const plotWidth = plotRight - plotLeft;
       const allValues = datasets.flatMap((set) => set.values.filter(isFiniteNumber));
       const dataMax = allValues.length ? Math.max(...allValues, 0) : 0;
       const dataMin = allValues.length ? Math.min(...allValues, 0) : 0;
-      const max = isFiniteNumber(config.max) ? config.max : niceCeiling(Math.max(dataMax, Math.abs(dataMin), 1));
+      const scale = chartScale(Math.max(dataMax, Math.abs(dataMin), 1), config.max);
+      const max = scale.max;
       const hasNegative = dataMin < 0;
       const zeroY = hasNegative
         ? plotTop + plotHeight * (max / (max + Math.abs(dataMin)))
@@ -12493,7 +12556,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
           const y = value >= 0 ? zeroY - height : zeroY;
           bars += '<rect class="chart-bar" style="--i:' + index + '" x="' + x.toFixed(1) + '" y="' + y.toFixed(1) +
             '" width="' + (barWidth - 2).toFixed(1) + '" height="' + height.toFixed(1) +
-            '" rx="3" fill="' + escapeAttr(set.color || "var(--brand)") + '"><title>' +
+            '" rx="3" fill="' + escapeAttr((set.colors && set.colors[labelIndex]) || set.color || "var(--brand)") + '"><title>' +
             escapeHTML(label + " - " + (set.label || "") + ": " + format(value, labelIndex, setIndex)) + "</title></rect>";
           bars += '<text class="chart-value" style="--i:' + index + '" x="' + (x + (barWidth - 2) / 2).toFixed(1) +
             '" y="' + (value >= 0 ? y - 4 : y + height + 9).toFixed(1) + '" text-anchor="middle">' +
@@ -12504,7 +12567,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
           '" text-anchor="middle">' + escapeHTML(label) + "</text>";
       });
 
-      const grid = hasNegative ? "" : gridLines(max, plotTop, plotHeight, plotLeft, plotRight, tickFormat);
+      const grid = hasNegative ? "" : gridLines(scale, plotTop, plotHeight, plotLeft, plotRight, tickFormat);
       const baseline = '<line class="chart-axis" x1="' + plotLeft + '" x2="' + plotRight + '" y1="' + zeroY.toFixed(1) + '" y2="' + zeroY.toFixed(1) + '" />';
       const legend = datasets.length > 1
         ? datasets.map((set, i) => '<g class="chart-legend-item"><rect x="' + (plotLeft + i * 92) + '" y="2" width="8" height="8" rx="2" fill="' +
@@ -12513,7 +12576,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         : "";
       const summary = config.ariaLabel || (labels.map((label, i) =>
         label + ": " + datasets.map((set) => (set.label ? set.label + " " : "") + format(set.values[i])).join(", ")).join("; "));
-      return chartFrame(grid + baseline + bars + legend, summary);
+      return chartFrame(grid + baseline + bars + legend, summary, "", width);
     }
 
     // A single horizontal bar split into coloured segments.
@@ -12544,7 +12607,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
     }
 
     // Percentile histogram in ten-point bins, coloured by the band each bin sits in.
-    function histogramSVG(values, ariaPrefix) {
+    function histogramSVG(values, ariaPrefix, width) {
       const clean = values.filter(isFiniteNumber);
       const bins = Array.from({ length: 10 }, (unused, index) => ({
         from: index * 10,
@@ -12558,9 +12621,10 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         bins[index].count += 1;
       });
       if (!clean.length) return '<div class="stack-empty">No percentile scores in this view.</div>';
-      const max = niceCeiling(Math.max(...bins.map((bin) => bin.count), 1));
+      const scale = chartScale(Math.max(...bins.map((bin) => bin.count), 1));
+      const max = scale.max;
       const plotLeft = CHART_PAD.left;
-      const plotRight = CHART_W - CHART_PAD.right;
+      const plotRight = (width || CHART_W) - CHART_PAD.right;
       const plotTop = CHART_PAD.top;
       const plotHeight = CHART_H - CHART_PAD.top - CHART_PAD.bottom;
       const slot = (plotRight - plotLeft) / bins.length;
@@ -12574,19 +12638,19 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
           escapeHTML("Percentile " + bin.from + " to " + bin.to + ": " + formatInteger(bin.count) + " records") + "</title></rect>" +
           (bin.count ? '<text class="chart-value" style="--i:' + index + '" x="' + (x + slot * 0.38).toFixed(1) + '" y="' + (y - 3).toFixed(1) +
             '" text-anchor="middle">' + formatInteger(bin.count) + "</text>" : "") +
-          '<text class="chart-axis-label small" x="' + (x + slot * 0.38).toFixed(1) + '" y="' + (CHART_H - CHART_PAD.bottom + 13) +
+          '<text class="chart-axis-label small" x="' + (x + slot * 0.38).toFixed(1) + '" y="' + (CHART_H - CHART_PAD.bottom + 14) +
           '" text-anchor="middle">' + escapeHTML(bin.label) + "</text>";
       }).join("");
       const benchmark = plotLeft + (plotRight - plotLeft) * (SECURE_BENCHMARK / 100);
       const marker = '<line class="chart-benchmark" x1="' + benchmark.toFixed(1) + '" x2="' + benchmark.toFixed(1) +
         '" y1="' + plotTop + '" y2="' + (plotTop + plotHeight) + '" /><text class="chart-benchmark-text" x="' +
         (benchmark + 3).toFixed(1) + '" y="' + (plotTop + 8) + '">61st</text>';
-      const grid = gridLines(max, plotTop, plotHeight, plotLeft, plotRight, (value) => formatNumber(value, 0));
+      const grid = gridLines(scale, plotTop, plotHeight, plotLeft, plotRight, (value) => formatNumber(value, 0));
       const axis = '<line class="chart-axis" x1="' + plotLeft + '" x2="' + plotRight + '" y1="' + (plotTop + plotHeight) +
         '" y2="' + (plotTop + plotHeight) + '" />';
       const summary = (ariaPrefix || "Percentile distribution") + ": " +
         bins.filter((bin) => bin.count).map((bin) => bin.label + " " + bin.count).join(", ");
-      return chartFrame(grid + axis + bars + marker, summary);
+      return chartFrame(grid + axis + bars + marker, summary, "", width);
     }
 
     // Distance from the norm runs below-through-above, which is polarity, not
@@ -12606,13 +12670,14 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
     ];
 
     // Diverging distribution of RIT distance from the grade/season norm mean.
-    function normDeltaChartSVG(rows) {
+    function normDeltaChartSVG(rows, width) {
       const values = rows.map((row) => row.usNormDeltaRIT).filter(isFiniteNumber);
       if (!values.length) return '<div class="stack-empty">No records could be matched to a US norm for their grade, subject and season.</div>';
       const counts = NORM_DELTA_BINS.map((bin) => values.filter((value) => value >= bin.min && value < bin.max).length);
-      const max = niceCeiling(Math.max(...counts, 1));
+      const scale = chartScale(Math.max(...counts, 1));
+      const max = scale.max;
       const plotLeft = CHART_PAD.left;
-      const plotRight = CHART_W - CHART_PAD.right;
+      const plotRight = (width || CHART_W) - CHART_PAD.right;
       const plotTop = CHART_PAD.top;
       const plotHeight = CHART_H - CHART_PAD.top - CHART_PAD.bottom;
       const slot = (plotRight - plotLeft) / NORM_DELTA_BINS.length;
@@ -12626,23 +12691,35 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
           escapeHTML(bin.label + " RIT from norm: " + formatInteger(count) + " records") + "</title></rect>" +
           (count ? '<text class="chart-value" style="--i:' + index + '" x="' + (x + slot * 0.36).toFixed(1) + '" y="' + (y - 3).toFixed(1) +
             '" text-anchor="middle">' + formatInteger(count) + "</text>" : "") +
-          '<text class="chart-axis-label small" x="' + (x + slot * 0.36).toFixed(1) + '" y="' + (CHART_H - CHART_PAD.bottom + 13) +
-          '" text-anchor="middle">' + escapeHTML(bin.label.replace(" or less", "-").replace(" or more", "+")) + "</text>";
+          normDeltaBinLabel(bin.label, x + slot * 0.36, CHART_H - CHART_PAD.bottom + 14, slot);
       }).join("");
       const zeroX = plotLeft + slot * 3;
       const divider = '<line class="chart-benchmark" x1="' + zeroX.toFixed(1) + '" x2="' + zeroX.toFixed(1) + '" y1="' + plotTop +
         '" y2="' + (plotTop + plotHeight) + '" /><text class="chart-benchmark-text" x="' + (zeroX + 3).toFixed(1) + '" y="' + (plotTop + 8) + '">norm</text>';
-      const grid = gridLines(max, plotTop, plotHeight, plotLeft, plotRight, (value) => formatNumber(value, 0));
+      const grid = gridLines(scale, plotTop, plotHeight, plotLeft, plotRight, (value) => formatNumber(value, 0));
       const axis = '<line class="chart-axis" x1="' + plotLeft + '" x2="' + plotRight + '" y1="' + (plotTop + plotHeight) +
         '" y2="' + (plotTop + plotHeight) + '" />';
       const summary = "RIT distance from the grade and season norm: " +
         NORM_DELTA_BINS.map((bin, index) => bin.label + " " + counts[index]).join(", ");
-      return chartFrame(grid + axis + bars + divider, summary);
+      return chartFrame(grid + axis + bars + divider, summary, "", width);
     }
 
+    // A bin label that does not fit its slot on one line ("-14 to -8" in a
+    // 40px slot) goes onto two: "-14" over "to -8".
+    function normDeltaBinLabel(label, x, y, slot) {
+      const text = label.replace(" or less", "-").replace(" or more", "+");
+      const parts = text.split(" to ");
+      if (parts.length === 2 && text.length * 6.2 > slot - 2) {
+        return '<text class="chart-axis-label small" x="' + x.toFixed(1) + '" y="' + y + '" text-anchor="middle">' + escapeHTML(parts[0]) +
+          '<tspan x="' + x.toFixed(1) + '" dy="12">' + escapeHTML("to " + parts[1]) + "</tspan></text>";
+      }
+      return '<text class="chart-axis-label small" x="' + x.toFixed(1) + '" y="' + y + '" text-anchor="middle">' + escapeHTML(text) + "</text>";
+    }
+
+    // body is markup, or draw(width) for a chart drawn at the card's width.
     function chartCard(title, body, note) {
       return '<div class="chart-card reveal"><div class="chart-title">' + escapeHTML(title) + "</div>" +
-        '<div class="chart-box">' + body + "</div>" +
+        '<div class="chart-box">' + (typeof body === "function" ? vizChartSlot(body, { minHeight: 150 }) : body) + "</div>" +
         '<div class="chart-note">' + escapeHTML(note || "") + "</div></div>";
     }
 
@@ -15518,17 +15595,17 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       const lens = currentOverviewLens();
       const buckets = getOverviewBuckets(state.filteredRows, lens);
       if (!buckets.length) {
-        els.chartsWrap.innerHTML = '<div class="empty-state">Upload a CSV to see charts.</div>';
+        vizMount(els.chartsWrap, '<div class="empty-state">Upload a CSV to see charts.</div>');
         return;
       }
       const baseline = isBaselineMode();
-      els.chartsWrap.innerHTML = buckets.map((bucket) => {
+      vizMount(els.chartsWrap, buckets.map((bucket) => {
         const rows = bucketRows(state.filteredRows, bucket, lens);
         const metrics = aggregateRows(rows);
         return '<section class="subject-chart-section reveal"><h3>' + escapeHTML(bucket) + "</h3>" +
           '<div class="chart-grid">' + (baseline ? baselineChartCards(rows, metrics) : growthChartCards(rows, metrics)) +
           "</div></section>";
-      }).join("");
+      }).join(""));
     }
 
     function tierSegments(metrics) {
@@ -15555,23 +15632,24 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       const goalRows = rows.filter((row) => row.goals);
       return [
         chartCard(currentWindowName() + " percentile distribution",
-          histogramSVG(rows.map((row) => row.currentPercentile), "Percentile distribution"),
+          (width) => histogramSVG(rows.map((row) => row.currentPercentile), "Percentile distribution", width),
           "Ten-point bins, coloured by band. The marker shows the 61st-percentile secure benchmark."),
         chartCard("Instructional tiers",
           stackedBarSVG(tierSegments(metrics)),
           "Group sizes at a glance. Tier cut points match the percentile bands used everywhere else."),
         chartCard("Distance from the US grade/season norm",
-          normDeltaChartSVG(rows),
+          (width) => normDeltaChartSVG(rows, width),
           normRows.length
             ? formatInteger(aboveNorm) + " of " + formatInteger(normRows.length) + " records are at or above the norm mean (mean " +
               formatNumber(metrics.avgCurrentRIT, 1) + " RIT against a norm of " + formatNumber(avg(rows.map((row) => row.usNormBenchmarkRIT)), 1) + ")."
             : "No grade or season could be matched to a US norm for these records."),
         chartCard("Typical gain to " + (goalRows.length ? goalRows[0].goals.horizonLabel.toLowerCase() : "the next window"),
-          barChartSVG({
+          (width) => barChartSVG({
+            width,
             labels: ["Typical peer gain", "Gain to grade level"],
             datasets: [{
               label: "RIT",
-              color: "var(--green)",
+              color: "var(--viz-seq-5)",
               values: [metrics.avgTypicalGain, avg(goalRows.map((row) => row.goals.catchUpGain))]
             }],
             format: (value) => formatSignedNumber(value)
@@ -15583,25 +15661,31 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
     function growthChartCards(rows, metrics) {
       return [
         chartCard("Start vs end achievement percentile",
-          barChartSVG({
+          (width) => barChartSVG({
+            width,
             labels: [state.dataWindow.priorWindowLabel, state.dataWindow.currentWindowLabel],
             datasets: [{ label: "Average percentile", color: "var(--brand)", values: [metrics.avgStartPercentilePaired, metrics.avgEndPercentilePaired] }],
             max: 100
           }),
           "Both bars cover the same " + formatInteger(metrics.pairedCount) + " records that carry two windows, so the change is like for like."),
         chartCard("Projected vs observed growth",
-          barChartSVG({
+          (width) => barChartSVG({
+            width,
             labels: ["Projected", "Observed"],
-            datasets: [{ label: "Average RIT growth", color: "var(--purple)", values: [metrics.avgProjectedGrowth, metrics.avgObservedGrowth] }],
+            // One hue, two shades: projected is the lighter "before", observed
+            // the full "after" - the kit's pair for two readings of one thing.
+            datasets: [{ label: "Average RIT growth", color: "var(--viz-after)", colors: ["var(--viz-before)", "var(--viz-after)"], values: [metrics.avgProjectedGrowth, metrics.avgObservedGrowth] }],
             format: (value) => formatSignedNumber(value)
           }),
           "Observed growth above projected means the group beat its NWEA projection."),
         chartCard("Met and exceeded growth",
-          barChartSVG({
+          (width) => barChartSVG({
+            width,
             labels: ["Met", "Exceeded"],
             // The bars still need a height, so the geometry keeps the raw
             // percentage; only the text printed on them respects the floor.
-            datasets: [{ label: "Percent of records", color: "var(--green)", values: [metrics.metPct, metrics.exceededPct] }],
+            // A ramp purple, not band green: band colours mean bands.
+            datasets: [{ label: "Percent of records", color: "var(--viz-seq-5)", values: [metrics.metPct, metrics.exceededPct] }],
             max: 100,
             format: (value, labelIndex) =>
               formatShare(labelIndex === 0 ? metrics.shares.met : metrics.shares.exceeded)
@@ -15611,13 +15695,13 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
               ? " " + shareFloorNote([metrics.shares.met, metrics.shares.exceeded])
               : "")),
         chartCard("Distance from the US grade/season norm",
-          normDeltaChartSVG(rows),
+          (width) => normDeltaChartSVG(rows, width),
           "Where the group sits against same-grade peers now. " +
             (isFiniteNumber(metrics.avgNormDeltaChange)
               ? "Across the two windows the group moved " + formatSignedNumber(metrics.avgNormDeltaChange) + " RIT relative to those norms."
               : "")),
         chartCard(currentWindowName() + " percentile distribution",
-          histogramSVG(rows.map((row) => row.currentPercentile), "Percentile distribution"),
+          (width) => histogramSVG(rows.map((row) => row.currentPercentile), "Percentile distribution", width),
           "Averages hide the shape of a class. The marker shows the 61st-percentile secure benchmark."),
         chartCard("Band distribution",
           '<div class="stack-compare"><span class="stack-compare-label">' + escapeHTML(state.dataWindow.currentWindowLabel) + "</span>" +
@@ -16695,7 +16779,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       ].join("\n");
       const shortLabel = `${row.studentName}, ${groupingValue}, percentile ${formatNumber(row.endPercentile, 0)}, ${row.endQuadrant}`;
       return `
-        <button class="scatter-point" data-student="${escapeAttr(row.studentName)}" style="left:${x}%; bottom:${y}%; background:${escapeAttr(row.endBand.color)}; color:${escapeAttr(row.endBand.ink)};" title="${escapeAttr(title)}" aria-label="${escapeAttr(shortLabel)}">
+        <button class="scatter-point" data-student="${escapeAttr(row.studentName)}" data-student-key="${escapeAttr(studentKey(row))}" style="left:calc(14px + (100% - 28px) * ${(x / 100).toFixed(4)}); bottom:calc(14px + (100% - 28px) * ${(y / 100).toFixed(4)}); background:${escapeAttr(row.endBand.color)}; color:${escapeAttr(row.endBand.ink)};" title="${escapeAttr(title)}" aria-label="${escapeAttr(shortLabel)}">
           ${escapeHTML(studentInitials(row.studentName))}
         </button>
       `;
@@ -16920,7 +17004,13 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       setText("goalTargetsNote", projectionRows.length
         ? "NWEA's own projection leads; norm-referenced targets sit beside it."
         : "Targets use US norm means.");
-      setText("goalMethodNote", normsWarning + (normsWarning ? " " : "") +
+      // Two sentences stay in view; the method sits under "How these targets
+      // are worked out", where a teacher who wants it can open it. A norms
+      // mismatch is a warning, so it stays in the lead.
+      setText("goalMethodLead", normsWarning.trim() + (normsWarning ? " " : "") + (projectionRows.length
+        ? "NWEA's own projection for the window ahead leads: the growth it expects from each student's own starting score. Keep-pace and grade-level targets sit beside it."
+        : "Keep-pace targets add the gain a typical peer makes by the next window; grade-level targets are the US mean RIT for the grade and season, near the 50th percentile."));
+      setText("goalMethodNote",
         (projectionRows.length ? METHOD_NOTES.forwardProjection + " " : "") +
         METHOD_NOTES.keepPace + " " + METHOD_NOTES.gradeLevel +
         (flatNormCount ? " " + formatInteger(flatNormCount) + " record(s) are at a grade and subject where the published means flatten between these seasons, so keeping pace there means holding the current RIT." : "") +
@@ -23344,6 +23434,11 @@ Suggested next steps: prioritize Intensive Support and Targeted Support students
     const GUIDE_URL = "teacher-dashboard-guide.pdf";
 
     const SECTION_HELP = {
+      "sec-briefing": {
+        what: "A short narrated walk through what the records in view say: who is in the file, how achievement and growth compare with national figures, what stands out, and what to do next. Your own device reads it aloud; nothing is sent anywhere.",
+        read: "Each scene is one idea, built from the same figures as the sections below it, so it follows your filters. The transcript under the player has every word, for reading instead of listening or for pasting into notes. The voice and speed are your device's own.",
+        act: "Play it at the start of a data meeting or a planning conversation, filtered to the class or subject the meeting is about, so everyone hears the same summary before the detail."
+      },
       "sec-insights": {
         what: "The headline numbers for the records in view, each set against a national reference, then a ranked list of what stands out: whether growth is running above or below typical, the widest gap between the groups you compare, whether lower and higher starters are growing alike, results far from the rest, band movement, and any warning about test reliability. Checks that found nothing clear are listed underneath, so a missing card never means a question nobody asked.",
         read: "Findings are ranked by the strength of the evidence, and each one says how sure it is: how many students it rests on, a 95% range or a p-value, and an effect size. Strong evidence means a p-value under 0.01 from at least 30 students; could be chance means the pattern is in this file but a different group of students could easily have shown otherwise. Every test counts each student once, so a child tested in four subjects cannot make a pattern look four times as sure. A gap between groups is only called one when both have at least 10 students and it is at least 0.3 standard deviations wide, and it never says why the groups differ.",
@@ -26338,7 +26433,8 @@ Suggested next steps: prioritize Intensive Support and Targeted Support students
     font-weight: 800;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: rgba(15, 122, 69, 0.28);
+    /* A label, not a watermark: 3.4:1 on the zone's own tint. */
+    color: rgba(15, 122, 69, 0.8);
   }
   .poster-race-line {
     position: absolute;
@@ -31223,15 +31319,33 @@ ${sheets.join("\n")}
 <title>${escapeHTML(title)}</title>
 <style>
   ${BRAND_FONT_CSS}
-  @page { size: A4 portrait; margin: 14mm; }
+  /* The same print system as the seating plans and goal sheets: a purple
+     masthead with a gold rule and the gold-and-white wordmark, and a muted
+     footer with the school's name and the page number on every page. */
+  @page {
+    size: A4 portrait;
+    margin: 14mm 14mm 16mm;
+    @bottom-left { content: "American International School in Abu Dhabi · Teacher MAP Dashboard"; font-family: ${BRAND_FONT_STACK}; font-size: 8pt; color: #555555; }
+    @bottom-right { content: "Page " counter(page) " of " counter(pages); font-family: ${BRAND_FONT_STACK}; font-size: 8pt; color: #555555; }
+  }
   * { box-sizing: border-box; }
-  body { margin: 0; font-family: ${BRAND_FONT_STACK}; color: #1A1A1A; font-size: 11px; line-height: 1.4; }
+  body { margin: 0; font-family: ${BRAND_FONT_STACK}; color: #1A1A1A; font-size: 11px; line-height: 1.4; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   h1 { font-size: 17px; margin: 0 0 2px; color: #21076C; }
   h2 { font-size: 13px; margin: 14px 0 4px; color: #21076C; }
-  /* The AISA wordmark heads every sheet, on the right, clear of the title. */
-  .doc-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8mm; }
+  .doc-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 8mm;
+    background: #21076C; color: #ffffff; border-bottom: 1.2mm solid #D8B664;
+    padding: 4mm 6mm; border-radius: 1.5mm 1.5mm 0 0;
+  }
+  .doc-head h1 { color: #ffffff; margin: 0.5mm 0 0; font-size: 18px; line-height: 1.1; }
+  .doc-kicker { display: block; font-size: 8pt; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: #D8B664; }
   .doc-logo { height: 9mm; width: auto; flex: none; }
-  .doc-meta { color: #555555; font-size: 10px; margin-bottom: 10px; border-bottom: 1px solid #C8BEE8; padding-bottom: 6px; }
+  .doc-meta { color: #555555; font-size: 10px; margin: 6px 0 10px; border-bottom: 1px solid #C8BEE8; padding-bottom: 6px; }
+  .band-chip { display: inline-block; padding: 1px 6px; border-radius: 8px; font-size: 9px; font-weight: 700; }
+  .profile-lists { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 6px 0 4px; }
+  .profile-lists ul { margin: 2px 0 0; padding-left: 14px; }
+  .profile-lists strong { color: #21076C; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
   th, td { border: 1px solid #C8BEE8; padding: 4px 5px; text-align: left; vertical-align: top; }
   th { background: #F2EFFA; color: #21076C; font-size: 10px; text-transform: uppercase; letter-spacing: .03em; }
@@ -31254,8 +31368,8 @@ ${sheets.join("\n")}
         .filter(Boolean)
         .filter((part, index, all) => all.indexOf(part) === index)
         .join(" | ") || "All visible records";
-      return '<div class="doc-head"><h1>' + escapeHTML(title) + '</h1><img class="doc-logo" src="' +
-        escapeAttr(BRAND.wordmark) + '" alt="' + escapeAttr(BRAND.school) + '"></div><div class="doc-meta">' +
+      return '<header class="doc-head"><div><span class="doc-kicker">NWEA MAP Growth</span><h1>' + escapeHTML(title) + '</h1></div><img class="doc-logo" src="' +
+        escapeAttr(BRAND.wordmarkReverse) + '" alt="' + escapeAttr(BRAND.school) + '"></header><div class="doc-meta">' +
         escapeHTML(context + " | " + currentWindowName() + " | " + new Date().toLocaleDateString()) + "</div>";
     }
 
@@ -31618,10 +31732,56 @@ ${sheets.join("\n")}
       const rows = spotlightRows();
       if (!rows.length) return;
       const first = rows[0];
+      // The one-pager for a parent conference, built from the profile's own
+      // rows: one line per subject, what to build on and what to watch, the
+      // instructional areas, the next step, then room to write.
+      const baseline = isBaselineMode();
+      const chip = (band) => band && band.rank
+        ? '<span class="band-chip" style="background:' + escapeAttr(bandPrintColour(band)) + ";color:" + escapeAttr(bandPrintInk(band)) + '">' + escapeHTML(band.name) + "</span>"
+        : "";
+      const target = (row) => (row.goals ? "RIT " + formatNumber(row.goals.keepPaceRIT, 0) + " keep pace, " + formatNumber(row.goals.gradeLevelRIT, 0) + " grade level" : "");
+      const head = baseline
+        ? ["Subject", "RIT", "Percentile", "Band", "vs US norm", "Tier", "Target"]
+        : ["Subject", "Start RIT", "End RIT", "Change", "Percentile", "Band", "CGP", "Met growth", "Gap status", "Target"];
+      const numeric = baseline ? [1, 2, 4] : [1, 2, 3, 4, 6];
+      const cells = (row) => (baseline
+        ? [row.subject, formatNumber(row.currentRIT, 0), formatNumber(row.currentPercentile, 0), chip(row.currentBand), formatSignedNumber(row.usNormDeltaRIT), row.currentTier ? row.currentTier.name : "", target(row)]
+        : [row.subject, formatNumber(row.startRIT, 0), formatNumber(row.endRIT, 0), formatSignedNumber(row.ritChange),
+          formatNumber(row.startPercentile, 0) + " to " + formatNumber(row.endPercentile, 0), chip(row.currentBand), formatNumber(row.conditionalGrowthPercentile, 0),
+          row.metGrowth === true ? "Yes" : row.metGrowth === false ? "No" : "Not reported", row.gapStatus || "", target(row)]);
+      const trusted = baseline ? [3] : [5];
+      const table = "<table><thead><tr>" + head.map((label, i) => "<th" + (numeric.includes(i) ? ' class="num"' : "") + ">" + escapeHTML(label) + "</th>").join("") +
+        "</tr></thead><tbody>" + rows.map((row) => "<tr>" + cells(row).map((value, i) =>
+          "<td" + (numeric.includes(i) ? ' class="num"' : "") + ">" + (trusted.includes(i) ? value : escapeHTML(String(value ?? ""))) + "</td>").join("") + "</tr>").join("") +
+        "</tbody></table>";
+      const strengths = unique(rows.flatMap((row) => strengthReasons(row).map((reason) => row.subject + ": " + reason.charAt(0).toLowerCase() + reason.slice(1))));
+      const focus = unique(rows.flatMap((row) => focusReasons(row).map((reason) => row.subject + ": " + reason.charAt(0).toLowerCase() + reason.slice(1))));
+      const list = (title, items) => items.length ? "<div><strong>" + escapeHTML(title) + "</strong><ul>" + items.map((item) => "<li>" + escapeHTML(item) + "</li>").join("") + "</ul></div>" : "";
+      const areas = rows.flatMap((row) => (row.instructionalAreas || []).filter((area) => isFiniteNumber(area.delta)).map((area) => ({ row, area })));
+      const floor = state.strandAnalysis ? state.strandAnalysis.floor : AREA_MIN_FLOOR;
+      const areaTable = areas.length
+        ? "<h2>Instructional areas</h2><table><thead><tr><th>Subject</th><th>Area</th><th class=\"num\">Area RIT</th><th class=\"num\">From own overall RIT</th></tr></thead><tbody>" +
+          areas.map(({ row, area }) => "<tr><td>" + escapeHTML(row.subject) + "</td><td>" + escapeHTML(area.name) + '</td><td class="num">' + escapeHTML(formatNumber(area.rit, 0)) +
+            '</td><td class="num">' + escapeHTML(formatSignedNumber(area.delta) + (Math.abs(area.delta) >= floor ? "" : " (within noise)")) + "</td></tr>").join("") +
+          "</tbody></table><p class=\"note\">" + escapeHTML("Each area is set against this student's own overall RIT in that subject, not grade level. Differences under " + formatInteger(floor) + " RIT are measurement noise.") + "</p>"
+        : "";
+      // Subjects that share a next step are listed together, once.
+      const bySteps = new Map();
+      rows.forEach((row) => {
+        const step = planningAction(row);
+        if (!bySteps.has(step)) bySteps.set(step, []);
+        bySteps.get(step).push(row.subject);
+      });
+      const steps = [...bySteps.entries()].map(([step, subjects]) => "<li><b>" + escapeHTML(listSentence(subjects)) + ":</b> " + escapeHTML(step) + "</li>").join("");
       const body = '<section class="sheet">' +
         printHeader("Student Profile", first.className) +
         "<h2>" + escapeHTML(first.studentName) + " - Grade " + escapeHTML(first.studentGrade) + "</h2>" +
-        "<pre style=\"white-space:pre-wrap;font-family:inherit;font-size:11px\">" + escapeHTML(buildSpotlightText()) + "</pre>" +
+        '<p class="note">' + escapeHTML(currentWindowName() + (baseline ? ", a single test window: no growth is measured yet." : ", compared with " + state.dataWindow.priorWindowLabel + ".")) + "</p>" +
+        table +
+        (strengths.length || focus.length ? '<div class="profile-lists">' + list("Strengths", strengths) + list("Watch", focus) + "</div>" : "") +
+        areaTable +
+        "<h2>Next steps</h2><ul>" + steps + "</ul>" +
+        '<p class="note">' + escapeHTML(METHOD_NOTES.normEquivalent) + "</p>" +
         "<h2>Conference notes</h2><div class=\"write-in\"></div>" +
         "</section>";
       openPrintWindow("Student Profile - " + first.studentName, body, "nwea-student-profile.html");
