@@ -19860,13 +19860,18 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
     //   - A share on fewer than MIN_SHARE_N records prints as a count, and a
     //     finding resting on fewer than MIN_SHARE_N students is not tested.
     //   - Nothing is written to storage. Which grouping the teacher compared
-    //     lives in memory for the session and follows the Overview Lens.
+    //     lives in memory, follows the Overview Lens, and goes back to it
+    //     when a new file loads.
+    //   - A result that is not clear keeps its direction and says it could
+    //     be chance. "Close to" the national middle is said only when the
+    //     median's whole 95% interval sits within INSIGHTS_CLOSE points of
+    //     it: no clear evidence of a gap is not evidence of no gap.
     //
     // Everything is drawn with the viz kit: tiles with vizKpiTile, charts in
     // vizChartSlot, tips with vizTip, statistics from vizStats. The few
-    // statistics the kit does not carry (an exact binomial test, the median's
-    // interval, Wilson's interval and Cohen's h) sit here, beside their only
-    // users.
+    // statistics the kit does not carry (an exact binomial test, Wilcoxon's
+    // signed-rank test, the median's interval, Wilson's interval and Cohen's
+    // h) sit here, beside their only users.
 
     // Insights is one of the essentials the page opens on; it is listed in
     // ESSENTIAL_SECTIONS itself, beside the Briefing it follows.
@@ -19893,6 +19898,11 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
     // Cohen's d when the findings are ranked.
     const INSIGHTS_PERCENTILE_SD = 28.6;
     const INSIGHTS_NAME_LIMIT = 12;
+    // A median is called "close to" its reference (50) only when its whole
+    // 95% interval sits within this many points of it. A result that is not
+    // clear but whose interval reaches further keeps its direction and says
+    // it could be chance: "no clear evidence" is not evidence of "close".
+    const INSIGHTS_CLOSE = 10;
     // A chart with more data marks than this lets its table or its text carry
     // the values instead of giving every mark a tab stop.
     const INSIGHTS_FOCUSABLE_MARKS = 60;
@@ -19948,6 +19958,76 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       const above = clean.filter((value) => value > centre).length;
       const below = clean.filter((value) => value < centre).length;
       return { above, below, n: clean.length, p: above + below ? insightsBinomTest(above, above + below, 0.5) : null };
+    }
+
+    // Wilcoxon's signed-rank test against a centre: like the sign test it
+    // makes no assumption about the shape of the spread, but it also uses
+    // how far each value sits from the centre, not only which side - so a
+    // group whose median is 73 is not called "close to 50" for want of
+    // power. Values on the centre drop out; tied distances share a rank.
+    // Up to 60 values the p-value is exact (every way the signs could fall,
+    // counted over the ranks as they are); beyond that it is the normal
+    // approximation with the tie and continuity corrections. above and below
+    // are the counts either side, as the sign test gives them.
+    function insightsNormalCDF(z) {
+      // Abramowitz and Stegun 7.1.26, good to about 1e-7.
+      const t = 1 / (1 + 0.3275911 * Math.abs(z) / Math.SQRT2);
+      const erf = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-z * z / 2);
+      return z >= 0 ? (1 + erf) / 2 : (1 - erf) / 2;
+    }
+
+    function insightsSignedRankTest(values, centre) {
+      const diffs = vizStats.numbers(values).map((value) => value - centre).filter((value) => value !== 0);
+      const n = diffs.length;
+      const above = diffs.filter((value) => value > 0).length;
+      const below = n - above;
+      const out = { above, below, n: vizStats.numbers(values).length, p: null };
+      if (!n) return out;
+      // Average ranks of the distances, doubled so tied ranks stay whole.
+      const order = diffs.map((value, i) => ({ size: Math.abs(value), positive: value > 0, i })).sort((a, b) => a.size - b.size);
+      const ranks2 = new Array(n);
+      let tieTerm = 0;
+      for (let i = 0; i < n;) {
+        let j = i;
+        while (j + 1 < n && order[j + 1].size === order[i].size) j += 1;
+        const t = j - i + 1;
+        tieTerm += t * t * t - t;
+        for (let k = i; k <= j; k += 1) ranks2[k] = i + j + 2;
+        i = j + 1;
+      }
+      let w2 = 0;
+      order.forEach((item, k) => { if (item.positive) w2 += ranks2[k]; });
+      const total2 = ranks2.reduce((sum, rank) => sum + rank, 0);
+      if (n <= 60) {
+        let dist = new Float64Array(total2 + 1);
+        dist[0] = 1;
+        let reach = 0;
+        ranks2.forEach((rank) => {
+          const next = new Float64Array(total2 + 1);
+          for (let v = 0; v <= reach; v += 1) {
+            if (!dist[v]) continue;
+            next[v] += dist[v] / 2;
+            next[v + rank] += dist[v] / 2;
+          }
+          reach += rank;
+          dist = next;
+        });
+        let lower = 0;
+        let upper = 0;
+        for (let v = 0; v <= total2; v += 1) {
+          if (v <= w2) lower += dist[v];
+          if (v >= w2) upper += dist[v];
+        }
+        out.p = Math.min(1, 2 * Math.min(lower, upper));
+        return out;
+      }
+      const w = w2 / 2;
+      const mean = n * (n + 1) / 4;
+      const variance = n * (n + 1) * (2 * n + 1) / 24 - tieTerm / 48;
+      if (!(variance > 0)) return out;
+      const z = (Math.abs(w - mean) - 0.5) / Math.sqrt(variance);
+      out.p = Math.min(1, 2 * (1 - insightsNormalCDF(Math.max(0, z))));
+      return out;
     }
 
     // A 95% interval for the median that assumes nothing about the shape of
@@ -20007,19 +20087,16 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       return evidence === "strong" || evidence === "moderate";
     }
 
+    // Close to the reference only when the whole 95% interval of the median
+    // sits within INSIGHTS_CLOSE points of it.
+    function insightsIsClose(ci, reference) {
+      return Boolean(ci) && ci[0] >= reference - INSIGHTS_CLOSE && ci[1] <= reference + INSIGHTS_CLOSE;
+    }
+
     // --- Words and numbers ---------------------------------------------------
     function insightsCap(text) {
       const value = String(text || "");
       return value.charAt(0).toUpperCase() + value.slice(1);
-    }
-
-    // "+12.4", "-3.0" with a true minus sign, and "0.0" rather than "-0.0".
-    function insightsSigned(value, digits) {
-      if (!isFiniteNumber(value)) return "N/A";
-      const places = Number.isInteger(digits) ? digits : 1;
-      const size = Number(Math.abs(value).toFixed(places));
-      if (!size) return (0).toFixed(places);
-      return (value > 0 ? "+" : "−") + size.toFixed(places);
     }
 
     // A fixed number of decimals ("1.00", not "1"), with a true minus sign.
@@ -20041,9 +20118,9 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       return formatInteger(n) + " " + (n === 1 ? noun : (plural || noun + "s"));
     }
 
-    function insightsRange(pair, format) {
+    function insightsRange(pair, format, label) {
       if (!pair || !isFiniteNumber(pair[0]) || !isFiniteNumber(pair[1])) return "";
-      return "95% CI " + format(pair[0]) + " to " + format(pair[1]);
+      return (label || "95% CI") + " " + format(pair[0]) + " to " + format(pair[1]);
     }
 
     function insightsR(r) {
@@ -20084,6 +20161,17 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
 
     function insightsStudentCount(rows) {
       return new Set(rows.map(studentKey)).size;
+    }
+
+    // Whether a row's student shares their full name with another student
+    // in view: such names chips carry the class, so the two can be told apart.
+    function insightsNameClash(rows) {
+      const keysByName = new Map();
+      rows.forEach((row) => {
+        if (!keysByName.has(row.studentName)) keysByName.set(row.studentName, new Set());
+        keysByName.get(row.studentName).add(studentKey(row));
+      });
+      return (row) => (keysByName.get(row.studentName) || new Set()).size > 1;
     }
 
     // Said once in a "how sure" line whenever some student has more than one
@@ -20177,33 +20265,52 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       };
     }
 
+    // A median as the page prints one: whole when it is whole, one decimal
+    // when it falls between two values (55.5), as Distributions and the
+    // Heatmap print the same number.
+    function insightsMedianText(value) {
+      if (!isFiniteNumber(value)) return "N/A";
+      return Number.isInteger(value) ? String(value) : formatNumber(value, 1);
+    }
+
+    function insightsMedianOrdinal(value) {
+      if (!isFiniteNumber(value)) return "N/A";
+      return Number.isInteger(value) ? ordinal(value) : formatNumber(value, 1) + "th";
+    }
+
+    // The tiles count records, like every other figure on the page; the
+    // findings under them count each student once. The two medians can
+    // differ by a point or two, so each says which it is and the tile's tip
+    // gives the other.
     function insightsPercentileKpi(ctx) {
       const values = ctx.scored.map((row) => row.currentPercentile);
       if (!values.length) return { label: "Median percentile", value: "N/A", context: "No percentile in view" };
-      const med = Math.round(vizStats.quantile(values, 0.5));
+      const med = vizStats.quantile(values, 0.5);
       const q1 = vizStats.quantile(values, 0.25);
       const q3 = vizStats.quantile(values, 0.75);
       const perStudent = insightsStudentValues(ctx.scored, (row) => row.currentPercentile);
-      const test = insightsSignTest(perStudent, 50);
+      const test = insightsSignedRankTest(perStudent, 50);
       const thin = vizIsThin(values.length);
       const diff = med - 50;
+      const medText = insightsMedianText(med);
       return {
         label: "Median percentile",
-        value: String(med),
-        unit: ordinal(med).slice(String(med).length),
-        context: (thin ? vizThinNote(values.length) + " " : "Middle half " + ordinal(q1) + " to " + ordinal(q3) + " · ") + "US median 50th",
-        delta: insightsDelta(diff, diff ? insightsSigned(diff, 0) + " vs US 50th" : "Level with the US 50th", test.p, perStudent.length, true),
+        value: medText,
+        unit: insightsMedianOrdinal(med).slice(medText.length),
+        context: (thin ? vizThinNote(values.length) + " " : "Across " + insightsCount(values.length, "record") + " · middle half " + ordinal(q1) + " to " + ordinal(q3) + " · ") + "US median 50th",
+        delta: insightsDelta(diff, diff ? vizSigned(diff, Number.isInteger(diff) ? 0 : 1) + " vs US 50th" : "Level with the US 50th", test.p, perStudent.length, true),
         thin,
         visual: insightsMiniHist(values, {
           domain: [0, 100], ref: 50, thin,
           ariaLabel: "How the " + formatInteger(values.length) + " percentiles spread from 0 to 100, with the US median, the 50th, marked"
         }),
         tip: vizTip("Median percentile", [
-          ["Median", ordinal(med)],
+          ["Median, every record", insightsMedianOrdinal(med)],
           ["Middle half", ordinal(q1) + " to " + ordinal(q3)],
           ["Records", formatInteger(values.length)],
+          ["Median, each student once", insightsMedianOrdinal(vizStats.quantile(perStudent, 0.5))],
           ["Students above / below the 50th", test.above + " / " + test.below],
-          ["Sign test, per student", vizStats.formatP(test.p)]
+          ["Signed-rank test, per student", vizStats.formatP(test.p)]
         ], "Percentiles place each score among US students in the same grade and season; the US median is the 50th.")
       };
     }
@@ -20219,7 +20326,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         label: spec.label,
         value: formatShare(entry),
         context: insightsCap(spec.referenceText) + (thin ? "" : " · " + formatInteger(entry.n) + " of " + insightsCount(entry.of, spec.noun)),
-        delta: thin ? null : insightsDelta(diff, (diff ? insightsSigned(diff, 0) + " pts" : "Level") + " vs US " + insightsPct(spec.reference), test.p, test.nEff, spec.higherIsBetter),
+        delta: thin ? null : insightsDelta(diff, (diff ? vizSigned(diff, 0) + " pts" : "Level") + " vs US " + insightsPct(spec.reference), test.p, test.nEff, spec.higherIsBetter),
         thin,
         visual: insightsBullet(fraction, {
           reference: spec.reference, refLabel: spec.refLabel, thin,
@@ -20238,29 +20345,30 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       const rows = ctx.growthRows.filter((row) => isFiniteNumber(row.conditionalGrowthPercentile));
       const values = rows.map((row) => row.conditionalGrowthPercentile);
       if (!values.length) return { label: "Median growth (CGP)", value: "N/A", context: "No growth percentile in view" };
-      const med = Math.round(vizStats.quantile(values, 0.5));
+      const med = vizStats.quantile(values, 0.5);
       const q1 = vizStats.quantile(values, 0.25);
       const q3 = vizStats.quantile(values, 0.75);
       const perStudent = insightsStudentValues(rows, (row) => row.conditionalGrowthPercentile);
-      const test = insightsSignTest(perStudent, 50);
+      const test = insightsSignedRankTest(perStudent, 50);
       const thin = vizIsThin(values.length);
       const diff = med - 50;
       return {
         label: "Median growth (CGP)",
-        value: String(med),
-        context: (thin ? vizThinNote(values.length) + " " : "Middle half " + insightsWhole(q1) + " to " + insightsWhole(q3) + " · ") + "typical growth is 50",
-        delta: insightsDelta(diff, diff ? insightsSigned(diff, 0) + " vs typical 50" : "Level with typical 50", test.p, perStudent.length, true),
+        value: insightsMedianText(med),
+        context: (thin ? vizThinNote(values.length) + " " : "Across " + insightsCount(values.length, "growth result") + " · middle half " + insightsWhole(q1) + " to " + insightsWhole(q3) + " · ") + "typical growth is 50",
+        delta: insightsDelta(diff, diff ? vizSigned(diff, Number.isInteger(diff) ? 0 : 1) + " vs typical 50" : "Level with typical 50", test.p, perStudent.length, true),
         thin,
         visual: insightsMiniHist(values, {
           domain: [0, 100], ref: 50, thin,
           ariaLabel: "How the " + formatInteger(values.length) + " growth percentiles spread from 0 to 100, with typical growth, 50, marked"
         }),
         tip: vizTip("Median growth percentile (CGP)", [
-          ["Median", insightsWhole(med)],
+          ["Median, every result", insightsMedianText(med)],
           ["Middle half", insightsWhole(q1) + " to " + insightsWhole(q3)],
           ["Growth results", formatInteger(values.length)],
+          ["Median, each student once", insightsMedianText(vizStats.quantile(perStudent, 0.5))],
           ["Students above / below 50", test.above + " / " + test.below],
-          ["Sign test, per student", vizStats.formatP(test.p)]
+          ["Signed-rank test, per student", vizStats.formatP(test.p)]
         ], "How each student's growth compares with US students who started at the same score in the same grade. 50 is typical.")
       };
     }
@@ -20281,20 +20389,20 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       const gapRounded = isFiniteNumber(gap) ? Number(gap.toFixed(1)) : null;
       return {
         label: "Mean RIT change",
-        value: insightsSigned(mean, 1),
+        value: vizSigned(mean, 1),
         unit: "RIT",
         context: isFiniteNumber(projected)
-          ? "Projected " + insightsSigned(projected, 1) + (sameSet ? " for the same " + insightsCount(rows.length, "result") : " for the " + formatInteger(withProjection.length) + " with a projection")
+          ? "Projected " + vizSigned(projected, 1) + (sameSet ? " for the same " + insightsCount(rows.length, "result") : " for the " + formatInteger(withProjection.length) + " with a projection")
           : "No projection in view to compare with",
-        delta: isFiniteNumber(gapRounded) && !thin ? insightsDelta(gapRounded, (gapRounded ? insightsSigned(gapRounded, 1) : "Level") + " vs projected", p, diffs.length, true) : null,
+        delta: isFiniteNumber(gapRounded) && !thin ? insightsDelta(gapRounded, (gapRounded ? vizSigned(gapRounded, 1) : "Level") + " vs projected", p, diffs.length, true) : null,
         thin,
         visual: isFiniteNumber(projected) ? insightsObsProj(observed, projected) : "",
         tip: vizTip("Mean RIT change", [
-          ["Mean change", insightsSigned(mean, 1) + " RIT"],
+          ["Mean change", vizSigned(mean, 1) + " RIT"],
           ["Growth results", formatInteger(rows.length)],
-          ["Actual, with a projection", insightsSigned(observed, 1)],
-          ["Projected", insightsSigned(projected, 1)],
-          ["Gap, per student", ci ? insightsSigned(ci.mean, 1) + (ci.lo !== null ? " (" + insightsRange([ci.lo, ci.hi], (v) => insightsSigned(v, 1)) + ")" : "") : "N/A"],
+          ["Actual, with a projection", vizSigned(observed, 1)],
+          ["Projected", vizSigned(projected, 1)],
+          ["Gap, per student", ci ? vizSigned(ci.mean, 1) + (ci.lo !== null ? " (" + insightsRange([ci.lo, ci.hi], (v) => vizSigned(v, 1)) + ")" : "") : "N/A"],
           ["Paired test", vizStats.formatP(p)]
         ], "RIT points gained between the two windows, beside the gain NWEA projected for the same students.")
       };
@@ -20312,19 +20420,19 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       const reach = Math.max(20, Math.ceil(Math.max(...values.map(Math.abs)) / 10) * 10);
       return {
         label: "Distance from US grade mean",
-        value: insightsSigned(mean, 1),
+        value: vizSigned(mean, 1),
         unit: "RIT",
         context: "Mean distance from the US mean RIT for each student's grade and season · " + insightsCount(rows.length, "record"),
         delta: thin ? null : insightsDelta(rounded, rounded > 0 ? "Above the US mean" : rounded < 0 ? "Below the US mean" : "Level with the US mean", p, ci ? ci.n : 0, true),
         thin,
         visual: insightsMiniHist(values, {
-          domain: [-reach, reach], ref: 0, thin, format: (v) => (v ? insightsSigned(v, 0) : "0"),
+          domain: [-reach, reach], ref: 0, thin, format: (v) => (v ? vizSigned(v, 0) : "0"),
           ariaLabel: "How the " + formatInteger(values.length) + " distances from the US grade mean spread, with zero marked"
         }),
         tip: vizTip("Distance from US grade mean", [
-          ["Mean", insightsSigned(mean, 1) + " RIT"],
+          ["Mean", vizSigned(mean, 1) + " RIT"],
           ["Records", formatInteger(rows.length)],
-          ["Per student", ci && ci.lo !== null ? insightsRange([ci.lo, ci.hi], (v) => insightsSigned(v, 1)) : "N/A"],
+          ["Per student", ci && ci.lo !== null ? insightsRange([ci.lo, ci.hi], (v) => vizSigned(v, 1)) : "N/A"],
           ["t-test against 0", vizStats.formatP(p)]
         ], METHOD_NOTES.normSource.split(". ")[0] + ".")
       };
@@ -20395,9 +20503,9 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         const left = Math.min(zero, end);
         return '<span class="insights-pair-label">' + escapeHTML(label) + "</span>" +
           '<span class="insights-pair-track"><span class="insights-pair-bar ' + className + '" style="--left:' + left.toFixed(1) + "%;--w:" + Math.max(1.5, Math.abs(end - zero)).toFixed(1) + '%"></span></span>' +
-          "<b>" + escapeHTML(insightsSigned(value, 1)) + "</b>";
+          "<b>" + escapeHTML(vizSigned(value, 1)) + "</b>";
       };
-      return '<div class="insights-pair" role="img" aria-label="' + escapeAttr("Actual mean gain " + insightsSigned(observed, 1) + " RIT against a projected " + insightsSigned(projected, 1)) + '">' +
+      return '<div class="insights-pair" role="img" aria-label="' + escapeAttr("Actual mean gain " + vizSigned(observed, 1) + " RIT against a projected " + vizSigned(projected, 1)) + '">' +
         row("Actual", observed, "is-actual") + row("Projected", projected, "is-projected") + "</div>";
     }
 
@@ -20516,8 +20624,19 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
     // Start score against growth, one dot per student, with the straight
     // line that fits them best and its 95% band.
     function insightsScatterSVG(width, spec) {
-      const height = 222;
-      const plot = vizLayout(width, height, { top: 30, right: 16, bottom: 44, left: 58 });
+      // The key sits above the plot, clear of the dots and the line: a
+      // label on the dashed line itself would sit on top of both. When the
+      // two entries do not fit on one row they stack on two, and the plot
+      // moves down to make room - a series is never left without its key.
+      const keys = [
+        { text: "Best fit, 95% band", mark: '<line class="viz-line" stroke="var(--viz-cat-1)"' },
+        { text: "Typical growth, 50", mark: '<line class="viz-ref-line"' }
+      ];
+      const keyWidth = (key) => 26 + key.text.length * VIZ_CHAR_PX;
+      const oneRow = keys.reduce((sum, key) => sum + keyWidth(key) + 14, -14) <= width - 58 - 16;
+      const stack = oneRow ? 0 : 14;
+      const height = 222 + stack;
+      const plot = vizLayout(width, height, { top: 30 + stack, right: 16, bottom: 44, left: 58 });
       const x = vizScaleLinear([0, 100], [plot.left, plot.right], { clamp: true });
       const y = vizScaleLinear([0, 100], [plot.bottom, plot.top], { clamp: true });
       const ticks = [0, 25, 50, 75, 100];
@@ -20539,18 +20658,12 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         if (upper.length) inner += '<polygon class="viz-band" points="' + upper.concat(lower).join(" ") + '"/>';
       }
       inner += vizRefLine(plot, { y: y(50) });
-      // The key sits above the plot, clear of the dots and the line: a
-      // label on the dashed line itself would sit on top of both.
-      const keys = [
-        { text: "Best fit, 95% band", mark: '<line class="viz-line" stroke="var(--viz-cat-1)"' },
-        { text: "Typical growth, 50", mark: '<line class="viz-ref-line"' }
-      ];
-      const keyWidth = (key) => 26 + key.text.length * VIZ_CHAR_PX;
-      const shown = keys.reduce((sum, key) => sum + keyWidth(key) + 14, 0) <= plot.innerW ? keys : keys.slice(1);
-      let keyX = plot.right - shown.reduce((sum, key) => sum + keyWidth(key) + 14, -14);
-      shown.forEach((key) => {
-        inner += key.mark + ' x1="' + vizNum(keyX) + '" x2="' + vizNum(keyX + 18) + '" y1="12" y2="12"/>' +
-          '<text class="viz-label is-muted" x="' + vizNum(keyX + 24) + '" y="12" dominant-baseline="central">' + escapeHTML(key.text) + "</text>";
+      let keyX = plot.right - keys.reduce((sum, key) => sum + keyWidth(key) + 14, -14);
+      keys.forEach((key, i) => {
+        const ky = oneRow ? 12 : 12 + i * 14;
+        const kx = oneRow ? keyX : plot.right - keyWidth(key);
+        inner += key.mark + ' x1="' + vizNum(kx) + '" x2="' + vizNum(kx + 18) + '" y1="' + ky + '" y2="' + ky + '"/>' +
+          '<text class="viz-label is-muted" x="' + vizNum(kx + 24) + '" y="' + ky + '" dominant-baseline="central">' + escapeHTML(key.text) + "</text>";
         keyX += keyWidth(key) + 14;
       });
       const r = spec.points.length > 150 ? 2.4 : 3.4;
@@ -20576,7 +20689,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       const plot = vizLayout(width, height, { top: 28, right: 14, bottom: 26, left: 14 });
       const x = vizScaleLinear([-4, 4], [plot.left, plot.right], { clamp: true });
       const z2 = INSIGHTS_UNUSUAL_Z;
-      let inner = vizAxisBottom(x, plot, { ticks: [-4, -2, 0, 2, 4], format: (v) => (v ? insightsSigned(v, 0) + " SD" : "Average") });
+      let inner = vizAxisBottom(x, plot, { ticks: [-4, -2, 0, 2, 4], format: (v) => (v ? vizSigned(v, 0) + " SD" : "Average") });
       inner += '<rect class="viz-band" x="' + vizNum(plot.left) + '" y="' + vizNum(plot.top - 6) + '" width="' + vizNum(x(-z2) - plot.left) + '" height="' + vizNum(plot.innerH + 6) + '" rx="3"/>' +
         '<rect class="viz-band" x="' + vizNum(x(z2)) + '" y="' + vizNum(plot.top - 6) + '" width="' + vizNum(plot.right - x(z2)) + '" height="' + vizNum(plot.innerH + 6) + '" rx="3"/>';
       [-z2, z2].forEach((value) => {
@@ -20738,28 +20851,40 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       }
       const med = vizStats.quantile(perStudent, 0.5);
       const ci = insightsMedianCI(perStudent);
-      const test = insightsSignTest(perStudent, 50);
+      const test = insightsSignedRankTest(perStudent, 50);
       const evidence = insightsEvidence(test.p, n);
       const clear = insightsIsClear(evidence);
       const above = med > 50;
+      const close = insightsIsClose(ci, 50);
+      const near = Math.abs(med - 50) < INSIGHTS_CLOSE;
       const pooled = insightsPooledNote(rows, getter);
+      const recordMedian = vizStats.quantile(rows.map(getter), 0.5);
       out.cards.push({
         key: "growth-typical",
         area: "Growth",
-        headline: !clear ? "Growth is close to typical" : above ? "Growth is running above typical" : "Growth is running below typical",
+        headline: clear ? (above ? "Growth is running above typical" : "Growth is running below typical")
+          : close ? "Growth is close to typical"
+            : near ? "No clear difference from typical growth"
+              : above ? "Growth looks above typical, but it could be chance" : "Growth looks below typical, but it could be chance",
         figures: [
-          { value: insightsWhole(med), label: "median growth percentile per student (typical is 50)" },
+          { value: insightsWhole(med), label: "median growth percentile, each student counted once (" + insightsMedianText(recordMedian) + " across all " + insightsCount(rows.length, "result") + "; typical is 50)" },
           { value: formatShare({ n: test.above, of: n }), label: "of students grew more than the typical US student who started at the same score" }
         ],
         evidence,
         effect: (med - 50) / INSIGHTS_PERCENTILE_SD,
-        sure: insightsCount(n, "student") + pooled + " · " + formatInteger(test.above) + " above 50, " + formatInteger(test.below) + " below · sign test " +
+        sure: insightsCount(n, "student") + pooled + " · " + formatInteger(test.above) + " above 50, " + formatInteger(test.below) + " below · signed-rank test " +
           vizStats.formatP(test.p) + (ci ? " · median " + insightsWhole(med) + ", " + insightsRange(ci, insightsWhole) : ""),
         note: clear
           ? (above
             ? "On the whole, students grew more than US students who started at the same score in the same grade."
             : "On the whole, students grew less than US students who started at the same score in the same grade.")
-          : "The middle student grew about as much as US students who started at the same score. A median this close to 50 could easily come from typical growth.",
+          : close
+            ? "The middle student grew about as much as US students who started at the same score: the median's 95% interval sits within " + INSIGHTS_CLOSE + " points of 50."
+            : near
+              ? "The median, " + insightsWhole(med) + ", is near 50, but with " + insightsCount(n, "student") + " its 95% interval is wide" +
+                (ci ? " (" + insightsWhole(ci[0]) + " to " + insightsWhole(ci[1]) + ")" : "") + ", so this cannot say whether growth sits above, below or at typical."
+              : "The median is " + insightsWhole(med) + ", but with " + insightsCount(n, "student") + " a gap this size could still come from typical growth" +
+                (ci ? " (the median's 95% interval runs from " + insightsWhole(ci[0]) + " to " + insightsWhole(ci[1]) + ")" : "") + ". More students, or the next window, would settle it.",
         visual: {
           minHeight: 104,
           draw: (width) => insightsStripSVG(width, {
@@ -20775,7 +20900,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
                 ["Median", insightsWhole(med)],
                 ["95% interval", ci ? insightsWhole(ci[0]) + " to " + insightsWhole(ci[1]) : "N/A"],
                 ["Students", formatInteger(n)],
-                ["Sign test", vizStats.formatP(test.p)]
+                ["Signed-rank test", vizStats.formatP(test.p)]
               ], "Each grey dot is one student.")
             },
             ariaLabel: "Growth percentile per student, median " + insightsWhole(med) + " against a typical 50",
@@ -20798,31 +20923,47 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       }
       const med = vizStats.quantile(perStudent, 0.5);
       const ci = insightsMedianCI(perStudent);
-      const test = insightsSignTest(perStudent, 50);
+      const test = insightsSignedRankTest(perStudent, 50);
       const secure = share(rows, (row) => row.currentPercentile >= SECURE_BENCHMARK);
       const secureTest = insightsShareTest(secure.n, secure.of, insightsStudentCount(rows), INSIGHTS_US_SECURE_SHARE);
       const evidence = insightsEvidence(test.p, n);
       const clear = insightsIsClear(evidence);
       const above = med > 50;
+      const close = insightsIsClose(ci, 50);
+      const near = Math.abs(med - 50) < INSIGHTS_CLOSE;
       const pooled = insightsPooledNote(rows, getter);
+      const recordMedian = vizStats.quantile(rows.map(getter), 0.5);
+      const side = above ? "above" : "below";
       const headline = baseline
-        ? (!clear ? "Students are starting close to the national middle" : above ? "Students are starting above the national middle" : "Students are starting below the national middle")
-        : (!clear ? "Achievement is close to the national middle" : above ? "Achievement sits above the national middle" : "Achievement sits below the national middle");
+        ? (clear ? "Students are starting " + side + " the national middle"
+          : close ? "Students are starting close to the national middle"
+            : near ? "No clear difference from the national middle"
+              : "Students look to be starting " + side + " the national middle, but it could be chance")
+        : (clear ? "Achievement sits " + side + " the national middle"
+          : close ? "Achievement is close to the national middle"
+            : near ? "No clear difference from the national middle"
+              : "Achievement looks " + side + " the national middle, but it could be chance");
       out.cards.push({
         key: "achievement",
         area,
         headline,
         figures: [
-          { value: ordinal(med), label: "median percentile per student (the US median is the 50th)" },
+          { value: ordinal(med), label: "median percentile, each student counted once (" + insightsMedianOrdinal(recordMedian) + " across all " + insightsCount(rows.length, "record") + "; the US median is the 50th)" },
           { value: formatShare(secure), label: "of records at or above the " + ordinal(SECURE_BENCHMARK) + " (about 40% nationally)" }
         ],
         evidence,
         effect: (med - 50) / INSIGHTS_PERCENTILE_SD,
-        sure: insightsCount(n, "student") + pooled + " · " + formatInteger(test.above) + " above the 50th, " + formatInteger(test.below) + " below · sign test " +
+        sure: insightsCount(n, "student") + pooled + " · " + formatInteger(test.above) + " above the 50th, " + formatInteger(test.below) + " below · signed-rank test " +
           vizStats.formatP(test.p) + (ci ? " · median " + ordinal(med) + ", " + insightsRange(ci, ordinal) : "") +
           " · at or above the " + ordinal(SECURE_BENCHMARK) + " against about 40%: " + vizStats.formatP(secureTest.p),
-        note: "Percentiles place each score among US students in the same grade and season. " +
-          (clear ? "" : "A median this close to the 50th could easily come from a typical US group."),
+        note: "Percentiles place each score among US students in the same grade and season." +
+          (clear ? "" : " ") + (clear ? ""
+            : close ? "The median's 95% interval sits within " + INSIGHTS_CLOSE + " points of the 50th, so this group is close to a typical US one."
+              : near
+                ? "The median, the " + ordinal(med) + ", is near the middle, but with " + insightsCount(n, "student") + " its 95% interval is wide" +
+                  (ci ? " (the " + ordinal(ci[0]) + " to the " + ordinal(ci[1]) + ")" : "") + ", so this cannot say whether the group sits above, below or at the middle."
+                : "The median is the " + ordinal(med) + ", but with " + insightsCount(n, "student") + " a gap this size could still come from a typical US group" +
+                  (ci ? " (the median's 95% interval runs from the " + ordinal(ci[0]) + " to the " + ordinal(ci[1]) + ")" : "") + "."),
         visual: {
           minHeight: 104,
           draw: (width) => insightsStripSVG(width, {
@@ -20838,7 +20979,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
                 ["Median", ordinal(med)],
                 ["95% interval", ci ? ordinal(ci[0]) + " to " + ordinal(ci[1]) : "N/A"],
                 ["Students", formatInteger(n)],
-                ["Sign test", vizStats.formatP(test.p)]
+                ["Signed-rank test", vizStats.formatP(test.p)]
               ], "Each grey dot is one student.")
             },
             ariaLabel: "Percentile per student, median " + ordinal(med) + " against the US 50th",
@@ -20947,14 +21088,21 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       let testName;
       if (paired) {
         const test = vizStats.pairedTest(overlap.map((key) => b.perStudent.get(key).value), overlap.map((key) => a.perStudent.get(key).value));
-        result = { diff: test.meanDiff, ci: test.ci95, p: test.p };
+        result = { diff: test.meanDiff, ci: test.ci95, p: test.p, se: test.se, df: test.df };
         testName = "paired t-test on the " + formatInteger(overlap.length) + " students in both";
       } else {
         const test = vizStats.welchTest(a.values, b.values);
-        result = { diff: test.diff, ci: test.ci95, p: test.p };
+        result = { diff: test.diff, ci: test.ci95, p: test.p, se: test.se, df: test.df };
         testName = "Welch t-test";
       }
       const pAdjusted = isFiniteNumber(result.p) ? Math.min(1, result.p * pairs) : null;
+      // The interval printed is adjusted the same way as the p-value (each
+      // pair at 95 / pairs % confidence, Bonferroni's simultaneous interval),
+      // so an interval that clears zero never sits beside "could be chance".
+      if (pairs > 1 && isFiniteNumber(result.se) && result.se > 0 && isFiniteNumber(result.df)) {
+        const tAdjusted = vizStats.tInv(1 - 0.025 / pairs, result.df);
+        if (isFiniteNumber(tAdjusted)) result.ci = [result.diff - tAdjusted * result.se, result.diff + tAdjusted * result.se];
+      }
       const table = insightsGroupTable(groups, spec, dim);
       if (Math.abs(d) < INSIGHTS_MIN_D) {
         out.quiet.push({
@@ -20980,13 +21128,14 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         area,
         headline: spec.higher(a.label, b.label) + (clear ? "" : ", but it could be chance"),
         figures: [
-          { value: insightsSigned(result.diff, 1), label: spec.unit + " higher on average, " + a.label + " over " + b.label },
+          { value: vizSigned(result.diff, 1), label: spec.unit + " higher on average, " + a.label + " over " + b.label },
           { value: insightsWhole(a.median) + " vs " + insightsWhole(b.median), label: "median " + spec.metricShort + " per student" }
         ],
         evidence,
         effect: Math.abs(d),
-        sure: formatInteger(a.n) + " vs " + insightsCount(b.n, "student") + " · difference " + insightsSigned(result.diff, 1) + " " + spec.unit +
-          (result.ci ? ", " + insightsRange(result.ci, (v) => insightsSigned(v, 1)) : "") + " · " + testName + " " + vizStats.formatP(result.p) +
+        sure: formatInteger(a.n) + " vs " + insightsCount(b.n, "student") + " · difference " + vizSigned(result.diff, 1) + " " + spec.unit +
+          (result.ci ? ", " + insightsRange(result.ci, (v) => vizSigned(v, 1), pairs > 1 ? "95% CI adjusted for the " + formatInteger(pairs) + " pairs" : "95% CI") : "") +
+          " · " + testName + " " + vizStats.formatP(result.p) +
           (pairs > 1 ? "; the widest of " + formatInteger(pairs) + " pairs, so adjusted " + vizStats.formatP(pAdjusted) : "") + " · " + insightsDText(d),
         note: "This describes these two groups in this file, not why they differ: groups differ in who is in them as well as in how they were taught." + fellBack,
         visual: {
@@ -21067,13 +21216,17 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       const clear = insightsIsClear(evidence);
       const pooled = insightsPooledNote(rows, (row) => row.conditionalGrowthPercentile);
       const slope10 = fit.slope * 10;
-      const headline = !clear ? "Lower and higher starters grew at similar rates"
+      const headline = !clear ? "No clear difference in growth between lower and higher starters"
         : cor.r > 0 ? "Higher starters grew more than lower starters" : "Lower starters grew more than higher starters";
+      // The correlation compares the two ends with each other. Where either
+      // end sits against national peers is a separate question, answered
+      // here only by what the two halves' medians are, set against 50.
+      const nation = insightsHalvesAgainstTypical(lowerMedian, upperMedian);
       const note = !clear
-        ? "No clear sign in this file that growth depends on where students started. Growth percentiles already allow for the starting score, so similar rates mean both ends are keeping pace with similar students nationally."
+        ? "No clear sign in this file that growth depends on where students started. This compares lower and higher starters with each other, not with students nationally. " + nation
         : cor.r > 0
-          ? "Growth percentiles already allow for the starting score, so this is not the usual pull toward the middle: lower starters are growing less than similar students nationally. Worth checking that their support is reaching them."
-          : "Catch-up growth: lower starters are growing more than similar students nationally. Worth checking that higher starters are still being stretched.";
+          ? "Growth percentiles already allow for the starting score, so this is not the usual pull toward the middle: relative to similar students nationally, lower starters grew less than higher starters did. " + nation + " Worth checking that support is reaching the lower starters."
+          : "Relative to similar students nationally, lower starters grew more than higher starters did - catch-up growth. " + nation + " Worth checking that higher starters are still being stretched.";
       const points = keys.map((key, i) => ({
         x: xs[i],
         y: ys[i],
@@ -21093,8 +21246,8 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         evidence,
         effect: Math.abs(cor.r) * 2,
         sure: insightsCount(n, "student") + pooled + " · r = " + insightsR(cor.r) + ", " + vizStats.formatP(cor.p) +
-          " · each 10 start-percentile points goes with " + insightsSigned(slope10, 1) + " growth percentile points" +
-          (fit.slopeCI95 ? " (" + insightsRange(fit.slopeCI95.map((v) => v * 10), (v) => insightsSigned(v, 1)) + ")" : ""),
+          " · each 10 start-percentile points goes with " + vizSigned(slope10, 1) + " growth percentile points" +
+          (fit.slopeCI95 ? " (" + insightsRange(fit.slopeCI95.map((v) => v * 10), (v) => vizSigned(v, 1)) + ")" : ""),
         note,
         visual: {
           minHeight: 222,
@@ -21103,7 +21256,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
             fit,
             fitTip: vizTip("Line of best fit", [
               ["r", insightsR(cor.r)],
-              ["Per 10 start points", insightsSigned(slope10, 1) + " growth points"],
+              ["Per 10 start points", vizSigned(slope10, 1) + " growth points"],
               ["Students", formatInteger(n)],
               ["Test", vizStats.formatP(cor.p)]
             ], "The shaded band is the line's 95% interval."),
@@ -21112,6 +21265,19 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
           })
         }
       });
+    }
+
+    // What the two halves' medians say against typical growth (50), in the
+    // words of a description, not a test.
+    function insightsHalvesAgainstTypical(lower, upper) {
+      if (!isFiniteNumber(lower) || !isFiniteNumber(upper)) return "";
+      const where = (value) => (value > 50 ? "above" : value < 50 ? "below" : "at");
+      const figures = "(medians " + insightsWhole(lower) + " and " + insightsWhole(upper) + ")";
+      if (where(lower) === where(upper)) {
+        return where(lower) === "at" ? "Both halves sit at typical growth " + figures + "."
+          : "Both halves sit " + where(lower) + " typical growth " + figures + ".";
+      }
+      return "The lower half sits " + where(lower) + " typical growth and the upper half " + where(upper) + " it " + figures + ".";
     }
 
     function insightsUnusual(ctx, out) {
@@ -21140,7 +21306,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
             ["Subject", row.subject],
             ["Growth percentile", formatNumber(row.conditionalGrowthPercentile, 0)],
             ["Growth index", formatNumber(row.conditionalGrowthIndex, 2)],
-            ["From this view's average", insightsSigned(z, 1) + " SD"]
+            ["From this view's average", vizSigned(z, 1) + " SD"]
           ]) : ""
         };
       });
@@ -21152,12 +21318,21 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         return;
       }
       const total = low.length + high.length;
-      const headline = low.length && high.length
+      // As many as chance alone would give: no more than the top of the
+      // 95% range of a Poisson count with that expectation. The card then
+      // says so, and sits below the findings a test backs.
+      const chanceTop = insightsPoissonUpper(expected, 0.975);
+      const chanceLike = total <= chanceTop;
+      const expectedText = expected < 1 ? "under 1" : "about " + formatInteger(Math.round(expected));
+      const headline = chanceLike
+        ? (total === 1 ? "One result sits 2+ SD from the rest" : insightsCount(total, "result") + " sit 2+ SD from the rest") + ", about what chance alone gives (" + expectedText + ")"
+        : low.length && high.length
         ? insightsCount(total, "result") + " sit far from the rest: " + formatInteger(low.length) + " unusually low, " + formatInteger(high.length) + " unusually high"
         : low.length
           ? (low.length === 1 ? "One result grew far less than the rest" : formatInteger(low.length) + " results grew far less than the rest")
           : (high.length === 1 ? "One result grew far more than the rest" : formatInteger(high.length) + " results grew far more than the rest");
-      const chipDetail = (entry) => entry.row.subject + " · CGP " + formatNumber(entry.row.conditionalGrowthPercentile, 0);
+      const clash = insightsNameClash(ctx.rows);
+      const chipDetail = (entry) => (clash(entry.row) ? entry.row.className + " · " : "") + entry.row.subject + " · CGP " + formatNumber(entry.row.conditionalGrowthPercentile, 0);
       const actions = [];
       if (low.length) actions.push({ jump: "sec-priority", label: "Open Priority Students" });
       if (high.length) actions.push({ jump: "sec-celebration", label: "Open Celebration" });
@@ -21170,14 +21345,15 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
           { value: formatInteger(high.length), label: "grew unusually much (2+ SD above)" }
         ],
         evidence: "count",
+        rankWeight: chanceLike ? 12 : null,
         effect: 0,
         sure: "Measured against this view's own spread of conditional growth index (mean " + insightsFixed(mean, 2) + ", SD " + insightsFixed(sd, 2) + ", " +
           insightsCount(rows.length, "result") + "). Even with nothing unusual going on, about 1 result in 22 lands this far out, so " +
           (expected < 1 ? "fewer than one would be expected in a group this size." : "around " + formatInteger(Math.round(expected)) + " would be expected here."),
         note: "A list of students to look at first, not a diagnosis: check how each test went before acting on one score.",
         names: [
-          { title: "Grew unusually little", entries: low.map((entry) => ({ name: entry.row.studentName, detail: chipDetail(entry) })) },
-          { title: "Grew unusually much", entries: high.map((entry) => ({ name: entry.row.studentName, detail: chipDetail(entry) })) }
+          { title: "Grew unusually little", entries: low.map((entry) => ({ name: entry.row.studentName, key: studentKey(entry.row), detail: chipDetail(entry) })) },
+          { title: "Grew unusually much", entries: high.map((entry) => ({ name: entry.row.studentName, key: studentKey(entry.row), detail: chipDetail(entry) })) }
         ].filter((group) => group.entries.length),
         actions,
         visual: {
@@ -21189,6 +21365,20 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
           })
         }
       });
+    }
+
+    // The smallest k with P(X <= k) >= q for a Poisson count with mean m.
+    function insightsPoissonUpper(m, q) {
+      if (!(m > 0)) return 0;
+      let term = Math.exp(-m);
+      let cumulative = term;
+      let k = 0;
+      while (cumulative < q && k < 100000) {
+        k += 1;
+        term *= m / k;
+        cumulative += term;
+      }
+      return k;
     }
 
     function insightsBandMovement(ctx, out) {
@@ -21206,25 +21396,35 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       // subjects, and whether more students gained than lost.
       const net = insightsPerStudent(rows, (row) => (row.bandMovement === "Moved Up" ? 1 : row.bandMovement === "Moved Down" ? -1 : 0));
       const test = insightsSignTest([...net.values()].map((entry) => entry.value), 0);
-      const evidence = up === down ? (up ? "weak" : "count") : insightsEvidence(test.p, net.size);
+      // The direction and how sure come from the same unit, the student: a
+      // clear finding is about students, whichever way the record counts
+      // lean, and when the two lean different ways the headline says so.
+      const evidence = !up && !down ? "count" : insightsEvidence(test.p, net.size);
       const clear = insightsIsClear(evidence);
+      const recordWay = Math.sign(up - down);
+      const studentWay = Math.sign(test.above - test.below);
       const headline = !up && !down ? "Every result stayed in its band"
-        : up === down ? "As many results moved up a band as down"
-          : up > down ? (clear ? "More results moved up a band than down" : "Slightly more results moved up a band than down")
-            : (clear ? "More results moved down a band than up" : "Slightly more results moved down a band than up");
+        : recordWay && studentWay && recordWay !== studentWay
+          ? (recordWay > 0 ? "More results moved up a band, but more students moved down on balance" : "More results moved down a band, but more students moved up on balance")
+          : !recordWay && studentWay
+            ? "As many results moved up a band as down, but more students moved " + (studentWay > 0 ? "up" : "down") + " on balance"
+            : clear
+              ? (studentWay > 0 ? "More students moved up a band than down" : "More students moved down a band than up")
+              : !recordWay ? "As many results moved up a band as down"
+                : recordWay > 0 ? "Slightly more results moved up a band than down" : "Slightly more results moved down a band than up";
       out.cards.push({
         key: "bands",
         area: "Band movement",
         headline,
         figures: [
-          { value: insightsSigned(up - down, 0), label: "net band moves (" + formatInteger(up) + " up, " + formatInteger(down) + " down)" },
+          { value: vizSigned(up - down, 0), label: "net band moves (" + formatInteger(up) + " up, " + formatInteger(down) + " down)" },
           { value: formatShare({ n: same, of: rows.length }), label: "stayed in the same band" }
         ],
         evidence,
-        effect: (up - down) / rows.length * 2,
+        effect: net.size ? (test.above - test.below) / net.size * 2 : 0,
         sure: insightsCount(net.size, "student") + ": " + formatInteger(test.above) + " moved up more than down, " + formatInteger(test.below) + " the reverse · " +
           (net.size < MIN_SHARE_N ? "too few students for a test (it needs " + MIN_SHARE_N + ")" : "sign test " + vizStats.formatP(test.p)),
-        note: "Bands are fifths of the national spread, so moving up a band means gaining ground on US peers, not just growing.",
+        note: "Bands are fifths of the national spread, so on average moving up a band means gaining ground on US peers, not just growing. Some movement out of the top and bottom bands is expected from test error alone, so read one student's move with care.",
         visual: { minHeight: 58, draw: (width) => insightsMoveBarSVG(width, { up, down, same }) }
       });
     }
@@ -21292,9 +21492,11 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         figures.push({ value: formatInteger(rapid.length), label: "tests with " + RAPID_GUESS_FLAG_PCT + "% or more of items rapid-guessed" });
         figures.push({ value: formatShare({ n: rapid.length, of: reported.length }), label: "of the " + insightsCount(reported.length, "test") + " that report it" });
       }
-      if (short.length) figures.push({ value: formatInteger(short.length), label: (reported.length ? "other " : "") + "tests under " + SHORT_TEST_ABSOLUTE_MINUTES + " minutes and half this file's median time" });
-      const flagged = rapid.map((row) => ({ name: row.studentName, detail: row.subject + " · " + formatNumber(row.rapidGuessedPct, 0) + "% rapid" }))
-        .concat(short.map((row) => ({ name: row.studentName, detail: row.subject + " · " + formatNumber(row.currentDuration, 0) + " min" })));
+      if (short.length) figures.push({ value: formatInteger(short.length), label: (reported.length ? "other " : "") + (short.length === 1 ? "test" : "tests") + " under " + SHORT_TEST_ABSOLUTE_MINUTES + " minutes and half this file's median time" });
+      const clash = insightsNameClash(rows);
+      const where = (row) => (clash(row) ? row.className + " · " : "") + row.subject;
+      const flagged = rapid.map((row) => ({ name: row.studentName, key: studentKey(row), detail: where(row) + " · " + formatNumber(row.rapidGuessedPct, 0) + "% rapid" }))
+        .concat(short.map((row) => ({ name: row.studentName, key: studentKey(row), detail: where(row) + " · " + formatNumber(row.currentDuration, 0) + " min" })));
       const bins = [0, 0, 0, 0, 0];
       reported.forEach((row) => {
         const value = row.rapidGuessedPct;
@@ -21334,7 +21536,9 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       // a smaller one sits after the findings a test backs and the named
       // students, and ahead of the patterns that could be chance.
       out.cards.forEach((card, index) => {
-        const weight = card.tone === "caveat" && !card.pinned ? 22 : (INSIGHTS_EVIDENCE[card.evidence] || INSIGHTS_EVIDENCE.thin).weight;
+        const weight = card.tone === "caveat" && !card.pinned ? 22
+          : isFiniteNumber(card.rankWeight) ? card.rankWeight
+            : (INSIGHTS_EVIDENCE[card.evidence] || INSIGHTS_EVIDENCE.thin).weight;
         card.score = (card.pinned ? 100 : 0) + weight + Math.min(1.5, Math.abs(card.effect || 0)) * 10 - index * 0.001;
       });
       out.cards.sort((a, b) => b.score - a.score);
@@ -21354,7 +21558,8 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         const more = group.entries.length - shown.length;
         return '<div class="insights-names"><span class="insights-names-title">' + escapeHTML(group.title) + "</span>" +
           '<div class="insights-chips">' + shown.map((entry) =>
-            '<button class="name-chip" type="button" data-student="' + escapeAttr(entry.name) + '">' + escapeHTML(entry.name) +
+            '<button class="name-chip" type="button" data-student="' + escapeAttr(entry.name) + '"' +
+            (entry.key ? ' data-student-key="' + escapeAttr(entry.key) + '"' : "") + ">" + escapeHTML(entry.name) +
             '<span class="name-chip-subject">' + escapeHTML(entry.detail) + "</span></button>").join("") +
           (more > 0 ? '<span class="name-more">and ' + formatInteger(more) + " more</span>" : "") + "</div></div>";
       }).join("");
@@ -21405,18 +21610,28 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
           options: choice.available.map((dim) => ({ value: dim.key, label: dim.label })),
           value: choice.dim ? choice.dim.key : ""
         }),
-        '<p class="insights-control-hint">Used by the group comparisons below. It starts on the Overview Lens and goes back to it when the lens changes.</p>'
+        '<p class="insights-control-hint">Used by the group comparisons below. It starts on the grouping chosen under More filters and follows it when that changes.</p>'
       ]);
     }
 
     function insightsNoteText(ctx) {
       const records = insightsCount(ctx.rows.length, "record");
       const students = insightsCount(ctx.students, "student");
+      const earlier = earlierWindowRecords(ctx.rows);
+      const windows = earlier.labels.length ? listSentence(earlier.labels) : "an earlier window";
       if (!ctx.growth) {
-        return "Where the " + records + " in view (" + students + ") are starting, strongest evidence first. This file has one test window, so nothing here measures growth.";
+        // Two Class Profile terms loaded together are two windows of single
+        // scores, not growth pairs: say that, rather than "one window".
+        return "Where the " + records + " in view (" + students + ") are starting, strongest evidence first. " +
+          (earlier.count
+            ? "These records come from more than one test window (" + formatInteger(earlier.count) + " from " + windows + ", the rest " + currentWindowName() +
+              ") and are counted together, as the Data Check explains; none is paired with another, so nothing here measures growth."
+            : "This file has one test window, so nothing here measures growth.");
       }
       return "What the " + records + " in view (" + students + ") say, strongest evidence first. Everything here follows your filters." +
-        (ctx.mode === "mixed" ? " Growth findings use the " + insightsCount(ctx.growthRows.length, "record") + " with both test windows." : "");
+        (ctx.mode === "mixed" ? " Growth findings use the " + insightsCount(ctx.growthRows.length, "record") + " with both test windows." : "") +
+        (earlier.count ? " " + insightsCount(earlier.count, "record") + " " + (earlier.count === 1 ? "has" : "have") + " no " + currentWindowName() +
+          " score; " + (earlier.count === 1 ? "its" : "their") + " latest, from " + windows + ", counts in the achievement figures." : "");
     }
 
     function insightsSetButtons(enabled) {
@@ -23021,7 +23236,7 @@ Suggested next steps: prioritize Intensive Support and Targeted Support students
       "sec-insights": {
         what: "The headline numbers for the records in view, each set against a national reference, then a ranked list of what stands out: whether growth is running above or below typical, the widest gap between the groups you compare, whether lower and higher starters are growing alike, results far from the rest, band movement, and any warning about test reliability. Checks that found nothing clear are listed underneath, so a missing card never means a question nobody asked.",
         read: "Findings are ranked by the strength of the evidence, and each one says how sure it is: how many students it rests on, a 95% range or a p-value, and an effect size. Strong evidence means a p-value under 0.01 from at least 30 students; could be chance means the pattern is in this file but a different group of students could easily have shown otherwise. Every test counts each student once, so a child tested in four subjects cannot make a pattern look four times as sure. A gap between groups is only called one when both have at least 10 students and it is at least 0.3 standard deviations wide, and it never says why the groups differ.",
-        act: "Open a data meeting here. Take the top two findings into the conversation, click through to the students named on the unusual-growth card, and use Compare groups by (it starts on your Overview Lens) to see whether a gap sits between subjects, classes, teachers or grades. Copy the findings into your notes when you are done.",
+        act: "Open a data meeting here. Take the top two findings into the conversation, click through to the students named on the unusual-growth card, and use Compare groups by (it starts on the grouping chosen under More filters) to see whether a gap sits between subjects, classes, teachers or grades. Copy the findings into your notes when you are done.",
         baseline: {
           what: "The headline numbers for a single-window file, each set against a national reference, then what stands out about where students are starting: achievement against the national middle, the share in the lowest and highest bands against the one in five you would expect nationally, the widest gap between the groups you compare, and any warning about test reliability.",
           read: "Nothing here measures growth: with one test window there is no earlier score to compare against. Findings are ranked by the strength of the evidence and each says how sure it is. Every test counts each student once, and a gap between groups is only called one when both have at least 10 students and it is at least 0.3 standard deviations wide."
