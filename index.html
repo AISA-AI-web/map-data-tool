@@ -6762,11 +6762,16 @@
     }
 
     /* --- The scatter's marks ------------------------------------------------ */
-    /* A little transparency so a pile of points darkens where it is deep; the
-       surface ring stays solid, so each dot keeps its edge. */
-    .explorer-plot .explorer-pt .viz-dot { fill-opacity: 0.82; }
-    .explorer-plot.is-dense .explorer-pt .viz-dot { fill-opacity: 0.62; }
-    .explorer-plot .explorer-pt.is-hollow .viz-dot { fill-opacity: 1; }
+    /* Coloured points are drawn opaque. The kit's categorical slots were
+       validated as painted; laid over the panel at 62% they failed the same
+       validator (Language and Science ran together, dark Reading fell to
+       2:1). Overlap shows through the surface ring instead, which thins to
+       1px on a dense plot so a small dot keeps its colour. Only an
+       uncoloured plot (Colour by: None) is translucent, where depth is the
+       one thing its colour can say. */
+    .explorer-plot.is-dense .explorer-pt .viz-dot { stroke-width: 1px; }
+    .explorer-plot.is-mono .explorer-pt .viz-dot { fill-opacity: 0.82; }
+    .explorer-plot.is-mono.is-dense .explorer-pt .viz-dot { fill-opacity: 0.62; }
     .explorer-pt { cursor: pointer; transition: opacity var(--dur-fast) var(--ease-soft); }
     .explorer-pt.is-dim { opacity: 0.22; }
 
@@ -14734,9 +14739,11 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       "Keyboard: Tab to a row, then the arrow keys step through its records and Enter opens the profile.";
     // A function, not a constant: MIN_SHARE_N is declared further down the
     // script, and a constant built from it here would read it too early.
-    function distStatsNote() {
+    function distStatsNote(model) {
+      const pooled = model && model.groups.concat([model.all]).some((group) => group.students < group.n);
       return "Quartiles use the same method as Excel's PERCENTILE.INC, so a spreadsheet check gives the same numbers. " +
-        "The 95% interval of the mean uses the t distribution, so a small group gets a wide interval, as it should. " +
+        "The 95% interval of the mean uses the t distribution, so a small group gets a wide interval, as it should" +
+        (pooled ? "; it counts each student once, because one student's records in a row move together. " : ". ") +
         "Muted, hatched rows rest on fewer than " + MIN_SHARE_N + " records: describe them, but do not compare them.";
     }
 
@@ -14799,7 +14806,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         const dot = event.target.closest && event.target.closest("[data-dist-student]");
         if (!dot) return;
         vizTooltipHide();
-        openSpotlight(dot.getAttribute("data-dist-student"));
+        openSpotlight(dot.getAttribute("data-dist-student"), dot.getAttribute("data-dist-key"));
       });
       wrap.addEventListener("keydown", distKeydown);
       const exportBtn = document.getElementById("distExportBtn");
@@ -14842,6 +14849,9 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
     // --- The numbers --------------------------------------------------------
     function distModel(rows, metric, lens) {
       const groups = [];
+      // A percentile or RIT is each record's latest score; say so when some
+      // of them come from an earlier window than the one the axis names.
+      const level = metric.kind === "percentile" || metric.kind === "rit";
       const empty = [];
       getOverviewBuckets(rows, lens).forEach((name) => {
         const records = distRecords(bucketRows(rows, name, lens), metric);
@@ -14858,7 +14868,8 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         inView: rows.length,
         plotted: all.n,
         subjects: unique(rows.map((row) => row.subject)).length,
-        drawDots: all.n <= DIST_DOT_CAP
+        drawDots: all.n <= DIST_DOT_CAP,
+        earlier: level ? earlierWindowRecords(all.records.map((record) => record.row)) : { count: 0, labels: [] }
       };
     }
 
@@ -14872,14 +14883,22 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
           naturalCompare(a.row.subject, b.row.subject));
     }
 
+    // The interval counts each student once. A class row (and the pooled
+    // foot row) holds a student's records from every subject, and one child's
+    // scores move together, so treating them as separate children made the
+    // interval 1.5 to 1.8 times too narrow; the kit's clustered interval
+    // treats each student as one cluster. A subject row has one record per
+    // student and gets the ordinary interval.
     function distGroup(name, records) {
       const values = records.map((record) => record.value);
+      const keys = records.map((record) => studentKey(record.row));
       return {
         name,
         records,
         n: values.length,
+        students: new Set(keys).size,
         box: vizStats.boxStats(values),
-        ci: vizStats.ci95Mean(values),
+        ci: vizStats.ci95MeanClustered(values, keys),
         sd: vizStats.sd(values),
         thin: vizIsThin(values.length)
       };
@@ -14887,14 +14906,14 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
 
     function distFormat(metric, value) {
       if (!isFiniteNumber(value)) return "N/A";
-      if (metric.kind === "change") return (value > 0 ? "+" : value < 0 ? "\u2212" : "") + formatNumber(Math.abs(value), 1);
+      if (metric.kind === "change") return vizSigned(value, Number.isInteger(value) ? 0 : 1);
       return formatNumber(value, 1);
     }
 
     // Means and interval ends in a column read better at a fixed decimal.
     function distFormatMean(metric, value) {
       if (!isFiniteNumber(value)) return "\u2013";
-      return metric.kind === "change" ? formatSigned1(value) : formatFixed1(value);
+      return metric.kind === "change" ? vizSigned(value, 1) : formatFixed1(value);
     }
 
     function distFormatCI(metric, ci) {
@@ -14918,15 +14937,17 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
     }
 
     // The dot's colour, the words for it, and whether it is drawn hollow.
+    // "Not met" is a diamond as well as a colour, so the pair never rests on
+    // colour alone; a light band colour is outlined in its own ink.
     function distDotStyle(metric, row) {
       if (metric.colorBy === "band") {
         const band = row.currentBand && row.currentBand.rank ? row.currentBand : null;
         return band
-          ? { fill: band.color, label: band.name, key: band.name }
+          ? { fill: band.color, stroke: vizBandEdge(band), label: band.name, key: band.name }
           : { fill: "var(--viz-surface)", stroke: "var(--dist-none)", label: "No percentile", key: "none" };
       }
       if (row.metGrowth === true) return { fill: "var(--dist-met)", label: "Met", key: "met" };
-      if (row.metGrowth === false) return { fill: "var(--dist-missed)", label: "Not met", key: "missed" };
+      if (row.metGrowth === false) return { fill: "var(--dist-missed)", label: "Not met", key: "missed", shape: "diamond" };
       return { fill: "var(--viz-surface)", stroke: "var(--dist-none)", label: "No projection given", key: "none" };
     }
 
@@ -14978,14 +14999,15 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
     function distEyebrow(model) {
       const span = model.metric.growth
         ? state.dataWindow.priorWindowLabel + " to " + state.dataWindow.currentWindowLabel
-        : currentWindowName();
+        : model.earlier.count ? "Latest score" : currentWindowName();
       return span + " \u00b7 " + formatInteger(model.plotted) + (model.plotted === 1 ? " record" : " records");
     }
 
     function distAxisTitle(model) {
       const kind = model.metric.kind;
-      if (kind === "percentile") return "Achievement percentile, " + currentWindowName();
-      if (kind === "rit") return "RIT score, " + currentWindowName();
+      const when = model.earlier.count ? "latest score" : currentWindowName();
+      if (kind === "percentile") return "Achievement percentile, " + when;
+      if (kind === "rit") return "RIT score, " + when;
       if (kind === "change") return "RIT change, " + state.dataWindow.priorWindowLabel + " to " + state.dataWindow.currentWindowLabel;
       return "Conditional growth percentile (50 is typical growth)";
     }
@@ -15001,6 +15023,12 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
           : metric.kind === "rit" ? lead + (left === 1 ? "has" : "have") + " no RIT score and " + (left === 1 ? "is" : "are") + " not drawn."
             : metric.kind === "change" ? lead + (left === 1 ? "has" : "have") + " only one test window, so no RIT change, and " + (left === 1 ? "is" : "are") + " not drawn."
               : lead + (left === 1 ? "carries" : "carry") + " no conditional growth percentile and " + (left === 1 ? "is" : "are") + " not drawn.");
+      }
+      if (model.earlier.count) {
+        const earlier = model.earlier.labels.length ? listSentence(model.earlier.labels) : "an earlier window";
+        notes.push(formatInteger(model.earlier.count) + " of the " + formatInteger(model.plotted) + " records " + (model.earlier.count === 1 ? "has" : "have") +
+          " no " + currentWindowName() + " score, so " + (model.earlier.count === 1 ? "its" : "their") + " latest score, from " + earlier + ", is drawn; the rest are " +
+          currentWindowName() + "." + (metric.kind === "rit" ? " RIT rises through the year, so an earlier score sits lower than it would now." : ""));
       }
       if (model.empty.length) {
         notes.push("No row for " + listSentence(model.empty) + ": nothing there to plot for this measure.");
@@ -15052,7 +15080,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         ? BANDS.map((band) => ({ label: band.name, color: band.color, shape: "dot", value: formatInteger(count(band.name)) }))
         : [
           { label: "Met projection", color: "var(--dist-met)", shape: "dot", value: formatInteger(count("met")) },
-          { label: "Did not meet", color: "var(--dist-missed)", shape: "dot", value: formatInteger(count("missed")) }
+          { label: "Did not meet", color: "var(--dist-missed)", shape: "diamond", value: formatInteger(count("missed")) }
         ];
       const none = count("none");
       let legend = vizLegend(items, { ariaLabel: metric.colorBy === "band" ? "Dot colour: NWEA band, with the number of records" : "Dot colour: growth projection, with the number of records" });
@@ -15080,6 +15108,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       model.groups.forEach((group) => group.records.forEach((record) => {
         rows.push({
           student: record.row.studentName,
+          key: studentKey(record.row),
           subject: record.row.subject,
           className: record.row.className,
           value: distFormat(metric, record.value),
@@ -15089,7 +15118,9 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       return vizTable({
         caption: metric.label + ", every record, lowest first within each " + (model.lens === "class" ? "class" : "subject"),
         columns: [
-          { key: "student", label: "Student" },
+          // A name opens the profile, as the dot does: a full-size control
+          // for anyone who cannot land on a small dot.
+          { key: "student", label: "Student", html: (name, row) => studentLinkByName(name, row.key) },
           { key: "subject", label: "Subject" },
           { key: "className", label: "Class" },
           { key: "value", label: metric.label, numeric: true },
@@ -15142,7 +15173,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
           ],
           rows
         }),
-        note: distStatsNote()
+        note: distStatsNote(model)
       });
     }
 
@@ -15385,12 +15416,14 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         for (let j = k + 1; j < points.length && points[j].px - entry.px < 24; j += 1) nearest = Math.min(nearest, Math.hypot(entry.px - points[j].px, entry.py - points[j].py));
         // Without a box the row has no tab stop of its own, so its lowest dot is it.
         const tabStop = !hasBox && k === 0;
+        // A dot opens the student's profile, so it is a button, and says so.
         return vizDot(entry.px, entry.py, {
-          r, fill: style.fill, stroke: style.stroke, tip, focusable: false, className: "viz-dot dist-dot",
+          r, fill: style.fill, stroke: style.stroke || undefined, shape: style.shape, tip, focusable: false,
+          className: "viz-dot dist-dot" + (style.stroke && style.key !== "none" ? " is-edged" : ""),
           hitR: Math.max(r + 1, Math.min(12, nearest / 2))
         }).replace('<g class="viz-dot-wrap"', '<g class="viz-dot-wrap dist-dot-wrap" tabindex="' + (tabStop ? "0" : "-1") +
-          '" role="img" aria-label="' + escapeAttr(spoken) + '" data-dist-student="' + escapeAttr(record.row.studentName) +
-          '" data-dist-v="' + vizNum(record.value) + '"');
+          '" role="button" aria-label="' + escapeAttr(spoken.replace(/\.?$/, ". ") + "Opens the student profile.") + '" data-dist-student="' + escapeAttr(record.row.studentName) +
+          '" data-dist-key="' + escapeAttr(studentKey(record.row)) + '" data-dist-v="' + vizNum(record.value) + '"');
       }).join("");
     }
 
@@ -15418,7 +15451,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         if (!isDot) return;
         event.preventDefault();
         vizTooltipHide();
-        openSpotlight(target.getAttribute("data-dist-student"));
+        openSpotlight(target.getAttribute("data-dist-student"), target.getAttribute("data-dist-key"));
         return;
       }
       if (event.key === "ArrowRight") next = isDot ? dots[index + 1] : dots[0];
@@ -15670,12 +15703,6 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       return (diff > 0 ? "Up " : "Down ") + Math.abs(diff) + bands;
     }
 
-    // "+12", "0", or a fall with the page's minus sign; one decimal at most.
-    function movementSigned(value) {
-      if (!isFiniteNumber(value)) return "N/A";
-      return (value > 0 ? "+" : value < 0 ? "\u2212" : "") + formatNumber(Math.abs(value), 1);
-    }
-
     function movementPlural(count, noun) {
       return formatInteger(count) + " " + noun + (count === 1 ? "" : "s");
     }
@@ -15742,7 +15769,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       // Largest move first: biggest rise for up and stayed, biggest fall for down.
       return rows.sort((a, b) =>
         order * ((a.percentileChange ?? 0) - (b.percentileChange ?? 0)) ||
-        String(a.studentName).localeCompare(String(b.studentName)));
+        naturalCompare(a.studentName, b.studentName));
     }
 
     // The default list lights nothing: the matrix opens clean, and the rings
@@ -15827,7 +15854,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       const middle = vizStats.quantile(changes, 0.5);
       tiles.push(vizKpiTile({
         label: "Median percentile change",
-        value: movementSigned(middle),
+        value: vizSigned(middle, Number.isInteger(middle) ? 0 : 1),
         unit: isFiniteNumber(middle) ? " pts" : "",
         context: vizIsThin(changes.length) ? vizThinNote(changes.length) : "the middle of " + formatInteger(changes.length) + " changes: half above it, half below",
         thin: vizIsThin(changes.length)
@@ -15877,7 +15904,14 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
             slipping ? slipping.band.name + " starters " + (rising ? "" : "were ") + "the most likely to slip (" + rate(slipping.down, slipping) + ")" : ""
           ].filter(Boolean).join(", and ");
         }
-        if (clause) text += " Among starting bands with at least " + MIN_SHARE_N + " records, " + clause + ".";
+        if (clause) {
+          text += " Among starting bands with at least " + MIN_SHARE_N + " records, " + clause + ".";
+          // The end bands win this comparison partly by arithmetic: a Red
+          // starter can only rise, a Blue one only slip, and test error alone
+          // moves some scores back toward the middle.
+          const edge = [rising, slipping].some((entry) => entry && (entry.band === BANDS[0] || entry.band === BANDS[BANDS.length - 1]));
+          if (edge) text += " Some movement out of the top and bottom bands is expected from test error alone (regression to the mean), so compare these rates with the middle bands before reading them as progress.";
+        }
       }
       const noStart = scope.rows.filter((row) => row.endBand && row.endBand.rank && !(row.startBand && row.startBand.rank)).length;
       const noEnd = scope.rows.filter((row) => row.startBand && row.startBand.rank && !(row.endBand && row.endBand.rank)).length;
@@ -16102,7 +16136,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
           '<span class="move-item-arrow" aria-hidden="true">\u2192</span><span class="sr-only"> to </span>' +
           '<span class="move-band"><i class="move-band-dot" style="--sw:' + escapeAttr(row.endBand.color) + '" aria-hidden="true"></i>' + escapeHTML(row.endBand.name + " " + ordinal(row.endPercentile)) + "</span>" +
           "</span>" +
-          '<span class="move-item-change"><span class="sr-only">change </span>' + escapeHTML(movementSigned(row.percentileChange)) + "</span>" +
+          '<span class="move-item-change"><span class="sr-only">change </span>' + escapeHTML(vizSigned(row.percentileChange, 0)) + "</span>" +
           "</li>";
       }).join("");
       return '<div class="viz-card-head"><span class="viz-eyebrow">Who is in it</span>' +
@@ -16156,7 +16190,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         .concat([
           { key: "start", label: prior, numeric: true, format: (value) => ordinal(value) },
           { key: "end", label: current, numeric: true, format: (value) => ordinal(value) },
-          { key: "change", label: "Change", numeric: true, format: (value) => movementSigned(value) },
+          { key: "change", label: "Change", numeric: true, format: (value) => vizSigned(value, 0) },
           { key: "met", label: "Met projection" }
         ]);
       const table = vizTable({
@@ -16201,8 +16235,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
     function movementSorted(records) {
       return records.filter((row) => isFiniteNumber(row.startPercentile) && isFiniteNumber(row.endPercentile))
         .sort((a, b) => (b.percentileChange ?? 0) - (a.percentileChange ?? 0) ||
-          String(a.studentName).localeCompare(String(b.studentName)) ||
-          String(a.subject).localeCompare(String(b.subject)));
+          naturalCompare(a.studentName, b.studentName) || naturalCompare(a.subject, b.subject));
     }
 
     function movementMetText(row) {
@@ -16220,12 +16253,16 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       const shown = capped ? records.slice(0, half).concat(records.slice(n - half)) : records;
       const hidden = capped ? records.slice(half, n - half) : [];
       const focusable = shown.length <= MOVEMENT_FOCUSABLE_MAX;
-      const rowH = 20;
+      // On a phone a name column beside the lines left the 0-100 scale about
+      // 140px wide, so there each name sits above its line instead and the
+      // scale takes the full width.
+      const stacked = width < 480;
+      const rowH = stacked ? 34 : 20;
       const gapH = capped ? 30 : 0;
 
       // Row labels: the name, and the subject when more than one is in view.
       // Long names are cut to fit; the tip and the table keep them whole.
-      const maxLabel = Math.min(Math.round(width * 0.4), 210);
+      const maxLabel = stacked ? width - 24 : Math.min(Math.round(width * 0.4), 210);
       const labels = shown.map((row) => {
         const suffix = scope.multiSubject ? " \u00b7 " + (MOVEMENT_SUBJECT_SHORT[row.subject] || row.subject) : "";
         let name = String(row.studentName || "");
@@ -16233,11 +16270,11 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         if (name.length > room) name = name.slice(0, Math.max(3, room - 1)) + "\u2026";
         return { name, suffix, px: (name.length + suffix.length) * VIZ_CHAR_PX };
       });
-      const labelW = Math.min(maxLabel, Math.max(60, ...labels.map((label) => label.px))) + 12;
+      const labelW = stacked ? 18 : Math.min(maxLabel, Math.max(60, ...labels.map((label) => label.px))) + 12;
       const top = 36;
       const bottomAxis = shown.length > 20;
       const plot = vizLayout(width, top + shown.length * rowH + gapH + (bottomAxis ? 30 : 8), {
-        top, left: labelW, right: 30, bottom: bottomAxis ? 30 : 8
+        top, left: labelW, right: stacked ? 22 : 30, bottom: bottomAxis ? 30 : 8
       });
       const x = vizScaleLinear([0, 100], [plot.left, plot.right]);
       const ticks = x.ticks(width < 420 ? 3 : 5);
@@ -16248,7 +16285,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         out += '<line class="viz-grid-line" x1="' + vizNum(px) + '" x2="' + vizNum(px) + '" y1="' + vizNum(plot.top - 4) + '" y2="' + vizNum(plot.bottom) + '"/>';
         out += '<text class="viz-tick" x="' + vizNum(px) + '" y="' + vizNum(plot.top - 10) + '" text-anchor="middle">' + escapeHTML(formatNumber(tick, 0)) + "</text>";
       });
-      out += '<text class="viz-axis-title" x="' + vizNum(plot.left - 12) + '" y="' + vizNum(plot.top - 10) + '" text-anchor="end">Percentile</text>';
+      if (!stacked) out += '<text class="viz-axis-title" x="' + vizNum(plot.left - 12) + '" y="' + vizNum(plot.top - 10) + '" text-anchor="end">Percentile</text>';
       // The two reference lines, labelled above the plot and pointing away
       // from each other so the two labels never meet.
       const x50 = x(50);
@@ -16263,12 +16300,12 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         if (capped && index === half) {
           const from = hidden[0].percentileChange;
           const to = hidden[hidden.length - 1].percentileChange;
-          const fold = movementPlural(hidden.length, "more record") + (width < 480 ? ", " : ", changes ") + movementSigned(from) + " to " + movementSigned(to);
+          const fold = movementPlural(hidden.length, "more record") + (width < 480 ? ", " : ", changes ") + vizSigned(from, 0) + " to " + vizSigned(to, 0);
           out += '<text class="viz-label is-muted" x="' + vizNum(width / 2) + '" y="' + vizNum(y + gapH / 2) + '" text-anchor="middle" dominant-baseline="central">' +
             escapeHTML("\u22ef " + fold + " \u22ef") + "</text>";
           y += gapH;
         }
-        const cy = y + rowH / 2;
+        const cy = stacked ? y + 24 : y + rowH / 2;
         const change = row.percentileChange;
         const way = change > 0 ? MOVEMENT_WAYS[0] : change < 0 ? MOVEMENT_WAYS[2] : MOVEMENT_WAYS[1];
         const xs = x(row.startPercentile);
@@ -16277,7 +16314,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         const tipRows = [
           [prior, ordinal(row.startPercentile) + " (" + row.startBand.name + ")"],
           [current, ordinal(row.endPercentile) + " (" + row.endBand.name + ")"],
-          ["Change", movementSigned(change) + (Math.abs(change) === 1 ? " point" : " points")],
+          ["Change", vizSigned(change, 0) + (Math.abs(change) === 1 ? " point" : " points")],
           ["Met projection", movementMetText(row)]
         ];
         if (scope.multiClass) tipRows.push(["Class", row.className]);
@@ -16285,7 +16322,9 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         const label = labels[index];
         out += '<g class="move-row"' + vizTipAttrs(tip, { focusable }) + ">" +
           '<rect class="move-row-bg" x="0" y="' + vizNum(y) + '" width="' + vizNum(width) + '" height="' + vizNum(rowH) + '" rx="4"/>' +
-          '<text class="move-row-label" x="' + vizNum(plot.left - 12) + '" y="' + vizNum(cy) + '" text-anchor="end" dominant-baseline="central">' +
+          (stacked
+            ? '<text class="move-row-label" x="' + vizNum(plot.left - 8) + '" y="' + vizNum(y + 9) + '" dominant-baseline="central">'
+            : '<text class="move-row-label" x="' + vizNum(plot.left - 12) + '" y="' + vizNum(cy) + '" text-anchor="end" dominant-baseline="central">') +
           escapeHTML(label.name) + (label.suffix ? '<tspan class="move-row-suffix">' + escapeHTML(label.suffix) + "</tspan>" : "") + "</text>";
         if (change) {
           out += '<line class="move-stem" x1="' + vizNum(xs) + '" x2="' + vizNum(xe) + '" y1="' + vizNum(cy) + '" y2="' + vizNum(cy) + '" stroke="' + way.color + '"/>' +
@@ -16301,7 +16340,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
           let anchor = right ? "start" : "end";
           if (!right && lx - 30 < plot.left) { lx = xs + 9; anchor = "start"; }
           if (right && lx + 30 > width) { lx = xs - 9; anchor = "end"; }
-          out += '<text class="viz-label" x="' + vizNum(lx) + '" y="' + vizNum(cy) + '" text-anchor="' + anchor + '" dominant-baseline="central">' + escapeHTML(movementSigned(change)) + "</text>";
+          out += '<text class="viz-label" x="' + vizNum(lx) + '" y="' + vizNum(cy) + '" text-anchor="' + anchor + '" dominant-baseline="central">' + escapeHTML(vizSigned(change, 0)) + "</text>";
         }
         y += rowH;
       });
@@ -16316,7 +16355,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         className: "move-dumbbell",
         ariaLabel: "Percentile change by student for " + scope.label + ": " + formatInteger(rises) + " of " + movementPlural(n, "record") + " rose, " +
           formatInteger(falls) + " fell and " + formatInteger(n - rises - falls) + " did not change." +
-          (n ? " Largest rise " + movementSigned(records[0].percentileChange) + ", largest fall " + movementSigned(records[n - 1].percentileChange) + " points." : ""),
+          (n ? " Largest rise " + vizSigned(records[0].percentileChange, 0) + ", largest fall " + vizSigned(records[n - 1].percentileChange, 0) + " points." : ""),
         desc: "Each line runs from the " + prior + " percentile (hollow dot) to the " + current + " percentile (filled dot) on a 0 to 100 scale, with dashed lines at the 50th and " +
           ordinal(SECURE_BENCHMARK) + " percentiles." + (capped ? " The middle " + movementPlural(hidden.length, "record") + " are folded; the table lists every record." : "")
       });
@@ -18332,13 +18371,6 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       return isFiniteNumber(number) ? number : 500;
     }
 
-    function heatmapSigned(value, digits) {
-      if (!isFiniteNumber(value)) return "N/A";
-      const text = formatNumber(Math.abs(value), digits === undefined ? 1 : digits);
-      if (text === "0") return "0";
-      return (value > 0 ? "+" : "\u2212") + text;
-    }
-
     // Shortens a label to fit maxPx at charPx a character, with an ellipsis.
     function heatmapFit(text, maxPx, charPx) {
       const value = String(text);
@@ -18403,12 +18435,13 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
           if (close) tip.push(["Too close to call", formatInteger(close)]);
         }
       } else if (metric.key === "change") {
-        const interval = vizStats.ci95Mean(base.map(metric.value));
+        // Counts each student once: an All column pools a student's subjects.
+        const interval = vizStats.ci95MeanClustered(base.map(metric.value), base.map((row) => studentKey(row)));
         summary.value = interval ? interval.mean : null;
-        summary.text = heatmapSigned(summary.value, 1);
+        summary.text = vizSigned(summary.value, 1);
         if (interval) {
-          tip.push([metric.tipLabel, heatmapSigned(interval.mean, 1) + " RIT"]);
-          if (isFiniteNumber(interval.lo)) tip.push(["95% interval", heatmapSigned(interval.lo, 1) + " to " + heatmapSigned(interval.hi, 1)]);
+          tip.push([metric.tipLabel, vizSigned(interval.mean, 1) + " RIT"]);
+          if (isFiniteNumber(interval.lo)) tip.push(["95% interval", vizSigned(interval.lo, 1) + " to " + vizSigned(interval.hi, 1)]);
         }
       } else {
         const five = vizStats.fiveNumber(base.map(metric.value));
@@ -18452,7 +18485,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       }
       const colors = [];
       for (let level = -metric.steps.length; level <= metric.steps.length; level += 1) colors.push(heatmapClassColor(metric, level));
-      const format = metric.signed ? (value) => heatmapSigned(value, 0) : (value) => formatNumber(value, 0);
+      const format = metric.signed ? (value) => vizSigned(value, 0) : (value) => formatNumber(value, 0);
       const lows = metric.steps.slice().reverse().map((step) => metric.centre - step);
       const highs = metric.steps.map((step) => metric.centre + step);
       return { colors, edges: lows.concat(highs).map(format), ends: null };
@@ -18609,19 +18642,6 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       return vizTip(title, cell.tip, note);
     }
 
-    // The kit gives a chart with no focusable marks a root <title>, which a
-    // browser pops up as a native tooltip over every mark that carries a kit
-    // tip. A dense grid - tips, but too many cells to be tab stops - takes
-    // its name as an aria-label instead, so only the kit's tooltip shows.
-    function heatmapFrame(inner, options) {
-      const svg = vizFrame(inner, options);
-      if (!/\sdata-tip="/.test(inner) || /\stabindex="0"/.test(inner)) return svg;
-      return svg.replace(/ aria-labelledby="([^"]*)"><title id="[^"]*">[\s\S]*?<\/title>/, (match, ids) => {
-        const rest = ids.split(" ").slice(1).join(" ");
-        return ' aria-label="' + escapeAttr(options.ariaLabel || "Chart") + '"' + (rest ? ' aria-describedby="' + rest + '"' : "") + ">";
-      });
-    }
-
     function heatmapMatrixSVG(model, width) {
       const { metric, groups, subjects, dim } = model;
       const columns = subjects.concat(model.showAllCol ? [HEATMAP_ALL] : []);
@@ -18706,7 +18726,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         });
       });
 
-      const frame = heatmapFrame(inner, {
+      const frame = vizFrame(inner, {
         width: gridW,
         height,
         fixed: true,
@@ -18751,7 +18771,15 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
     }
 
     function heatmapWindowText(metric) {
-      if (!metric.growth) return "Scores from " + currentWindowName() + ".";
+      if (!metric.growth) {
+        // Each record's latest score; say so when some come from an earlier
+        // window than the one named (a student absent in the spring, or two
+        // Class Profile terms loaded together).
+        const earlier = earlierWindowRecords(state.filteredRows);
+        if (!earlier.count) return "Scores from " + currentWindowName() + ".";
+        return "Each record's latest score: " + currentWindowName() + ", or " + (earlier.labels.length ? listSentence(earlier.labels) : "an earlier window") +
+          " for the " + formatInteger(earlier.count) + " with no later test.";
+      }
       const info = state.dataWindow;
       return "Growth from " + (info.priorWindowLabel || "the prior window") + " to " + (info.currentWindowLabel || "the current window") +
         (info.mode === "mixed" ? ", records with both windows only." : ".");
@@ -18879,7 +18907,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       const colors = [];
       for (let level = -3; level <= 3; level += 1) colors.push(vizColor.diverging(level / 3));
       const cut = [2 * floor, floor, floor / 2];
-      const edges = cut.map((value) => heatmapSigned(-value, 1)).concat(cut.slice().reverse().map((value) => heatmapSigned(value, 1)));
+      const edges = cut.map((value) => vizSigned(-value, 1)).concat(cut.slice().reverse().map((value) => vizSigned(value, 1)));
       return { colors, edges, ends: null };
     }
 
@@ -18920,8 +18948,13 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       const { students, areaNames, medians, floor } = model;
       const tall = students.length > HEATMAP_TALL_ROWS;
       const nameChars = Math.max(12, ...students.map((student) => String(student.row.studentName).length));
-      const nameW = Math.round(Math.max(96, Math.min(nameChars * 6.9 + 30, Math.max(96, width * 0.3))));
+      let nameW = Math.round(Math.max(96, Math.min(nameChars * 6.9 + 30, Math.max(96, width * 0.3))));
       const ritW = 48;
+      // A grid a few pixels too wide for its card gives them up from the
+      // name column (names are cut to fit, the tip keeps them whole) rather
+      // than scrolling sideways for a sliver.
+      const over = nameW + ritW + areaNames.length * 50 + (tall ? 14 : 0) - width;
+      if (over > 0 && over <= 24) nameW -= over;
       const left = nameW + ritW;
       const cellW = Math.max(50, Math.min(172, Math.floor((width - left - (tall ? 14 : 0)) / Math.max(1, areaNames.length))));
       const gridW = left + areaNames.length * cellW;
@@ -18960,28 +18993,28 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         const fill = level === null ? VIZ_EMPTY : vizColor.diverging(level / 3);
         const thin = entry.n > 0 && vizIsThin(entry.n);
         const rows = [
-          ["Median difference", heatmapSigned(entry.median, 1) + " RIT"],
+          ["Median difference", vizSigned(entry.median, 1) + " RIT"],
           ["Students", formatInteger(entry.n)]
         ];
-        if (entry.n >= 4) rows.splice(1, 0, ["Middle half", heatmapSigned(entry.q1, 1) + " to " + heatmapSigned(entry.q3, 1)]);
+        if (entry.n >= 4) rows.splice(1, 0, ["Middle half", vizSigned(entry.q1, 1) + " to " + vizSigned(entry.q3, 1)]);
         head += vizHeatCell(colX(i), my, cellW, medianH, {
           fill,
           empty: !entry.n,
           thin,
-          label: entry.n ? heatmapSigned(entry.median, 1) : "",
+          label: entry.n ? vizSigned(entry.median, 1) : "",
           tip: vizTip("Class median \u00b7 " + entry.name, rows, thin ? vizThinNote(entry.n) : "Area RIT minus each student's own overall " + subjectWord + " RIT; the Areas section tests this with a confidence interval."),
           focusable: entry.n > 0,
           radius: 4
         });
       });
       const headHeight = my + medianH + 8;
-      const headSVG = heatmapFrame(head, {
+      const headSVG = vizFrame(head, {
         width: gridW,
         height: headHeight,
         fixed: true,
         className: "hm-svg",
         ariaLabel: "Class median for each " + model.subject + " area against the students' own overall RIT",
-        desc: medians.map((entry) => entry.name + " " + heatmapSigned(entry.median, 1)).join("; ") + "."
+        desc: medians.map((entry) => entry.name + " " + vizSigned(entry.median, 1)).join("; ") + "."
       });
 
       // Body: one row per student, highest overall RIT first.
@@ -19007,7 +19040,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
           const rows = [
             ["Area RIT", formatNumber(area.rit, 0) + (area.range ? " (" + area.range + ")" : "")],
             ["Overall RIT", formatNumber(row.currentRIT, 0)],
-            ["Difference", heatmapSigned(area.delta, 0) + " RIT"]
+            ["Difference", vizSigned(area.delta, 0) + " RIT"]
           ];
           if (student.sittings > 1) rows.push(["Sittings in view", formatInteger(student.sittings) + ", latest shown"]);
           const note = flagged
@@ -19016,7 +19049,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
             : "Within the \u00b1" + formatNumber(floor, 1) + " RIT noise floor: measurement noise, not a profile.";
           body += vizHeatCell(colX(i), y, cellW, rowH, {
             fill,
-            label: flagged ? heatmapSigned(area.delta, 0) : "",
+            label: flagged ? vizSigned(area.delta, 0) : "",
             tip: vizTip(row.studentName + " \u00b7 " + name, rows, note),
             focusable: focusStudents,
             radius: 3
@@ -19024,7 +19057,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         });
       });
       const bodyHeight = students.length * rowH + 2;
-      const bodySVG = heatmapFrame(body, {
+      const bodySVG = vizFrame(body, {
         width: gridW,
         height: bodyHeight,
         fixed: true,
@@ -19046,7 +19079,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
     function heatmapAreaTable(model) {
       const columns = [{ key: "name", label: "Student" }, { key: "rit", label: "Overall RIT", numeric: true, format: (value) => formatNumber(value, 1) }];
       model.areaNames.forEach((name, i) => {
-        columns.push({ key: "a" + i, label: name, numeric: true, format: (value) => (isFiniteNumber(value) ? heatmapSigned(value, 1) : "\u2013") });
+        columns.push({ key: "a" + i, label: name, numeric: true, format: (value) => (isFiniteNumber(value) ? vizSigned(value, 1) : "\u2013") });
       });
       const medianRow = { name: "Class median", rit: model.medianRIT };
       model.medians.forEach((entry, i) => { medianRow["a" + i] = entry.median; });
@@ -21914,6 +21947,9 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       // refuses localStorage (a private window, a locked-down laptop).
       prefs: {},
       axes: { x: null, y: null },
+      // Whether the records in view carry latest scores from more than one
+      // window (see earlierWindowRecords); set on every render.
+      windowsMixed: false,
       model: null
     };
 
@@ -21983,28 +22019,41 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
 
     // Lexile and Quantile arrive as text: "850L", "BR120L" (a beginning
     // reader, below zero on the scale), "EM200Q", or a range such as
-    // "785L-935L", which is read at its midpoint.
-    function explorerParseMeasure(text) {
-      if (isFiniteNumber(text)) return text;
-      if (text === null || text === undefined) return null;
-      const parts = String(text).toUpperCase().match(/(?:BR|EM)?\s*\d+(?:\.\d+)?/g);
-      if (!parts || parts.length > 2) return null;
-      const values = parts.map((part) => {
-        const below = /^(BR|EM)/.test(part);
-        const value = parseFloat(part.replace(/^(BR|EM)\s*/, ""));
-        return below ? -value : value;
-      });
-      return values.length === 2 ? (values[0] + values[1]) / 2 : values[0];
+    // "785L-935L", which is read at its midpoint. A value outside what the
+    // scale reaches (EXPLORER_MEASURE_RANGE) is a slip, not a measure, and
+    // is treated as missing rather than stretching the axis.
+    const EXPLORER_MEASURE_RANGE = { lexile: [-2000, 2200], quantile: [-400, 1800] };
+
+    function explorerParseMeasure(text, key) {
+      let value = null;
+      if (isFiniteNumber(text)) {
+        value = text;
+      } else if (text !== null && text !== undefined) {
+        const parts = String(text).toUpperCase().match(/(?:BR|EM)?\s*\d+(?:\.\d+)?/g);
+        if (!parts || parts.length > 2) return null;
+        const values = parts.map((part) => {
+          const below = /^(BR|EM)/.test(part);
+          const number = parseFloat(part.replace(/^(BR|EM)\s*/, ""));
+          return below ? -number : number;
+        });
+        value = values.length === 2 ? (values[0] + values[1]) / 2 : values[0];
+      }
+      const range = EXPLORER_MEASURE_RANGE[key];
+      if (!isFiniteNumber(value) || (range && (value < range[0] || value > range[1]))) return null;
+      return value;
     }
 
     function explorerValue(row, field) {
-      const raw = field.measure ? explorerParseMeasure(row[field.key]) : row[field.key];
+      const raw = field.measure ? explorerParseMeasure(row[field.key], field.key) : row[field.key];
       return isFiniteNumber(raw) ? raw : null;
     }
 
     function explorerLabel(field) {
       if (isBaselineMode() && field.baselineLabel) return field.baselineLabel;
       const windowName = currentWindowName();
+      // Two Class Profile terms loaded together put records from both on the
+      // chart, so the axis names the score it plots, not one window.
+      if (field.windowName && explorerState.windowsMixed) return field.label + " (latest score)";
       if (field.windowName && windowName && windowName !== "Current window") return field.label + " (" + windowName + ")";
       return field.label;
     }
@@ -22165,7 +22214,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       if (colorBy === "band") {
         const band = row.currentBand && row.currentBand.rank ? row.currentBand : null;
         return band
-          ? { key: band.name, label: band.name, color: band.color, order: band.rank }
+          ? { key: band.name, label: band.name, color: band.color, edge: vizBandEdge(band), order: band.rank }
           : { key: "no-band", label: "No band", color: VIZ_OTHER, order: 9 };
       }
       if (colorBy === "subject") {
@@ -22175,7 +22224,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       if (colorBy === "class") {
         const slot = slots.get(row.className);
         return isFiniteNumber(slot) && slot >= 0
-          ? { key: row.className, label: row.className, color: vizColor.categorical(slot), order: slot }
+          ? { key: row.className, label: row.className, color: vizColor.categorical(slot), edge: slot === 1 ? "var(--viz-edge-gold)" : null, order: slot }
           : { key: "other-classes", label: "Other classes", color: VIZ_OTHER, order: 99 };
       }
       if (colorBy === "met") {
@@ -22183,7 +22232,9 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         // two poles of the diverging ramp: purple for met, the gold ink for
         // missed (6.4:1 on white, so it reads as a mark, unlike the gold).
         if (row.metGrowth === true) return { key: "met", label: "Met projection", color: "var(--viz-cat-1)", order: 1 };
-        if (row.metGrowth === false) return { key: "missed", label: "Did not meet", color: "var(--viz-div-0)", order: 2 };
+        // "Did not meet" is a diamond as well, so the pair never rests on
+        // colour alone (the ring is already "too close to call").
+        if (row.metGrowth === false) return { key: "missed", label: "Did not meet", color: "var(--viz-div-0)", shape: "diamond", order: 2 };
         return { key: "no-projection", label: "No projection", color: VIZ_OTHER, order: 3 };
       }
       return { key: "all", label: "Records", color: "var(--viz-cat-1)", order: 1 };
@@ -22201,6 +22252,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         model.empty = "No records in this view. Load a file, or widen the filters above.";
         return model;
       }
+      explorerState.windowsMixed = earlierWindowRecords(rows).count > 0;
       model.fields = explorerFields(rows);
       if (model.fields.length < 2) {
         model.empty = "This view has fewer than two measures with numbers in them, so there is nothing to plot one against the other.";
@@ -22338,8 +22390,10 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       if (usesRIT && explorerState.subject === "all" && new Set(model.points.map((point) => point.row.subject)).size > 1) {
         notes.push("RIT scales differ by subject, so pooling them can blur or even reverse a pattern: pick one subject above for a cleaner read.");
       }
-      if (model.fit && isFiniteNumber(model.pearson.r) && !model.thin && model.students < model.n) {
-        notes.push("Each student counts once per subject, so the points are not all independent and the p-value is on the generous side.");
+      if (model.fit && isFiniteNumber(model.pearson.r) && model.students < model.n) {
+        notes.push(model.thin
+          ? "Each student counts once per subject, so these few points are fewer independent students still: " + formatInteger(model.students) + (model.students === 1 ? " student" : " students") + "."
+          : "Each student counts once per subject, so the points are not all independent and the p-value is on the generous side.");
       }
       return notes.slice(0, 2);
     }
@@ -22359,7 +22413,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       const yShort = model.yField.short || model.yLabel;
       const xShort = model.xField.short || model.xLabel;
       const countContext = [];
-      if (model.students < model.n) countContext.push(formatInteger(model.students) + " students");
+      if (model.students < model.n) countContext.push(formatInteger(model.students) + (model.students === 1 ? " student" : " students"));
       if (model.missing) countContext.push(formatInteger(model.missing) + " missing a measure, left out");
       // The interval's ends take the slope's own number of decimals, so
       // "-0.19 to 0.065" reads as "-0.190 to 0.065".
@@ -22369,19 +22423,25 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
       const slopeCI = fit && fit.slopeCI95 && fit.slopeCI95.every(isFiniteNumber)
         ? " \u00b7 95% CI " + end(fit.slopeCI95[0]) + " to " + end(fit.slopeCI95[1])
         : "";
+      // Under MIN_SHARE_N records the figures are shown, hatched, but not
+      // read: no strength word, no p-value, no share of the spread and no
+      // slope interval - a test on four records of one child says nothing,
+      // however small its p.
       const tiles = [
         vizKpiTile({
           label: "Correlation",
           value: isFiniteNumber(r) ? explorerR(r) : "N/A",
-          context: isFiniteNumber(r)
-            ? "Pearson r \u00b7 " + (explorerStrength(r) === "no clear" ? "no clear line" : explorerStrength(r) + " " + (r > 0 ? "positive" : "negative")) + " \u00b7 " + vizStats.formatP(model.pearson.p)
-            : "Pearson r needs three records that vary",
+          context: !isFiniteNumber(r) ? "Pearson r needs three records that vary"
+            : model.thin ? "Pearson r \u00b7 too few records to test"
+              : "Pearson r \u00b7 " + (explorerStrength(r) === "no clear" ? "no clear line" : explorerStrength(r) + " " + (r > 0 ? "positive" : "negative")) + " \u00b7 " + vizStats.formatP(model.pearson.p),
           thin: model.thin
         }),
         vizKpiTile({
           label: "R\u00b2",
           value: fit && isFiniteNumber(fit.r2) ? fit.r2.toFixed(2) : "N/A",
-          context: fit && isFiniteNumber(fit.r2) ? "The line accounts for " + formatPercentWhole(fit.r2 * 100) + " of the spread in " + yShort : "No line to fit",
+          context: !(fit && isFiniteNumber(fit.r2)) ? "No line to fit"
+            : model.thin ? "Too few records to say how much the line accounts for"
+              : "The line accounts for " + formatPercentWhole(fit.r2 * 100) + " of the spread in " + yShort,
           thin: model.thin
         }),
         vizKpiTile({
@@ -22393,7 +22453,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         vizKpiTile({
           label: "Slope",
           value: fit ? slopeText : "N/A",
-          context: fit ? yShort + " per 1 " + xShort + slopeCI : "No line to fit",
+          context: fit ? yShort + " per 1 " + xShort + (model.thin ? "" : slopeCI) : "No line to fit",
           thin: model.thin
         })
       ];
@@ -22402,7 +22462,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
 
     function explorerLegendHTML(model) {
       const items = model.colorBy === "none" ? [] : model.groups.map((group) => ({
-        label: group.label, color: group.color, shape: "dot", value: formatInteger(group.points.length)
+        label: group.label, color: group.color, shape: group.shape || "dot", value: formatInteger(group.points.length)
       }));
       if (model.trendDrawn) items.push({ label: "Trend line", color: "var(--text-soft)", shape: "line" });
       if (items.length < 2) return "";
@@ -22548,12 +22608,17 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         if (jitterX) cx = Math.max(plot.left, Math.min(plot.right, cx + jitterX * (explorerHash01(point.id + "|x") * 2 - 1)));
         if (jitterY) cy = Math.max(plot.top, Math.min(plot.bottom, cy + jitterY * (explorerHash01(point.id + "|y") * 2 - 1)));
         const isPinned = Boolean(model.pinKey) && point.key === model.pinKey;
+        // A point pins its student on Enter or a click: a toggle button.
         const mark = vizDot(cx, cy, {
           r: isPinned ? 6 : radius,
           fill: point.hollow ? "var(--viz-surface)" : point.group.color,
-          stroke: point.hollow ? point.group.color : undefined,
+          stroke: point.hollow ? point.group.color : point.group.edge || undefined,
+          className: "viz-dot" + (!point.hollow && point.group.edge ? " is-edged" : ""),
+          shape: point.group.shape,
           tip: exporting ? "" : explorerTip(model, point),
           focusable: model.focusable,
+          role: "button",
+          pressed: isPinned,
           hitR: dense ? 9 : 12
         });
         const group = '<g class="explorer-pt' + (isPinned ? " is-pinned" : model.pinKey ? " is-dim" : "") + (point.hollow ? " is-hollow" : "") +
@@ -22594,21 +22659,17 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
           vizText(16, height - 10, "American International School in Abu Dhabi \u00b7 NWEA MAP Growth \u00b7 " + scope + " \u00b7 " + new Date().toISOString().slice(0, 10), { className: "explorer-export-foot" });
       }
 
-      const label = explorerAriaLabel(model);
-      const svg = vizFrame(chart, {
+      // The downloaded file names itself with a <title>; on screen the kit
+      // names the chart with aria-label, so no native tooltip competes with
+      // the kit's.
+      return vizFrame(chart, {
         width,
         height,
-        ariaLabel: label,
+        ariaLabel: explorerAriaLabel(model),
         desc: explorerDesc(model),
-        className: "explorer-plot" + (dense ? " is-dense" : "")
+        className: "explorer-plot" + (dense ? " is-dense" : "") + (model.colorBy === "none" ? " is-mono" : ""),
+        standalone: exporting
       });
-      if (exporting) return svg;
-      // Past EXPLORER_FOCUSABLE_MAX the marks are not focusable, so vizFrame
-      // names the chart with a root <title> - which the browser also shows
-      // as its own tooltip over every point, on top of the kit's. On screen
-      // the same words go in aria-label instead; the file keeps its title.
-      return svg.replace(/ aria-labelledby="(viz-title-\d+)(?: (viz-desc-\d+))?"><title id="\1">[^<]*<\/title>/,
-        (match, titleId, descId) => ' aria-label="' + escapeAttr(label) + '"' + (descId ? ' aria-describedby="' + descId + '"' : "") + ">");
     }
 
     // The top of the downloaded picture: title, the figures in one line, and
@@ -22683,7 +22744,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         const away = isFiniteNumber(distance)
           ? (Number(explorerAway(model.yField, distance)) === 0 ? "on the trend line" : explorerAway(model.yField, Math.abs(distance)) + (distance > 0 ? " above" : " below") + " the trend line")
           : "";
-        return '<li><span class="viz-swatch is-dot" style="--sw:' + escapeAttr(point.hollow ? "var(--viz-surface)" : point.group.color) + '" aria-hidden="true"></span>' +
+        return '<li><span class="viz-swatch ' + (point.group.shape === "diamond" ? "is-diamond" : "is-dot") + '" style="--sw:' + escapeAttr(point.hollow ? "var(--viz-surface)" : point.group.color) + '" aria-hidden="true"></span>' +
           '<span class="explorer-pin-subject">' + escapeHTML(point.row.subject) + "</span>" +
           '<span class="explorer-pin-values">' + escapeHTML((model.xField.short || model.xLabel) + " " + explorerFormat(model.xField, point.x) + " \u00b7 " +
             (model.yField.short || model.yLabel) + " " + explorerFormat(model.yField, point.y)) +
@@ -22702,7 +22763,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         (meta ? '<span class="explorer-pin-meta">' + escapeHTML(meta) + "</span>" : "") +
         '<ul class="explorer-pin-list">' + items + missingItems + "</ul>" +
         '<div class="explorer-pin-actions">' +
-        '<button class="btn small" type="button" data-student="' + escapeAttr(first.studentName) + '">Open full profile</button>' +
+        '<button class="btn small" type="button" data-student="' + escapeAttr(first.studentName) + '" data-student-key="' + escapeAttr(studentKey(first)) + '">Open full profile</button>' +
         '<button class="btn small ghost" type="button" data-explorer-clear>Clear pin</button>' +
         "</div></div>";
     }
@@ -22803,7 +22864,7 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
 
     function explorerCardHTML(model) {
       const sub = "Each point is one student in one subject" +
-        (model.colorLabel ? ", coloured by " + explorerLower(model.colorLabel) + (model.colorBy === "band" ? " (" + currentWindowName() + ")" : "") : "") + "." +
+        (model.colorLabel ? ", coloured by " + explorerLower(model.colorLabel) + (model.colorBy === "band" ? " (" + (explorerState.windowsMixed ? "latest score" : currentWindowName()) + ")" : "") : "") + "." +
         (model.jitter && (model.xInteger || model.yInteger) ? " Jitter is on: points sharing a score are spread slightly apart." : "");
       const caveats = explorerCaveats(model);
       const equation = explorerEquation(model);
@@ -23093,10 +23154,18 @@ Spring 2025-2026,AISA (sample data),AISA Demo School,Rahimi,6B,D250085,Wong,Jun,
         const key = point.getAttribute("data-explorer-key");
         explorerPin(key === explorerState.pinKey ? "" : key);
       });
-      // Escape clears a pin, unless a dialog is open - then Escape is the
-      // dialog's. (The tooltip swallows the first Escape while it shows.)
-      document.addEventListener("keydown", (event) => {
-        if (event.key !== "Escape" || !explorerState.pinKey || document.body.classList.contains("modal-open")) return;
+      // Escape clears a pin while focus is in the Explorer - never an
+      // Escape meant for a dialog, the section's own help panel, or anything
+      // elsewhere on the page. (The tooltip swallows the first Escape while
+      // it shows.)
+      section.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape" || event.defaultPrevented || !explorerState.pinKey) return;
+        if (document.body.classList.contains("modal-open")) return;
+        // An Escape on the section's "?" or inside its open help panel is
+        // the panel's.
+        if (event.target.closest && event.target.closest(".section-help, [data-help]")) return;
+        const help = document.getElementById("help-sec-explorer");
+        if (help && !help.hidden) return;
         explorerPin("");
       });
     }
