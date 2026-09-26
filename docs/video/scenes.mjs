@@ -20,7 +20,7 @@ const RAW = [
   S("essentials-vs-full", "Essentials or the full analysis", "Finding your way"),
   S("briefing", "Spoken Briefing", "Essentials", { from: "#sec-briefing" }),
   S("insights", "Insights: the headline numbers", "Essentials", { from: "#sec-insights", to: ".insights-kpis" }),
-  S("insights-findings", "Insights: what stands out", "Essentials", { from: ".insights-controls", to: ".insights-list > li:nth-child(2)" }),
+  S("insights-findings", "Insights: what stands out", "Essentials", { from: ".insights-controls", to: ".insights-list > li:nth-child(2)", padBottom: 6 }),
   S("class-snapshot", "Class Snapshot", "Essentials", { from: "#sec-snapshot" }),
   S("achievement-profile", "Achievement Profile (tiers)", "Full analysis", { from: "#sec-baseline", to: "#tierLadder" }),
   S("subject-overview", "Subject Overview", "Full analysis", { from: "#sec-overview" }),

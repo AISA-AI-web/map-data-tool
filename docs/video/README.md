@@ -29,6 +29,11 @@ here; `PACK_HTML=1` also writes the PDF's HTML for checking the text.
   the narration's length (about 160 words a minute).
 - The fall (single-window) scenes use the sample with its spring window
   blanked, made the same way `build-guide.js` makes it.
+- The quiz draws its questions at random, so the capture seeds the page's
+  `Math.random`: every rebuild shows the same question, and the words written
+  for Scene 33 stay true. Change the seed and you must rewrite that scene.
+- The running header and footer carry their own copy of DM Sans, so the
+  whole PDF is set in the brand font.
 - Headless Chromium has no system voices, so the capture gives the page one
   stand-in voice ("System voice") to show the Spoken Briefing as it looks on
   a teacher's laptop; nothing is spoken.

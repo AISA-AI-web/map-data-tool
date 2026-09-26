@@ -29,7 +29,7 @@ export const TEXT = {
     caption: "\u201cHow do I get this file?\u201d opens the NWEA export steps and what the tool reads.",
     onScreen: "The panel \u201cWhich files do I export, and what does this tool read?\u201d. Left: \u201cExporting from NWEA MAP Growth - you need both\u201d, four numbered steps (sign in and open MAP Reports; run the Achievement Status and Growth report and download it as CSV; run the Class Profile report once per subject as CSV; upload them all together), then \u201cGet both right\u201d. Right: \u201cGood to know\u201d, covering automatic column matching, suppressed values, fall uploads, and that nothing is persisted. Below: a link to the user guide.",
     tells: "Two exports give the full picture: the Achievement Status and Growth (ASG) report carries growth; the Class Profile report, one per subject, carries the instructional areas. Same class, same term, every student in both.",
-    say: "It takes two minutes. In MAP Reports, download the Achievement Status and Growth report as a CSV, plus the Class Profile report for each subject. Then select all the files at once and drop them in.",
+    say: "In MAP Reports, download the Achievement Status and Growth report as a CSV, plus the Class Profile report for each subject. Then select all the files at once and drop them in.",
     tip: "If the two exports disagree about a student\u2019s score, the Data Check names the student and both figures, so you can check the exports."
   },
   "sample-loaded": {
@@ -167,9 +167,9 @@ export const TEXT = {
   },
   "heatmap": {
     caption: "Heatmap: every class against every subject, coloured by median percentile.",
-    onScreen: "A Rows switch (Class, Teacher, Grade) and a Colour by switch (Median %ile, 61st+ share, Met projection, Median CGP, RIT change). The grid: rows 5A, 5B, 6A, 6B and All classes; columns Language, Reading, Mathematics, Science and All subjects; each cell shaded purple by its value, with n. The line below: lowest 5B in Mathematics (46.5), highest 6A in Language (84) (demo data).",
+    onScreen: "A Rows switch (Class, Teacher, Grade) and a Colour by switch (Median %ile, 61st+ share, Met projection, Median CGP, RIT change). The grid: rows 5A, 5B, 6A, 6B and All classes; columns Language, Reading, Mathematics, Science and All subjects; each cell shaded in one of five purple steps (darker is higher) and showing its value and n. The line below: lowest 5B in Mathematics (46.5), highest 6A in Language (84) (demo data).",
     tells: "The cell that needs a conversation stands out before anyone reads a number.",
-    say: "The Heatmap puts every class against every subject. The palest cell, 5B in Mathematics, is the one to talk about. It is a question, not a verdict.",
+    say: "The Heatmap puts every class against every subject: the darker the purple, the higher the median. The lowest cell, 5B in Mathematics, is the one to talk about. It is a question, not a verdict.",
     tip: "A difference between two cells is a question, not a verdict: ask what is different about that group before deciding it is the teaching."
   },
   "heatmap-student-areas": {
@@ -181,7 +181,7 @@ export const TEXT = {
   },
   "instructional-areas": {
     caption: "Instructional Areas: class strengths and gaps inside each subject (from Class Profile exports).",
-    onScreen: "Tiles (demo data): Records with areas 358, Areas measured 27 across 7 subjects, Class patterns found 6, Teaching groups 27, Student flags 198. BY SUBJECT: the Language card, one bar per area against the students’ own overall RIT with its 95% interval: Writing −1.5 “Class gap”, Mechanics −0.8 “Within noise”, Grammar and Usage +2.2 “Class strength”, then a plain-English read. The Mathematics card begins below: Measurement and Data −2.9, “Class gap”.",
+    onScreen: "Tiles (demo data): Records with areas 358, Areas measured 27 across 7 subjects, Class patterns found 6, Teaching groups 27, Student flags 198. BY SUBJECT, with a note that an area is only named as a pattern when its 95% interval clears zero. The Language card: one bar per area against the students’ own overall RIT: Writing −1.5 “Class gap”, Mechanics −0.8 “Within noise”, Grammar and Usage +2.2 “Class strength”, each with how many students sit below the floor, then a plain-English read of the card.",
     tells: "What to reteach to the whole class, and which students need a small group, inside each subject.",
     say: "Instructional Areas looks inside each subject. Here, Writing is a class gap and Grammar a strength. Patterns are named only when the evidence is clear.",
     tip: "Reteach the class gaps to everyone, and take the flagged students as a small group."
@@ -202,7 +202,7 @@ export const TEXT = {
   },
   "table-groups": {
     caption: "Table Groups and Seating Plan: groups built from the data and drawn as a room (filtered to class 5A).",
-    onScreen: "Filtered to class 5A (demo data). The heading line: 23 of 23 students seated at 5 tables, balanced mixed tables by end percentile. The “Open the seating planner” bar with its Open button. “How this plan was made” explains the snake deal round the tables. Below, the room: teacher desk, board, door and Tables 1 to 5, each seat a name card in the student’s band colour with CGP and percentile, and a band-colour strip on every table. Print teacher copy, Print wall plan and Export CSV buttons.",
+    onScreen: "Filtered to class 5A (demo data). The heading line: 23 of 23 students seated at 5 tables, balanced mixed tables by end percentile. The “Open the seating planner” bar with its Open button. “How this plan was made” explains the snake deal round the tables. Below, the room drawn on a grid: the teacher desk, the board and Tables 1 to 4 (Table 5 and the door are further down), each seat a name card in the student’s band colour with CGP and percentile, and a band-colour strip on every table. Print teacher copy, Print wall plan and Export CSV buttons.",
     tells: "Seating groups from the data in seconds, balanced mixed tables or similar-score skill groups, with the method spelled out.",
     say: "Table Groups builds seating groups from the data, here for class 5A. It explains how the plan was made. Colour strips show each table\u2019s mix.",
     tip: "A seating plan is for one room: pick one class first; the page offers each class as a one-click button."
@@ -217,8 +217,8 @@ export const TEXT = {
   "student-grouping": {
     caption: "Student Grouping Report: every record in one sortable table.",
     onScreen: "360 records, sorted by student: student ID, subject, grade, class, start and end RIT, US norm grade level (for example “Norm level 4, vs grade 6 (−2 grades)”), RIT change, start and end percentile and percentile change; more columns scroll to the right. An Export Grouping CSV button (demo data).",
-    tells: "The full evidence behind every card above, with the planning group the dashboard suggests and the teacher action that goes with it.",
-    say: "The Grouping Report is every record in one sortable table. Each row suggests a planning group. Export it for your own documents.",
+    tells: "The full evidence behind every card above. Further right, each row also carries the planning group the dashboard suggests and the teacher action that goes with it.",
+    say: "The Grouping Report is every record in one sortable table: scores, percentiles, and where each student sits against the US norm for their grade. Export it for your own documents.",
     tip: "Click a student’s name for their one-page spotlight."
   },
   "priority-students": {
@@ -232,14 +232,14 @@ export const TEXT = {
     caption: "Wall Posters: student-friendly class posters, previewed before printing.",
     onScreen: "The previews in the section “Whole class, every subject together, 90 students, 11 posters” (demo data): We grew this year, Where we are now, Our learning areas, The RIT ladder, Growth is measured fairly, Take your time, Our next milestone, Catching up. Each has a tick box, a one-line description, a preview of the purple-headed poster and a “Print this one” button.",
     tells: "Posters for the classroom wall in student language: class shares, medians and counts only, with no name, no individual score and no rank.",
-    say: "Wall Posters turn the data into something for your students, in student language. They show class figures only: no names, no individual scores, no ranks. Tick them, add your class name, and print.",
-    tip: "Filter to one class before printing, and turn on background graphics and fit to page in the print dialog."
+    say: "Wall Posters turn the data into something for your students, in student language. They show class figures only: no names, no individual scores, no ranks. Tick the ones you want, and print.",
+    tip: "Filter to one class first and put the class name the students know in the poster heading box; in the print dialog, turn on background graphics and fit to page."
   },
   "quiz": {
     caption: "Check My Understanding: practice questions for a data conversation, marked against the page.",
-    onScreen: "Question 1 of 12 with a gold progress bar. Tags: Inspector asks, Interpretation, True or false. The question: “Class 6A has 96 records with a percentile and class 5A has 92. True or false: the dashboard shows a percentage secure (61st or above) for both, so you can compare them side by side.” False is marked wrong and True correct, then “Not quite. The answer is True.” with the explanation, a “Likely follow-up” box, and Next question and “Show me: Subject Overview” buttons (demo data).",
-    tells: "A rehearsal for the questions a principal, inspector, governor, data lead or head of department would ask, built from the data in view.",
-    say: "Check My Understanding is a practice run for a data meeting. It asks what a principal or inspector would ask, and marks your answer. Then it shows you where the evidence is.",
+    onScreen: "Question 1 of 12 with a gold progress bar and “0 of 1 answered correctly”. Tags: Governor asks, Snapshot. The question: “How many students are in this view? A student tested in two subjects is two records, and I want students, not records.” Four answers: A 89 is marked wrong in red, D 90 is marked correct in green (B 360 and C 87 are the other options). Then “Not quite. The answer is 90.” with the explanation that 90 students make 360 student-subject records, a “Likely follow-up” box, and the Next question and “Show me: Class Snapshot” buttons (demo data).",
+    tells: "A rehearsal for the questions a principal, inspector or governor is likely to ask, with every answer worked out from the records in view.",
+    say: "Check My Understanding is a practice run for a data meeting. It asks what a principal, inspector or governor would ask, and marks your answer. Then it shows you where the evidence is.",
     tip: "Filter to the class the meeting is about, run a set, and copy the prep notes."
   },
   "celebration": {
@@ -264,11 +264,11 @@ export const TEXT = {
     tip: "When a figure surprises you, open the ? before drawing a conclusion."
   },
   "student-spotlight": {
-    caption: "A student’s spotlight: one (fictional) student across all their subjects.",
-    onScreen: "A popup over the Priority list for the fictional student Aarav Sharma (grade 6, class 6A, tier Strategic). A green STRENGTHS box (for example Reading: exceeded projected growth, moved up a band) and an orange WATCH box (Mathematics: did not meet growth, negative observed growth, finished below the 21st percentile). Subject cards, such as Reading: RIT 186 to 202, +16, met growth Yes, conditional growth percentile 89, a target for spring of grade 7, and bars for each instructional area against his own overall RIT.",
+    caption: "A student’s spotlight: one (fictional) student across all their subjects, in a popup over the page.",
+    onScreen: "The spotlight popup for the fictional student Aarav Sharma (ID, grade 6, class 6A, teacher, and the tier badge Strategic). A green STRENGTHS box (for example Reading: exceeded projected growth, moved up a band) and an orange WATCH box (Mathematics: did not meet growth, negative observed growth, finished below the 21st percentile). Then one card per subject, Reading and Language in view: Reading RIT 186 to 202, +16, percentile 9 to 28, met growth Yes, conditional growth percentile 89, a “Spring of grade 7 target”, and a bar for each instructional area against his own overall RIT (demo data).",
     tells: "Everything about one student on one page, ready for a parent conference or a conversation with the student.",
-    say: "Click any student\u2019s name to open their spotlight. Every subject is together: strengths in green, things to watch in orange, and targets for next year. Print it for a conference.",
-    tip: "Print the spotlight before a parent or student conference."
+    say: "Click any student\u2019s name to open their spotlight. Every subject is together: strengths in green, things to watch in orange, and a target for next year in each subject.",
+    tip: "At the foot of the spotlight, Copy conference notes and Print one-pager get you ready for a parent or student conference."
   },
   "goal-sheet-print": {
     caption: "The printed goal sheets, as the print window shows them (fictional student).",
@@ -315,15 +315,15 @@ export const TEXT = {
 };
 
 export const GLOSSARY = [
-  ["RIT score", "NWEA’s equal-interval scale, roughly 140 to 260, that runs through every year of school without restarting. Growth is measured in RIT points; it is the number to quote when talking about progress."],
-  ["Percentile", "Where a RIT score sits against students in the same grade and season nationally, out of 100; 50 is the middle. It is not the share of questions answered correctly."],
-  ["Achievement bands (Red, Orange, Yellow, Green, Blue)", "NWEA’s five percentile bands, each 20 points wide: Red 1st-20th, Orange 21st-40th, Yellow 41st-60th, Green 61st-80th, Blue 81st-99th. The page always shows them in these colours. A band is where a student is today, not a label."],
-  ["Instructional tiers", "The same cut points used for planning: Intensive (Tier 3, at or below the 20th percentile), Strategic (Tier 2, 21st-40th), On Track (41st-60th), Secure (61st-80th), Advanced (81st and above)."],
+  ["RIT score", "NWEA’s equal-interval scale (student scores typically fall between about 140 and 300) that runs through every year of school without restarting. Growth is measured in RIT points; it is the number to quote when talking about progress."],
+  ["Percentile", "Where a RIT score sits against students in the same grade, subject and season in NWEA’s US norms, from 1 to 99; 50 is the national middle. It is not the share of questions answered correctly."],
+  ["Achievement bands (Red, Orange, Yellow, Green, Blue)", "The five achievement quintiles, each 20 percentile points wide (NWEA’s Low, Low Average, Average, High Average and High), which the page names by colour: Red 1st-20th, Orange 21st-40th, Yellow 41st-60th, Green 61st-80th, Blue 81st-99th. The page always shows them in these colours. A band is where a student is today, not a label."],
+  ["Instructional tiers", "The same cut points used for planning: Intensive (Tier 3, at or below the 20th percentile), Strategic (Tier 2, 21st-40th), On Track (Tier 1, 41st-60th), Secure (Tier 1, 61st-80th), Advanced (Extend, 81st and above)."],
   ["Secure benchmark (61st percentile)", "A locally chosen line for “secure”, not an NWEA definition. Gap closure measures movement towards or past it among students who started below it."],
   ["Projected growth", "NWEA’s projection, from a student’s own starting RIT and grade, of how much a typical peer grows between the two test windows."],
   ["Observed growth / RIT change", "How many RIT points the student actually moved between the two windows."],
   ["Met projection (met growth)", "Observed growth was at least the projection; “exceeded” means more. Where the export carries a standard error, a result within measurement error of the projection is marked “too close to call”."],
-  ["Conditional growth percentile (CGP)", "A student’s growth ranked against students nationally who started at the same RIT in the same grade. 50 is typical growth from that start, so it is fair to low and high starters alike."],
+  ["Conditional growth percentile (CGP)", "A student’s growth ranked, from 1 to 99, against students nationally who started at the same RIT in the same grade and subject. 50 is typical growth from that start, so it is fair to low and high starters alike."],
   ["Growth and achievement quadrants", "NWEA’s grid of growth (low, average, high) against achievement (low, average, high), e.g. Hi-G/Lo-A: high growth from a low start."],
   ["Instructional areas", "The strands inside a subject (for example Geometry or Vocabulary), from the Class Profile export. The page reads each area against the student’s own overall RIT, because NWEA publishes no norm for an area."],
   ["ASG export", "The Achievement Status and Growth report, downloaded from MAP Reports as CSV. It carries start and end scores, projections and growth."],

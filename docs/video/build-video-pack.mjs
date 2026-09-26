@@ -124,7 +124,7 @@ async function capture(chromium) {
   // A full-width picture of part of the page: from the top of `from` to the
   // bottom of `to` (or `height` pixels), with a margin of page around it.
   // Every frame is 1440 wide, so every frame has the same scale on video.
-  async function frame(page, { from, to, height, pad = 16, max = MAX_FRAME }) {
+  async function frame(page, { from, to, height, pad = 16, padBottom = pad, max = MAX_FRAME }) {
     await page.evaluate(({ from, pad }) => {
       document.querySelector(from).scrollIntoView({ block: "start" });
       window.scrollBy(0, -pad);
@@ -136,13 +136,22 @@ async function capture(chromium) {
       if (!a || !b) throw new Error("frame: missing " + (a ? to : from));
       return { top: a.getBoundingClientRect().top, bottom: b.getBoundingClientRect().bottom };
     }, { from, to });
-    const h = Math.min(max, Math.ceil((height || box.bottom - box.top) + pad * 2));
+    const h = Math.min(max, Math.ceil((height || box.bottom - box.top) + pad + padBottom));
     return page.screenshot({ clip: { x: 0, y: Math.max(0, box.top - pad), width: WIDTH, height: h } });
   }
 
   async function newContext({ view = "full", theme = "light", width = WIDTH, height = VIEW_HEIGHT, voices = true } = {}) {
     const context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: DSF, reducedMotion: "reduce", colorScheme: theme });
     await context.addInitScript(({ view, theme, voices }) => {
+      // The quiz draws its questions at random. A fixed seed makes every
+      // capture show the same question, so the words written for it stay true.
+      let seed = 20260926;
+      Math.random = () => {
+        seed = (seed + 0x6D2B79F5) | 0;
+        let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
       try {
         localStorage.setItem("asg-dashboard-preferences", JSON.stringify({ theme, reducedMotion: true, supportPromptOff: true, supportPromptLastShown: 0, view }));
       } catch (error) { /* private mode */ }
@@ -246,7 +255,10 @@ async function capture(chromium) {
   await page.waitForTimeout(300);
   await page.click("#priorityTable .student-link");
   await page.waitForTimeout(600);
-  await save(F("student-spotlight"), await page.screenshot({ clip: { x: 0, y: 0, width: WIDTH, height: 900 } }));
+  // The popup itself, with a margin of the dimmed page round it, so its text
+  // is as large as the frame allows.
+  const pop = await page.evaluate(() => { const b = document.querySelector("#spotlight").getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height }; });
+  await save(F("student-spotlight"), await page.screenshot({ clip: { x: Math.max(0, pop.x - 24), y: Math.max(0, pop.y - 24), width: pop.w + 48, height: Math.min(900 - Math.max(0, pop.y - 24), pop.h + 48) } }));
   await page.click("#spotlightClose");
   await page.waitForTimeout(300);
 
@@ -352,7 +364,13 @@ async function capture(chromium) {
     await land.goto(INDEX);
     await land.waitForTimeout(400);
     await land.addStyleTag({ content: HIDE_TOASTS });
-    await save(F("privacy-offline"), await land.locator(".upload-panel").screenshot());
+    // With a margin of the purple masthead round it, so the panel's rounded
+    // corners sit on their real background.
+    const panel = await land.evaluate(() => { const b = document.querySelector(".upload-panel").getBoundingClientRect(); return { x: b.left, y: b.top + scrollY, w: b.width, h: b.height }; });
+    await land.evaluate((y) => scrollTo(0, Math.max(0, y - 40)), panel.y);
+    await land.waitForTimeout(200);
+    const top = await land.evaluate((y) => y - scrollY, panel.y);
+    await save(F("privacy-offline"), await land.screenshot({ clip: { x: panel.x - 20, y: top - 20, width: panel.w + 40, height: panel.h + 40 } }));
     await ctx.close();
   }
 
@@ -404,8 +422,10 @@ async function build(chromium) {
     printBackground: true,
     margin: { top: "13mm", bottom: "13mm", left: "13mm", right: "13mm" },
     displayHeaderFooter: true,
-    headerTemplate: '<div style="font-size:7.5px;color:#555555;width:100%;padding:0 13mm;font-family:DM Sans,sans-serif;display:flex;justify-content:space-between;"><span>AISA Teacher MAP Dashboard — Video source pack</span><span>Demo data is fictional</span></div>',
-    footerTemplate: '<div style="font-size:7.5px;color:#555555;width:100%;padding:0 13mm;font-family:DM Sans,sans-serif;display:flex;justify-content:space-between;"><span>Your file never leaves your computer.</span><span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span></div>'
+    // The running header and footer are drawn apart from the page, so they
+    // carry their own copy of the brand font.
+    headerTemplate: '<style>' + brand.fontCSS + '</style><div style="font-size:7.5px;color:#555555;width:100%;padding:0 13mm;font-family:\'DM Sans\',sans-serif;display:flex;justify-content:space-between;"><span>AISA Teacher MAP Dashboard — Video source pack</span><span>Demo data is fictional</span></div>',
+    footerTemplate: '<style>' + brand.fontCSS + '</style><div style="font-size:7.5px;color:#555555;width:100%;padding:0 13mm;font-family:\'DM Sans\',sans-serif;display:flex;justify-content:space-between;"><span>Your file never leaves your computer.</span><span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span></div>'
   });
   await browser.close();
 }
@@ -547,7 +567,7 @@ tr { break-inside: avoid; }
       <div class="card rule"><h3>The video follows the scenes in order</h3>
       <p>This pack is a storyboard. It contains ${SCENES.length} numbered scenes, one per page, starting on page 5. Make the video in exactly that order, from Scene 1 to Scene ${SCENES.length}.</p></div>
       <div class="card rule"><h3>Each scene has one screenshot, identified by its file name</h3>
-      <p>At the top right of every scene page is a purple label, for example <strong>Screenshot: 07-insights.png</strong>. The large picture on that page is that screenshot. While a scene is being narrated, show <strong>only that scene’s screenshot</strong>; switch to the next picture when the next scene begins. The picture of a scene always sits on the same page as its narration, and the Screenshot index at the end lists every ID.</p></div>
+      <p>At the top right of every scene page is a purple label, for example <strong>Screenshot: ${escapeHTML(SCENES.find((scene) => scene.slug === "insights").file)}</strong>. The large picture on that page is that screenshot. While a scene is being narrated, show <strong>only that scene’s screenshot</strong>; switch to the next picture when the next scene begins. The picture of a scene always sits on the same page as its narration, and the Screenshot index at the end lists every ID.</p></div>
       <div class="card rule"><h3>Narrate from “What to say”</h3>
       <p>The block headed <strong>What to say (narration)</strong> is the script for that scene. “What is on screen” tells you which parts of the picture the narration refers to (so you can zoom or highlight them); “What it tells a teacher” and “Teacher action / tip” give the meaning and the practical takeaway, which you may weave in. “Timing” is the approximate length of that scene.</p></div>
     </div>
@@ -568,7 +588,7 @@ tr { break-inside: avoid; }
   <h1 class="pg-title">The tool in one page</h1>
   <p style="font-size:10.5pt"><strong>What it is.</strong> The AISA Teacher MAP Dashboard is one web page (a single file, <em>index.html</em>). A teacher opens it in any modern browser, loads the CSV files exported from NWEA MAP Growth, and the page instantly builds about 25 planning sections from them: headline insights, growth and achievement, movement between colour bands, gap closure, growth goals, a weekly action board, priority and celebration lists, table groups with a seating planner, classroom wall posters, a quiz to rehearse for data meetings, and more. <strong>Who it is for:</strong> classroom teachers first, and coordinators and leaders preparing data conversations.</p>
   <div class="steps">
-    <div class="step"><b>1</b><h3>Export from NWEA</h3><p>In MAP Growth → MAP Reports, download the <em>Achievement Status and Growth (ASG)</em> report as CSV (it carries growth), and the <em>Class Profile</em> report as CSV, once per subject (it carries the instructional areas). Same class, same term.</p></div>
+    <div class="step"><b>1</b><h3>Export from NWEA</h3><p>In MAP Growth, open MAP Reports and download the <em>Achievement Status and Growth (ASG)</em> report as CSV (it carries growth), and the <em>Class Profile</em> report as CSV, once per subject (it carries the instructional areas). Same class, same term.</p></div>
     <div class="step"><b>2</b><h3>Upload</h3><p>Drag all the files onto the upload box at once, or click to browse. The page reads them in the browser, matches the columns automatically and folds each student’s records together. <em>Load Sample Data</em> shows everything with a fictional class first.</p></div>
     <div class="step"><b>3</b><h3>Plan</h3><p>Read the essentials, filter to a class or subject, then act: print goal sheets, build table groups and a seating plan, copy the summary into PLC notes, print student-friendly wall posters, and rehearse for the data meeting.</p></div>
   </div>
