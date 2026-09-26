@@ -399,7 +399,7 @@
 
     .filter-more { white-space: nowrap; }
 
-    .change-file { display: none; }
+    body:not(.has-data) .change-file { display: none; }
     body.has-data .change-file { display: inline-flex; justify-self: start; }
 
     body.has-data .topbar {
