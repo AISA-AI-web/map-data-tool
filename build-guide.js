@@ -248,7 +248,7 @@ async function main() {
     essentials: [...ESSENTIAL_SECTIONS],
     // The guide wears the page's own brand: its wordmark and its DM Sans,
     // read from the page so the two can never disagree.
-    brand: { school: BRAND.school, wordmarkReverse: BRAND.wordmarkReverse, fontCSS: BRAND_FONT_CSS }
+    brand: { school: BRAND.school, wordmarkReverse: BRAND.wordmarkReverse, sealReverse: BRAND.sealReverse, fontCSS: BRAND_FONT_CSS }
   }));
 
   // ---- pictures: growth mode --------------------------------------------
@@ -401,7 +401,8 @@ function buildHTML(data, pictures, baselineTitles) {
   .cover { height: 250mm; display: flex; flex-direction: column; justify-content: space-between; }
   /* The cover is the AISA cover: a purple block with the wordmark, a gold
      eyebrow and a white title, ruled off in gold. */
-  .cover-band { background: var(--brand); color: #ffffff; border-radius: 8px; padding: 12mm 12mm 14mm; border-bottom: 2mm solid var(--gold); }
+  .cover-band { background: var(--brand); color: #ffffff; border-radius: 8px; padding: 12mm 12mm 14mm; border-bottom: 2mm solid var(--gold); position: relative; }
+  .cover-band .cover-seal { position: absolute; right: 12mm; bottom: 14mm; height: 40mm; width: auto; margin: 0; }
   .cover-band img { display: block; height: 13mm; width: auto; margin-bottom: 22mm; }
   .cover .eyebrow { color: var(--gold); font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; font-size: 9pt; margin: 0; }
   .cover h1 { font-size: 34pt; color: #ffffff; margin: 6pt 0 0; }
@@ -450,6 +451,7 @@ function buildHTML(data, pictures, baselineTitles) {
       <img src="${data.brand.wordmarkReverse}" alt="${escapeHTML(data.brand.school)}">
       <p class="eyebrow">${escapeHTML(TITLE)}</p>
       <h1>User guide</h1>
+      <img class="cover-seal" src="${data.brand.sealReverse}" alt="">
     </div>
     <p class="lede">How to get your files out of NWEA, what every number means, what each section of the dashboard tells you, and what to do about it before the next data conversation.</p>
   </div>

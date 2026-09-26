@@ -227,35 +227,42 @@ surface, the gold is used as it is, and the masthead keeps the real
 
 ### The marks
 
-No official AISA logo file was available, so the marks are a typeset
-wordmark - "AISA" in DM Sans Bold beside the school's full name - drawn by
-`brand/make-brand-assets.mjs` from the same DM Sans the page embeds:
+The marks come from the school's official logo files, kept as supplied in
+`brand/official/`:
 
-- `brand/aisa-wordmark.png` - purple, for white paper (the poster footer and
-  the printed sheets);
-- `brand/aisa-wordmark-reverse.png` - gold and white, for the purple bands
-  (the masthead, the goal sheets, the seating plans, the guide cover);
-- `brand/aisa-symbol.png` - a gold A on a purple tile, for the favicon.
+- `aisa-seal-white.webp` - the full seal, white on transparent;
+- `aisa-mark.png` - the AISA monogram in its purple disc;
+- `aisa-seal-on-purple.jpg` - the seal on the logo's own purple field. It is
+  the same drawing as the white seal and is kept for reference only: its
+  field is the logo purple `#343474`, which would show as a box on the
+  interface purple `#21076C`.
 
-Every copy on the page and on every printed sheet is read from one constant,
-`BRAND`, near the top of `<body>`, and the guide reads it from the page. To
-use the official AISA lion logo, export it as PNG with a transparent
-background and save it over the marks in `brand/`: the version for white as
-`aisa-wordmark.png`, the reversed version for purple as
-`aisa-wordmark-reverse.png`, and a square crop of the lion as
-`aisa-symbol.png` for the favicon. Draw them at twice the size they should
-show - the masthead is sized at half the reverse PNG's pixels - and keep
-roughly the current 7:1 lockup so the masthead and print headers keep their
-layout. Then run
+`brand/make-brand-assets.mjs` crops, scales and (for the name beside the
+disc) typesets them into the four marks the page uses. Nothing is redrawn:
 
-    node brand/make-brand-assets.mjs --inline-only
+- `brand/aisa-wordmark.png` - the purple disc with the school name in the
+  logo purple, for white paper (the poster footer);
+- `brand/aisa-wordmark-reverse.png` - the white disc (cut from the white seal)
+  with the name in white, for the purple bands: the masthead, the goal
+  sheets, the seating plans, the print-sheet headers and the guide cover;
+- `brand/aisa-seal-reverse.png` - the whole white seal, for places big enough
+  to read its lettering: the landing masthead (wide screens only, until a
+  file loads) and the guide cover;
+- `brand/aisa-symbol.png` - the purple disc, square, for the favicon.
 
-which writes all three into `BRAND`, the masthead and the favicon as data
-URIs and fails loudly if any substitution does not match; it needs no
-browser. Rebuild the guide afterwards so its cover
-carries the new mark. Run the script without `--inline-only` (and with
-`PLAYWRIGHT_MODULE` set) to redraw the typeset marks instead; `--no-inline`
-draws them without touching the page.
+The small lockups use the disc rather than the whole seal because the seal's
+lettering is about 3px tall at masthead size. Every copy on the page and on
+every printed sheet is read from one constant, `BRAND`, near the top of
+`<body>`, and the guide reads it from the page. To change a mark, replace the
+file in `brand/official/` and run
+
+    PLAYWRIGHT_MODULE=/path/to/playwright/index.mjs node brand/make-brand-assets.mjs
+
+which redraws the PNGs and writes them into `BRAND`, the masthead and the
+favicon as data URIs, failing loudly if any substitution does not match.
+`--no-inline` draws without touching the page; `--inline-only` inlines the
+PNGs already in `brand/` and needs no browser. Rebuild the guide afterwards so
+its cover carries the new mark.
 
 ### The typeface
 
