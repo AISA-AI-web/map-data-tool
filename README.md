@@ -1,103 +1,284 @@
-# teachermap.ensdashboards.xyz
+# Teacher MAP Dashboard | AISA
 
-This directory is **generated**. Do not edit `index.html` here.
+An NWEA MAP Growth (ASG) dashboard for teachers at the American International
+School in Abu Dhabi. The whole product is one file, `index.html`: it opens in
+a browser, reads the teacher's CSV exports on their own machine, and turns
+them into a planning view - who grew, who needs support, how to group the
+class, what to say at a data meeting and what to put on the wall.
 
-It is built from the repository root `index.html` by:
+## The promise
 
-    node build/build-clone.mjs
+The upload panel tells teachers their file never leaves their computer, and
+the page is built so that stays true:
 
-The build applies the differences that make this a separate instance — the
-teal and wine palette, the ENS Dashboards title and favicon, and the removal
-of the support prompt — and asserts that every one of them matched. If the
-upstream page changes in a way that moves a token or a block, the build fails
-rather than shipping a half-themed page.
+- **Nothing is sent anywhere.** Files are read in the browser and forgotten
+  when the tab closes. There is no server code and no analytics, and the
+  page makes no request of its own.
+- **Nothing is loaded from anywhere.** Scripts, styles, the DM Sans typeface
+  and the AISA marks are all inside `index.html`, as inline code and data
+  URIs. The page works offline and behind a school filter; a teacher can save
+  it and open it from disk.
+- **The browser enforces it.** The Content-Security-Policy in `vercel.json`
+  allows inline code and `data:` images and fonts only, and sets
+  `connect-src 'none'`, so the page cannot make a network request even if one
+  were somehow introduced.
+- **Nothing remembered names a student.** `localStorage` holds the theme,
+  motion and view preferences (`asg-dashboard-preferences`), the last chart
+  axes and metrics as short tokens (`asg-dashboard-viz`), and the seating
+  planner's room shape (`asg-room-layout`). No name, ID, score, class or file.
 
-So the workflow for any dashboard change is: edit the root `index.html`, run
-the build, commit both.
+Anything added to the page keeps all four.
+
+## The files
+
+- `index.html` - the dashboard.
+- `vercel.json` - hosting headers (see *Deploying*).
+- `teacher-dashboard-guide.pdf` - the user guide the page links to from
+  every section's **?** panel.
+- `build-guide.js` - builds the guide from the page itself.
+- `check-planner.mjs` - the regression checks.
+- `brand/` - the AISA marks and the script that draws them.
+- `sample/` - the demo data behind *Load Sample Data* and the script that
+  draws it.
+
+## What is on the page
+
+A teacher loads an ASG export, and optionally Class Profile exports for the
+instructional areas; the page folds each student's records together. A file
+with two test windows gets the growth view; a fall file with one window gets
+a start-of-year view instead of empty growth panels. Every section follows the
+filters.
+
+The page opens on nine **essentials** (`ESSENTIAL_SECTIONS`); the rest sit
+behind *More analysis* and the choice is remembered. In page order, with the
+essentials marked *(E)*:
+
+- **Spoken Briefing** *(E)* - a narrated walk through the file, read aloud by
+  the teacher's own device.
+- **Insights** *(E)* - headline KPI tiles against national references, then
+  a ranked list of statistical findings, each saying how many students it
+  rests on and how sure it is.
+- **Class Snapshot** *(E)* - the headline counts and shares in one card.
+- **Achievement Profile** - the tier ladder and placement against US norms
+  (called Starting Point on a single-window file).
+- **Subject Overview** - one card per subject.
+- **Subject Charts** - start and end achievement, projected against observed
+  growth, band distribution, per subject.
+- **Distributions** - a box plot per subject or class with every record as a
+  dot on it, and a table of summary statistics.
+- **Growth and Achievement** *(E)* - NWEA's quadrants, quadrant movement and
+  growth by starting band. Growth files only.
+- **Movement** - a band-to-band transition matrix and a dumbbell per record
+  from start to end percentile. Growth files only.
+- **Gap Closure** - who closed, reduced or widened the gap to the 61st
+  percentile. Growth files only.
+- **Growth Goals** *(E)* - RIT targets for the next test, and the printed
+  goal sheets.
+- **Action Board** *(E)* - the week's highest-leverage moves, with the
+  students each applies to.
+- **What Would It Take?** - how far the group is from a chosen target, and
+  who is closest to it.
+- **Cross-Subject Profiles** - each student's strongest and weakest subject.
+- **Heatmap** - groups against subjects coloured by the chosen measure, and,
+  with Class Profile data, students against instructional areas.
+- **Instructional Areas** - class strengths and gaps inside each subject.
+  Class Profile exports only.
+- **Class Summary Report** - a copy-ready narrative of the view.
+- **Explorer** - a scatter of any two measures, with an OLS trend line, r,
+  R², a pinned student, and SVG and CSV export.
+- **Table Groups and Seating Plan** - table groups by strategy, and a room
+  planner with teacher and wall prints.
+- **Student Grouping Report** - every record in one sortable table.
+- **Priority Students** *(E)* - records that need attention first, with the
+  reasons.
+- **Wall Posters** *(E)* - class-level posters for students; no name, no
+  individual score.
+- **Check My Understanding** *(E)* - practice questions for the data
+  conversation, marked against the page.
+- **Celebration Students** - records with something to celebrate.
+- **Data Check** - what was read from the file, what was not, and why.
+
+Insights, Distributions, Movement, Heatmap and Explorer are the analytical
+sections, drawn with the viz kit below.
+
+### Adding or changing a section
+
+`SECTION_PLAN` lists the sections, the file modes each appears in and any
+availability test; it drives the *Jump to* bar and what is shown.
+`SECTION_HELP` is the text behind each **?** and becomes the section's page in
+the guide, so write it as three short answers (what it shows, how to read it,
+what to do with it) plus a `baseline` variant where a single-window file
+changes the meaning. Decide whether the section belongs in
+`ESSENTIAL_SECTIONS`; if it is heavy and not essential, register its renderer
+in `DEFERRED_RENDERERS` so it draws only when shown. Then rebuild the guide.
+
+## The viz kit
+
+The analytical sections share one chart system so they read as one piece and
+nobody writes a second quantile or a second tooltip. It has two halves that
+change together: the CSS block headed `AISA viz kit` at the end of the
+stylesheet, and the JavaScript block `---- AISA viz kit ----` after
+`chartCard()`. Each section then has its own `AISA: <Label>` block in both the
+stylesheet and the script. Search for those strings.
+
+- `vizStats` - pure, null-safe statistics: quantile (type 7, as Excel's
+  PERCENTILE.INC), box stats, mean, SD, t-based 95% intervals, Pearson, OLS,
+  Welch's test, paired t, Cohen's d. They drop non-numbers and answer `null`,
+  never NaN, when there is too little to say anything.
+- `vizColor` - the AISA data palette by job: categorical, subject,
+  sequential, diverging, and the ink for a label on a fill.
+- Scales, axes, `vizFrame`, marks, cards, legends, `vizTable`, `vizKpiTile`,
+  and the one tooltip (`vizTip` / `vizTipAttrs`, by `data-tip` delegation).
+- `vizChartSlot` / `vizMount` - draw at the container's real width and redraw
+  on resize, theme change and print.
+
+The rules, which the kit's own header comment explains in full:
+
+- **Colour by job.** Identity takes the categorical slots in order (or
+  `vizColor.subject(name)`), magnitude the purple ramp, either side of a
+  centre the gold-neutral-purple ramp. The five NWEA band colours
+  (`--red` to `--blue`) are semantic: they are never recoloured, and a chart
+  that shows bands never also shows a purple or gold series.
+- **Text never wears a series colour.** Gold text on a light surface is
+  `--accent-ink`.
+- **Every tip goes through `vizTip`**, so it is escaped, reachable by
+  keyboard and read aloud. Never a `<title>` tip. Every other interpolated
+  string goes through `escapeHTML` or `escapeAttr`.
+- **Every chart has its numbers without hovering**: a direct label, or a
+  table in a "Show the numbers" toggle (`vizTableToggle`).
+- **Thin data says so.** Under `MIN_SHARE_N` (10) records a mark is hatched
+  and a share prints as a count.
+- **Describe, never explain.** A finding says how large a difference or a
+  relationship is and how sure the data can be of it; it never says what
+  caused it.
+
+## Checks
+
+    PLAYWRIGHT_MODULE=/path/to/playwright/index.mjs node check-planner.mjs
+
+must end with `All planner checks passed`. It drives the page in Chromium with
+the sample data: the seating planner's layout, keyboard and drag moves, and
+prints, and the rule the whole page keeps - nothing written to `localStorage`
+may name a student. `TARGET` points it at another copy of the page, and
+`FIXTURES` at other exports (a comma-separated list).
+
+## The sample data
+
+*Load Sample Data* loads a made-up cohort - four grade 5 and 6 classes at
+"AISA Demo School", Fall 2025 to Spring 2026 - as two exports, an ASG file and
+a spring Class Profile file, through the same multi-file path a teacher's own
+uploads take. `sample/make-sample.mjs` draws both from a seeded generator,
+scored against the norm tables in `index.html` so every percentile agrees
+with the page's own norm comparisons, and writes them to
+`sample/sample-asg.csv` and `sample/sample-class-profile.csv` and into
+`SAMPLE_CSV` and `SAMPLE_CLASS_PROFILE_CSV` in the page:
+
+    node sample/make-sample.mjs            # --report lists the signals it built in; --no-inline writes the CSVs only
+
+Change the generator and rerun it rather than editing the strings by hand.
+No student, teacher or school in it is real.
 
 ## The user guide
 
-`teacher-dashboard-guide.pdf` in this directory is the instance's own copy of
-the guide, built from this instance's page so the pictures carry its colours
-and its name. The page links to it relatively, so it has to be here or the
-link is dead. Rebuild it after the clone build whenever a section changes:
+The section titles and the "what it shows / how to read it / what to do with
+it" text come out of `index.html` (`SECTION_PLAN` and `SECTION_HELP`), and
+every picture is the page rendered with its own sample data in the full view,
+so rebuild the guide whenever a section or the sample changes:
 
-    GUIDE_INDEX=ensdashboards/index.html \
-    GUIDE_OUTPUT=ensdashboards/teacher-dashboard-guide.pdf \
-    GUIDE_TITLE="Teacher MAP Dashboard | ENS Dashboards" \
-    node guide/build-guide.js
+    PLAYWRIGHT_MODULE=/path/to/playwright/index.mjs node build-guide.js
 
-`vercel.json` exempts the PDF from the frame-denying headers the page itself
-carries, because a browser's PDF viewer loads the document inside a frame.
+It writes `teacher-dashboard-guide.pdf` next to the script. A section taller
+than 1500 pixels is pictured from the top, cut at the end of the last whole
+card, table or paragraph rather than through a chart; where the part left out
+is the point of the section (Movement's dumbbells, the Heatmap's student
+grid) it gets a picture of its own. `GUIDE_INDEX`, `GUIDE_OUTPUT` and
+`GUIDE_TITLE` (default `Teacher MAP Dashboard | AISA`) override the page, the
+PDF and the running header; `GUIDE_HTML` also writes the guide's HTML for
+checking the text. Without `PLAYWRIGHT_MODULE` it falls back to
+`require("playwright")`.
 
-## Where the brand comes from
+## The brand
 
-The logo is the Emirates National Schools mark, checked in at
-`build/assets/ens-logo.png` (the full lockup) and `build/assets/ens-symbol.png`
-(the symbol alone, for the favicon — 709x130 of Arabic and English is a smear
-at 16px). Replace either file and rebuild; nothing else needs editing.
+The dashboard follows the AISA brand guide: DM Sans throughout, Deep Royal
+Purple `#21076C` for structure and Warm Mustard Gold `#D8B664` for emphasis,
+white surfaces, the purple tint `#F2EFFA` as the only off-white, `#C8BEE8` for
+lines, `#1A1A1A` for body text and `#555555` for muted text. The tokens live
+at the top of the stylesheet in `index.html`: the `--aisa-*` values are the
+brand's own and are the same in both themes; the component tokens (`--brand`,
+`--accent`, `--accent-ink`, `--heading`, `--line`, ...) are built from them
+and have a light and a dark value each.
 
-Both are inlined as data URIs. A logo on a CDN would be the one request that
-breaks the promise the upload panel makes, and the first thing to vanish on a
-school network that blocks image hosts.
+Two rules worth knowing before adding anything:
 
-The palette steps come from the ENS Dashboards portal (`rainetech/ens-portal`,
-`tailwind.config.ts`), so this dashboard and the portal that links to it read
-as one product. The portal calls the second colour *plum*, so this does too.
+- **Gold is never small text on a light surface.** `#D8B664` is 1.95:1 on
+  white. It is for fills, bars, big numbers on purple, and the one chip on
+  the masthead that has dark ink on it. Gold you need to *read* on a light
+  surface is `--accent-ink` / `--aisa-gold-ink`, `#7A5A12` (6.4:1 on white).
+- **The five NWEA band colours are not brand colours.** NWEA names the
+  quintiles Red, Orange, Yellow, Green and Blue, and a chart that prints a
+  purple square under the word "Blue" is wrong in a way no brand guide
+  outranks. They are never recoloured, and gold is kept out of any chart that
+  also shows the Yellow band.
 
-### The logo and the brand colours do not match
+The dark theme is not an inversion: surfaces are a deep purple-black, the
+brand purple is lifted to a lavender (`#bfa8fa`) that clears 7.6:1 on every
+surface, the gold is used as it is, and the masthead keeps the real
+`#21076C` in both themes.
 
-Worth knowing before anyone tries to "fix" it. The logo file is plain sRGB and
-contains **teal #007c85 and plum #a30046**. The brand colours specified for
-this instance — and the ones the portal's config uses — are **#007272 and
-#8e2344**. That is a CIE76 Delta E of 6.8 and 13.4: not a colour-management
-artefact, and far enough apart to look like a printing error if the two teals
-ever share an edge.
+### The marks
 
-The interface therefore uses the specified colours, and the logo is always
-placed on white, where its own teal never abuts the interface's. If the logo
-file is the canonical brand rather than the hex values, the fix is to change
-the palette in `build/build-clone.mjs` — not to recolour the logo.
+No official AISA logo file was available, so the marks are a typeset
+wordmark - "AISA" in DM Sans Bold beside the school's full name - drawn by
+`brand/make-brand-assets.mjs` from the same DM Sans the page embeds:
 
-## The Vercel project
+- `brand/aisa-wordmark.png` - purple, for white paper (the poster footer and
+  the printed sheets);
+- `brand/aisa-wordmark-reverse.png` - gold and white, for the purple bands
+  (the masthead, the goal sheets, the seating plans, the guide cover);
+- `brand/aisa-symbol.png` - a gold A on a purple tile, for the favicon.
 
-Already created and building from this directory:
+Every copy on the page and on every printed sheet is read from one constant,
+`BRAND`, near the top of `<body>`, and the guide reads it from the page. To
+use the official AISA lion logo, export it as PNG with a transparent
+background and save it over the marks in `brand/`: the version for white as
+`aisa-wordmark.png`, the reversed version for purple as
+`aisa-wordmark-reverse.png`, and a square crop of the lion as
+`aisa-symbol.png` for the favicon. Draw them at twice the size they should
+show - the masthead is sized at half the reverse PNG's pixels - and keep
+roughly the current 7:1 lockup so the masthead and print headers keep their
+layout. Then run
 
-- Project: `teachermap` (`prj_Ty8HzQDdj0dv0k6jLM0KAtU2u7kH`)
-- Team: `ENS_Platforms` (slug `ensplatforms`, `team_Iwl363H4TKfoqdwtWfICSO0V`)
-- Linked to `rainetech/teachermapdata.github.io`, production branch `main`
-- Root Directory: `ensdashboards`
+    node brand/make-brand-assets.mjs --inline-only
 
-Pushing to `main` redeploys it. GitHub Pages still serves the repository root
-independently, so both sites come from the same commit.
+which writes all three into `BRAND`, the masthead and the favicon as data
+URIs and fails loudly if any substitution does not match; it needs no
+browser. Rebuild the guide afterwards so its cover
+carries the new mark. Run the script without `--inline-only` (and with
+`PLAYWRIGHT_MODULE` set) to redraw the typeset marks instead; `--no-inline`
+draws them without touching the page.
 
-### Why the .vercel.app URL asks you to log in
+### The typeface
 
-Deployment protection is left at Vercel's default, `Vercel Authentication`
-scoped to *all except custom domains*. That means `teachermap.vercel.app` and
-every preview URL sit behind a Vercel login, and the custom domain is public.
-That is the right way round for this project - teachers reach it on the real
-domain, and half-finished preview builds are not indexable - so if the
-`.vercel.app` link asks for a login, it is working as intended rather than
-broken.
+DM Sans (SIL Open Font License 1.1, from `@fontsource-variable/dm-sans`) is
+embedded as two variable-weight WOFF2 files - latin and latin-ext, because
+student names carry accents - in `<style id="brandFonts">` in the head. The
+print sheets and the guide open as separate documents, so they are handed the
+same rules through `BRAND_FONT_CSS` rather than a second copy of the font.
 
 ## Deploying
 
-Vercel project settings:
+The site is static and has no build step: Vercel serves the repository as it
+is, and `index.html` is the page. `vercel.json` sets the headers:
 
-- **Root Directory**: `ensdashboards`
-- **Framework Preset**: Other
-- **Build Command**: none (leave empty — the file is already built)
-- **Output Directory**: leave empty
+- on everything except the guide: the Content-Security-Policy above (with
+  `form-action`, `frame-ancestors` and `base-uri` also `'none'`),
+  `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`,
+  `Referrer-Policy: no-referrer` and a Permissions-Policy that turns off
+  geolocation, camera and microphone;
+- on `teacher-dashboard-guide.pdf`: the same without the frame-denying
+  headers, because a browser's PDF viewer loads the document inside a frame;
+- `Cache-Control: max-age=0, must-revalidate` on `index.html` and the guide,
+  so a new version reaches teachers on their next visit.
 
-`vercel.json` sets the security headers. The Content-Security-Policy is
-deliberately strict: the dashboard loads no scripts, styles, fonts or images
-from anywhere, and `connect-src 'none'` means the page cannot make a network
-request even if one were somehow introduced. That is the same promise the
-upload panel makes to teachers, enforced by the browser rather than trusted.
-
-## Custom domain
-
-Add `teachermap.ensdashboards.xyz` in the Vercel project's Domains tab, then
-create the DNS record Vercel shows you on the `ensdashboards.xyz` zone —
-normally a CNAME on the `teachermap` host pointing at `cname.vercel-dns.com`.
+Anything that needs a new origin in the CSP is a change to the promise, not a
+configuration detail.

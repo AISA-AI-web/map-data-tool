@@ -1,22 +1,25 @@
 // Seating planner checks. Run with Playwright's Chromium:
 //
-//   node build/check-planner.mjs                 (checks index.html)
-//   TARGET=ensdashboards/index.html node build/check-planner.mjs
+//   node check-planner.mjs                       (checks index.html)
+//   TARGET=path/to/another/index.html node check-planner.mjs
 //
 // Needs `playwright` resolvable (npm i -D playwright, or set
 // PLAYWRIGHT_MODULE to its index.mjs) and a CSV under FIXTURES (a comma
-// separated list of NWEA export files; defaults to the bundled sample data
-// when none is given).
+// separated list of NWEA export files; defaults to the bundled sample data,
+// exactly as Load Sample Data gives it, when none is given).
 //
 // What it holds the planner to:
 //   - the room builds without a page error for every shape and turn;
-//   - tables never overlap on the default grid and never leave the room;
+//   - tables never overlap on the default grid and never leave the room,
+//     even for the sample's whole year group (four classes, eighteen tables);
 //   - a student can be moved by keyboard, by drag-and-drop onto a seat (a
 //     taken seat swaps), and undone;
 //   - nothing in localStorage names a student, whatever the teacher did;
 //   - the wall print carries no score, no growth and no band mark, and the
 //     teacher print carries them all;
-//   - the CSV has one row per seat.
+//   - the CSV has one row per seat;
+//   - with several classes in view the planner says a plan is for one room
+//     and offers each class, and picking one builds that class's room.
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -46,6 +49,9 @@ await page.reload();
 if (FIXTURES.length) await page.setInputFiles("#csvInput", FIXTURES);
 else await page.click("#sampleBtn");
 await page.waitForTimeout(2500);
+// The room is built from the files as loaded - for the bundled sample, all
+// four classes at once, which is what a teacher sees after Load Sample Data.
+// The "One room" checks at the end then pick a class.
 
 console.log("Room");
 await page.click("#plannerLaunch");
@@ -219,6 +225,22 @@ const csvRows = csv.trim().split("\n");
 const seated = await page.evaluate(() => state.tableGroups.reduce((n, g) => n + g.length, 0) + state.tableManualPool.length);
 check(csvRows.length === seated + 1, "CSV has one row per seat (" + (csvRows.length - 1) + ")");
 check(/^﻿?Table,Table name,Seat,Table shape/.test(csvRows[0]), "CSV starts with table, name, seat and shape columns");
+
+console.log("One room");
+const classesInView = await page.evaluate(() => [...new Set(state.filteredRows.map((row) => row.className))]);
+const offered = await page.$$eval("#plannerBackdrop [data-plan-class]", (buttons) => buttons.map((button) => button.dataset.planClass));
+if (classesInView.length > 1) {
+  check(offered.length === classesInView.length, "with " + classesInView.length + " classes in view the planner offers each one (" + offered.join(", ") + ")");
+  await page.click(`#plannerBackdrop [data-plan-class="${offered[0]}"]`);
+  await page.waitForTimeout(1000);
+  const picked = await page.evaluate(() => [...new Set(state.filteredRows.map((row) => row.className))]);
+  check(picked.length === 1 && picked[0] === offered[0], "picking a class filters the page to it");
+  const room = await geometry();
+  check(room.tables > 0 && room.overlaps === 0 && room.outside === 0, "that class's room builds with no overlap and nothing outside (" + room.tables + " tables)");
+  check(await page.$$eval("#plannerBackdrop [data-plan-class]", (buttons) => buttons.length) === 0, "the one-room note goes once one class is in view");
+} else {
+  check(offered.length === 0, "one class in view: no one-room note");
+}
 
 check(errors.length === 0, "no page errors" + (errors.length ? ": " + errors.join(" | ") : ""));
 await browser.close();
